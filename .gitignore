@@ -1,0 +1,7 @@
+# Ignore Unity files
+*.meta
+
+# Ignore IDE files
+*.csproj
+*.sln
+*.idea
