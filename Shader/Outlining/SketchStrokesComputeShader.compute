@@ -1,0 +1,220 @@
+#pragma kernel ComputeAverageStroke32
+#pragma kernel ComputeAverageStroke16
+#pragma kernel ComputeAverageStroke8
+#pragma kernel ComputeAverageStroke4
+#pragma kernel ApplyStrokes32
+#pragma kernel ApplyStrokes16
+#pragma kernel ApplyStrokes8
+#pragma kernel ApplyStrokes4
+
+#pragma multi_compile_local SIMPLE HATCHING ZIGZAG FEATHERING
+#pragma multi_compile_local _ USE_PERPENDICULAR_DIRECTION
+#pragma multi_compile_local _ FRAME_SMOOTHING
+
+#include "Packages/com.lorenzogrando.sketchrenderer/Shader/Strokes/StrokeSDFInclude.hlsl"
+
+RWStructuredBuffer<float4> _GradientVectors;
+RWTexture2D<float4> _OriginalSource;
+uint _GroupsX;
+uint _GroupsY;
+uint _DownscaleFactor;
+uint _TextureWidth;
+uint _TextureHeight;
+float _ThresholdForStroke;
+float _SmoothingThreshold;
+
+//declare them at max supported kernel size, though this does lead to some wasted memory
+groupshared float4 gradients[32*32];
+groupshared float localIsEdge[32*32];
+void ComputeAverageStroke (uint3 id, uint3 idG, uint3 idGs, uint2 kernelSizes)
+{
+    uint gFlatIndex = idG.y * kernelSizes.x + idG.x;
+    uint groupFlatIndex = idGs.y * _GroupsX + idGs.x;
+    int totalElements = (int)(kernelSizes.x * kernelSizes.y);
+
+    float angle = _OriginalSource[id.xy].g;
+    angle = angle * 2.0 * PI - PI;
+    
+    float isEdge = _OriginalSource[id.xy].r;
+    float2 position = float2(id.x/(float)_TextureWidth, id.y/(float)_TextureHeight);
+    float2 direction = float2(cos(angle), sin(angle));
+    float4 gradient = float4(position.xy, direction.xy);
+    gradients[gFlatIndex] = gradient;
+    localIsEdge[gFlatIndex] = step(0.5, isEdge);
+    
+    GroupMemoryBarrierWithGroupSync();
+    
+    if (idG.x == 0 && idG.y == 0)
+    {
+        float2 averagePosition = float2(0, 0);
+        float2 averageDirection = float2(0, 0);
+        int summed = 0;
+        [loop]
+        for (int i = 0; i < totalElements; i++)
+        {
+            if (localIsEdge[i] > 0)
+            {
+                averagePosition += gradients[i].rg;
+                averageDirection += gradients[i].ba;
+                summed++;
+            }
+        }
+        float isAverageStroke = step(_ThresholdForStroke, summed/(float)(totalElements));
+        if(isAverageStroke)
+        {
+            averagePosition /= (float)summed;
+            averageDirection /= (float)summed;
+            #if defined (USE_PERPENDICULAR_DIRECTION)
+            averageDirection = float4(cross(float3(averageDirection.xy, 0), float3(0, 0, 1)).xy, 0, 0);
+            #endif
+        }
+        gradients[0] = float4(averagePosition.xy, averageDirection.xy * isAverageStroke);
+
+        #if defined (FRAME_SMOOTHING)
+        float4 previousGradient = _GradientVectors[groupFlatIndex];
+        float4 diff = abs(gradients[0] - previousGradient);
+        if(max(diff.x, max(diff.y, max(diff.z, diff.w))) > 0.5)
+            gradients[0] = lerp(gradients[0], previousGradient, _SmoothingThreshold);
+        #endif
+        
+        _GradientVectors[groupFlatIndex] = gradients[0];
+    }
+    GroupMemoryBarrierWithGroupSync();
+
+    //Debugging
+    //float4 grad = gradients[0];
+    //_OriginalSource[id.xy] = float4(abs(grad.ba), 0.0, 1.0);
+    
+    //float x = float(idG.x)/(float)kernelSizes.x;
+    //float y = float(idG.y)/(float)kernelSizes.y;
+    //_OriginalSource[id.xy] = float4(x, y, 0.0, 1.0);
+}
+
+
+[numthreads(32, 32, 1)]
+void ComputeAverageStroke32 (uint3 id : SV_DispatchThreadID, uint3 idG : SV_GroupThreadID, uint3 idGs : SV_GroupID)
+{
+    ComputeAverageStroke(id, idG, idGs, uint2(32, 32));
+}
+
+[numthreads(16, 16, 1)]
+void ComputeAverageStroke16 (uint3 id : SV_DispatchThreadID, uint3 idG : SV_GroupThreadID, uint3 idGs : SV_GroupID)
+{
+    ComputeAverageStroke(id, idG, idGs, uint2(16, 16));
+}
+
+[numthreads(8, 8, 1)]
+void ComputeAverageStroke8 (uint3 id : SV_DispatchThreadID, uint3 idG : SV_GroupThreadID, uint3 idGs : SV_GroupID)
+{
+    ComputeAverageStroke(id, idG, idGs, uint2(8, 8));
+}
+
+[numthreads(4, 4, 1)]
+void ComputeAverageStroke4 (uint3 id : SV_DispatchThreadID, uint3 idG : SV_GroupThreadID, uint3 idGs : SV_GroupID)
+{
+    ComputeAverageStroke(id, idG, idGs, uint2(4, 4));
+}
+
+float SampleStrokeSDF(StrokeData data, float2 pointID, float2 dimensions, float thicknessScalar, float lengthScalar)
+{
+    uint sample = 0;
+
+    #if defined(SIMPLE) || defined(HATCHING)
+    sample = SampleBaseSDFClampParamScalar(data, pointID, dimensions, thicknessScalar, lengthScalar);
+    #elif defined(ZIGZAG)
+    sample = SampleRepeatingSDFClampParamScalar(data, pointID, dimensions, thicknessScalar, lengthScalar);
+    #elif defined(FEATHERING)
+    sample = SampleLoopRepeatingSDFClampParamScalar(data, pointID, dimensions, thicknessScalar, lengthScalar);
+    #endif
+
+    return (float)sample;
+}
+
+
+RWStructuredBuffer<StrokeData> _OutlineStrokeData;
+StructuredBuffer<VariationData> _OutlineStrokeVariationData;
+int _StrokeSampleScale;
+groupshared StrokeData groupData;
+groupshared float isEdge;
+groupshared uint flatIndex;
+void ApplyStrokeSDFs(uint3 id, uint2 idG, uint3 idGs, uint2 kernelSizes)
+{
+    float value = 1;
+    float4 direction = float4(0, 0, 0, 0);
+    float widthScalar = (float)_TextureWidth/(float)kernelSizes.x;
+    float heightScalar = (float)_TextureHeight/(float)kernelSizes.y;
+    float baseScalar = (min(widthScalar, heightScalar)) / ((float)_DownscaleFactor);
+    float lengthSampleScalar = baseScalar / _StrokeSampleScale;
+    StrokeData data = _OutlineStrokeData[0];
+    [loop]
+    for (int x = -_StrokeSampleScale; x < _StrokeSampleScale + 1; x++)
+    {
+        [loop]
+        for (int  y = -_StrokeSampleScale; y < _StrokeSampleScale + 1; y++)
+        {
+            uint xClamp = clamp((uint)(((int)idGs.x + x)), 0, _GroupsX - 1);
+            uint yClamp = clamp((uint)(((int)idGs.y + y)), 0, _GroupsY - 1);
+            //if we did downscale, the division will be by a value higher than one
+            //taking the floor of both x and y collapses the higher grid from the upscale into the downscale-espected group index
+            xClamp = (uint)floor((float)xClamp/(float)_DownscaleFactor);
+            yClamp = (uint)floor((float)yClamp/(float)_DownscaleFactor);
+            uint groupsClamp = (uint)(floor((float)_GroupsX/(float)_DownscaleFactor));
+            uint groupFlatIndex = yClamp * groupsClamp + xClamp;
+    
+            if(idG.x == 0 && idG.y == 0)
+            {
+                float4 edgeData = _GradientVectors[groupFlatIndex];
+                isEdge = step(0.5, length(float2(edgeData.ba)));
+                data.coords = float4(edgeData.rg, 0, 0);
+                data.direction = float4(edgeData.ba, 0, 0);
+                data = GetRandomizedParamsStrokeData(data, _OutlineStrokeVariationData[0], int(groupFlatIndex), float(_TextureWidth));
+                groupData = data;
+                if (x == 0 && y == 0)
+                    flatIndex = groupFlatIndex;
+            }
+            GroupMemoryBarrierWithGroupSync();
+
+            if (isEdge)
+            {
+                float localValue = SampleStrokeSDF(groupData, id.xy, float2(_TextureWidth, _TextureHeight), baseScalar, lengthSampleScalar)/255.0;
+                value *= localValue;
+                direction += groupData.direction;
+                // i.e. if not the very first iteration
+                if (y > -_StrokeSampleScale || x > -_StrokeSampleScale)
+                    direction /= 2.0;
+            }
+        }
+    }
+    value = 1 - value;
+    direction *= value;
+    direction = (direction + 1) * 0.5;
+    // R: Value graphite, GB: Average direction of found strokes. A: Value mask
+    _OriginalSource[id.xy] = float4(value.r, direction.rg * value.r, value.r);
+    //float u = float(idG.x)/(float)kernelSizes.x * (1- value);
+    //float v = float(idG.y)/(float)kernelSizes.y * (1- value);
+    //_OriginalSource[id.xy] = float4(u, v, 0.0, 1.0);
+}
+
+[numthreads(32,32,1)]
+void ApplyStrokes32(uint3 id : SV_DispatchThreadID, uint2 idG: SV_GroupThreadID, uint3 idGs : SV_GroupID)
+{
+    ApplyStrokeSDFs(id, idG, idGs, uint2(32, 32));
+}
+
+[numthreads(16,16,1)]
+void ApplyStrokes16(uint3 id : SV_DispatchThreadID, uint2 idG: SV_GroupThreadID, uint3 idGs : SV_GroupID)
+{
+    ApplyStrokeSDFs(id, idG, idGs, uint2(16, 16));
+}
+
+[numthreads(8,8,1)]
+void ApplyStrokes8(uint3 id : SV_DispatchThreadID, uint2 idG: SV_GroupThreadID, uint3 idGs : SV_GroupID)
+{
+    ApplyStrokeSDFs(id, idG, idGs, uint2(8, 8));
+}
+
+[numthreads(4,4,1)]
+void ApplyStrokes4(uint3 id : SV_DispatchThreadID, uint2 idG: SV_GroupThreadID, uint3 idGs : SV_GroupID)
+{
+    ApplyStrokeSDFs(id, idG, idGs, uint2(4, 4));
+}
