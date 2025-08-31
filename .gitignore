@@ -4,4 +4,4 @@
 # Ignore IDE files
 *.csproj
 *.sln
-*.idea
+*.idea/
