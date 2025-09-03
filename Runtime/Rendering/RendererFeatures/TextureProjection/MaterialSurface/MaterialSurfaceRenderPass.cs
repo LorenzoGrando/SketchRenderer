@@ -125,10 +125,10 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE
                     or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_REVERSED_CONSTANT_SCALE)
                 {
-                    builder.UseGlobalTexture(SketchResources.ScreenUV.GetUVTextureID, AccessFlags.Read);
+                    builder.UseGlobalTexture(SketchGlobalFrameData.ScreenUVTexture.GetUVTextureID, AccessFlags.Read);
                 }
 
-                var sketchData = frameData.GetOrCreate<SketchResourceData>();
+                var sketchData = frameData.GetOrCreate<SketchFrameData>();
                 
                 passData.mat = materialMat;
 
@@ -161,10 +161,10 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     is TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE
                     or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE)
                 {
-                    directionalBuilder.UseGlobalTexture(SketchResources.ScreenUV.GetUVTextureID, AccessFlags.Read);
+                    directionalBuilder.UseGlobalTexture(SketchGlobalFrameData.ScreenUVTexture.GetUVTextureID, AccessFlags.Read);
                 }
 
-                var sketchData = frameData.GetOrCreate<SketchResourceData>();
+                var sketchData = frameData.GetOrCreate<SketchFrameData>();
                 
                 directionalPassData.mat = materialMat;
                 

@@ -13,7 +13,7 @@ namespace SketchRenderer.Runtime.TextureTools.Strokes
         
         [Space(5)]
         [Header("Per Iteration Variability")]
-        public TAMVariationData VariationData;
+        public StrokeVariationData VariationData;
         
         public virtual StrokeSDFType PatternType => StrokeSDFType.SIMPLE;
 

@@ -1,4 +1,5 @@
 using System;
+using SketchRenderer.Runtime.Data;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
@@ -20,12 +21,17 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public AccentedOutlinePassData AccentedOutlinePassData = new AccentedOutlinePassData();
         public AccentedOutlinePassData CurrentAccentOutlinePassData { get { return AccentedOutlinePassData.GetPassDataByVolume(); } }
         
-        [SerializeField] private Shader depthNormalsEdgeDetectionShader;
-        [SerializeField] private Shader colorEdgeDetectionShader;
-        [SerializeField] private Shader edgeDetectionCompositorShader;
+        [SerializeField] [HideInInspector]
+        private Shader depthNormalsEdgeDetectionShader;
+        [SerializeField] [HideInInspector]
+        private Shader colorEdgeDetectionShader;
+        [SerializeField] [HideInInspector]
+        private Shader edgeDetectionCompositorShader;
 
-        [SerializeField] private Shader thicknessDilationDetectionShader;
-        [SerializeField] private Shader accentedOutlinesShader;
+        [SerializeField] [HideInInspector]
+        private Shader thicknessDilationDetectionShader;
+        [SerializeField] [HideInInspector]
+        private Shader accentedOutlinesShader;
         
         private Material edgeDetectionMaterial;
         private Material secondaryEdgeDetectionMaterial;
@@ -67,14 +73,25 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             accentedOutlinesMaterial = new Material(accentedOutlinesShader);
             accentedOutlinePass = new AccentedOutlineRenderPass();
         }
+
+        public void OnValidate()
+        {
+            if (AccentedOutlinePassData.UseAccentedOutlines)
+                AccentedOutlinePassData.ForceRebake = true;
+        }
         
-        public void ConfigureByContext(SketchRendererContext context)
+        public void ConfigureByContext(SketchRendererContext context, SketchResourceAsset resources)
         {
             if (context.UseSmoothOutlineFeature)
             {
                 EdgeDetectionPassData.CopyFrom(context.EdgeDetectionFeatureData);
                 AccentedOutlinePassData.CopyFrom(context.AccentedOutlineFeatureData);
                 ThicknessPassData.CopyFrom(context.ThicknessDilationFeatureData);
+                depthNormalsEdgeDetectionShader = resources.Shaders.DepthNormalsEdgeDetection;
+                colorEdgeDetectionShader = resources.Shaders.ColorEdgeDetection;
+                edgeDetectionCompositorShader = resources.Shaders.EdgeCompositor;
+                accentedOutlinesShader = resources.Shaders.AccentedOutline;
+                thicknessDilationDetectionShader = resources.Shaders.ThicknessDilation;
                 Create();
             }
         }

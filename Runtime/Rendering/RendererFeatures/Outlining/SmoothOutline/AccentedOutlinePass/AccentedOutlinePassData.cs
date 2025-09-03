@@ -34,6 +34,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         }
         
         public bool RequireMultipleTextures => AdditionalLines > 1;
+        [HideInInspector] public bool ForceRebake;
 
         public void CopyFrom(AccentedOutlinePassData passData)
         {

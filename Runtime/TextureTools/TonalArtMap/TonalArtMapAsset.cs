@@ -7,7 +7,7 @@ namespace SketchRenderer.Runtime.TextureTools.TonalArtMap
     public class TonalArtMapAsset : ScriptableObject
     {
         [Range(1, 9)]
-        public int ExpectedTones;
+        public int ExpectedTones = 6;
         public Texture2D[] Tones = new Texture2D[1];
     
         [SerializeField] [HideInInspector] public bool isPrePacked = false;

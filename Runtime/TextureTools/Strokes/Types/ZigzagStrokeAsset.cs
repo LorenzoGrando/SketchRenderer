@@ -12,8 +12,8 @@ namespace SketchRenderer.Runtime.TextureTools.Strokes
 
         [Space(5)] [Header("Zigzag Specific")] 
         [Range(-1, 1f)]
-        public float SubStrokeDirectionOffset;
-        public float SubStrokeLengthMultiplier;
+        public float SubStrokeDirectionOffset = 0.25f;
+        public float SubStrokeLengthMultiplier = 1f;
         public bool OnlyMultiplyZigStroke;
         [Range(1, 5)]
         public int Repetitions = 1;

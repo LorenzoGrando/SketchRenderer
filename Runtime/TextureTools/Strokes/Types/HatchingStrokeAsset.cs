@@ -5,14 +5,14 @@ namespace SketchRenderer.Runtime.TextureTools.Strokes
 {
     [CreateAssetMenu(fileName = "HatchingStrokeAsset",
         menuName = SketchRendererData.PackageAssetItemPath + "StrokeAssets/Hatching")]
-    public class HatchingTAMStrokeAsset : StrokeAsset
+    public class HatchingStrokeAsset : StrokeAsset
     {
         public override StrokeSDFType PatternType => StrokeSDFType.HATCHING;
 
         [Space(5)] [Header("Hatching Specific")] [Range(0, 1)]
-        public float MinCrossHatchingThreshold;
+        public float MinCrossHatchingThreshold = 0.5f;
 
-        [Range(0, 1)] public float MaxCrossHatchingThreshold;
+        [Range(0, 1)] public float MaxCrossHatchingThreshold = 0.75f;
 
         public override StrokeData UpdatedDataByFillRate(float fillRate)
         {

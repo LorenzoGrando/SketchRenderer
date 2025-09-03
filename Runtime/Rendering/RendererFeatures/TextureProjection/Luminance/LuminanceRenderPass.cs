@@ -170,10 +170,10 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     is TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE
                     or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE)
                 {
-                    builder.UseGlobalTexture(SketchResources.ScreenUV.GetUVTextureID, AccessFlags.Read);
+                    builder.UseGlobalTexture(SketchGlobalFrameData.ScreenUVTexture.GetUVTextureID, AccessFlags.Read);
                 }
 
-                var sketchData = frameData.GetOrCreate<SketchResourceData>();
+                var sketchData = frameData.GetOrCreate<SketchFrameData>();
                 sketchData.LuminanceBasisDirection = this.passData.ActiveTonalMap.TAMBasisDirection;
 
                 var dstDesc = renderGraph.GetTextureDesc(resourceData.activeColorTexture);

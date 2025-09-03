@@ -165,7 +165,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             if (resourceData.isActiveTargetBackBuffer)
                 return;
             
-            var sketchData = frameData.Get<SketchResourceData>();
+            var sketchData = frameData.Get<SketchFrameData>();
             if(sketchData == null)
                 return;
             

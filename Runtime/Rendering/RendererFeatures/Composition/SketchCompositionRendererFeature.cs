@@ -1,4 +1,5 @@
 using System;
+using SketchRenderer.Runtime.Data;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -10,7 +11,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         [Header("Parameters")] [Space(5)] [SerializeField]
         public SketchCompositionPassData CompositionPassData = new SketchCompositionPassData();
         
-        [SerializeField]
+        [SerializeField] [HideInInspector]
         private Shader sketchCompositionShader;
         
         [HideInInspector]
@@ -23,9 +24,10 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             sketchRenderPass = new SketchCompositionRenderPass();
         }
         
-        public void ConfigureByContext(SketchRendererContext context)
+        public void ConfigureByContext(SketchRendererContext context, SketchResourceAsset resources)
         {
             CompositionPassData.CopyFrom(context.CompositionFeatureData);
+            sketchCompositionShader = resources.Shaders.SketchComposition;
             Create();
         }
 

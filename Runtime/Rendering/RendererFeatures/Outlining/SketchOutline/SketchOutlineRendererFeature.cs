@@ -1,4 +1,5 @@
 using System;
+using SketchRenderer.Runtime.Data;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
@@ -13,10 +14,14 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public SketchStrokesPassData SketchStrokesPassData;
         private SketchStrokesPassData CurrentSketchStrokesPassData { get { return SketchStrokesPassData.GetPassDataByVolume(); } }
         
-        [SerializeField] private Shader depthNormalsEdgeDetectionShader;
-        [SerializeField] private Shader colorEdgeDetectionShader;
-        [SerializeField] private Shader edgeDetectionCompositorShader;
-        [SerializeField] private ComputeShader sketchStrokesComputeShader;
+        [SerializeField] [HideInInspector]
+        private Shader depthNormalsEdgeDetectionShader;
+        [SerializeField] [HideInInspector]
+        private Shader colorEdgeDetectionShader;
+        [SerializeField] [HideInInspector]
+        private Shader edgeDetectionCompositorShader;
+        [SerializeField] [HideInInspector]
+        private ComputeShader sketchStrokesComputeShader;
         
         private Material edgeDetectionMaterial;
         private Material secondaryEdgeDetectionMaterial;
@@ -52,12 +57,16 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             strokesComputePass = new SketchStrokesComputeRenderPass();
         }
 
-        public void ConfigureByContext(SketchRendererContext context)
+        public void ConfigureByContext(SketchRendererContext context, SketchResourceAsset resources)
         {
             if (context.UseSketchyOutlineFeature)
             {
                 EdgeDetectionPassData.CopyFrom(context.EdgeDetectionFeatureData);
                 SketchStrokesPassData.CopyFrom(context.SketchyOutlineFeatureData);
+                depthNormalsEdgeDetectionShader = resources.Shaders.DepthNormalsEdgeDetection;
+                colorEdgeDetectionShader = resources.Shaders.ColorEdgeDetection;
+                edgeDetectionCompositorShader = resources.Shaders.EdgeCompositor;
+                sketchStrokesComputeShader = resources.ComputeShaders.SketchStrokes;
                 Create();
             }
         }

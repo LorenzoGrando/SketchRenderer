@@ -4,7 +4,7 @@ using UnityEngine.Rendering.RenderGraphModule;
 
 namespace SketchRenderer.Runtime.Rendering
 {
-    public class SketchResourceData : ContextItem
+    public class SketchFrameData : ContextItem
     {
         public bool PrebakedDistortedUVs;
         public bool PrebakedDistortedMultipleUVs;

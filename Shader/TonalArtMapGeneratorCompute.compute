@@ -1,0 +1,148 @@
+#pragma kernel GenerateRandomStrokeBuffer
+#pragma kernel ApplyStrokeIterated
+#pragma kernel FindAverageTextureFillRate
+#pragma kernel BlitFinalSelectedStroke
+#pragma kernel PackStrokeTextures
+
+#pragma multi_compile_local SIMPLE HATCHING ZIGZAG FEATHERING
+#pragma multi_compile_local _ FALLOFF_LINEAR FALLOFF_EASE_INOUT_SINE FALLOFF_EASE_OUT_ELASTIC
+#pragma multi_compile_local _ IS_FIRST_ITERATION
+#pragma multi_compile_local _ IS_LAST_REDUCTION
+#pragma multi_compile_local _ PACK_TEXTURES_2 PACK_TEXTURES_3
+
+#include "Packages/com.lorenzogrando.sketchrenderer/Shader/Strokes/StrokeSDFInclude.hlsl"
+
+RWStructuredBuffer<StrokeData> _StrokeData;
+RWStructuredBuffer<VariationData> _VariationData;
+RWTexture2D<float4> _OriginalSource;
+RWStructuredBuffer<uint> _ReducedSource;
+uint _Iteration;
+uint _Dimension;
+RWStructuredBuffer<uint> _IterationOutputs;
+
+uint SampleSDF(StrokeData data, float2 pointID, float dimension)
+{
+    uint isStroke = 0;
+    
+    #if defined(SIMPLE) || defined(HATCHING)
+    isStroke = SampleBaseSDF(data, pointID, dimension);
+    #elif defined(ZIGZAG)
+    isStroke = SampleRepeatingSDF(data, pointID, dimension);
+    #elif defined(FEATHERING)
+    isStroke = SampleLoopRepeatingSDF(data, pointID, dimension);
+    #endif
+
+    return isStroke;
+}
+
+uint _Seed;
+[numthreads(32, 1, 1)]
+void GenerateRandomStrokeBuffer (uint3 id : SV_DispatchThreadID)
+{
+    StrokeData randData = RandomizeStrokePosition(_StrokeData[0], id.x + _Seed);
+    randData = GetRandomizedParamsStrokeData(randData, _VariationData[0], id.x  + _Seed, float(_Dimension));
+    _StrokeData[id.x] = randData;
+}
+
+[numthreads(8, 8, 1)]
+void ApplyStrokeIterated (uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _Dimension || id.y >= _Dimension)
+        return;
+
+    int i = id.y * _Dimension + id.x;
+    
+    //If in first iteration, fetch the original texture and store it in a reduced memory form. Future iterations can reuse the same value.
+    #if defined(IS_FIRST_ITERATION)
+    //Any future source stroke textures will only ever have a value in r UNLESS they are a final tone value result image, which will have a full RGB.
+    //For consistency, only care about r.
+    uint sourceValue = _OriginalSource[id.xy].r * 255.0;
+    _ReducedSource[i] = sourceValue;
+    #endif
+
+    float stroke = saturate(SampleSDF(_StrokeData[_Iteration], id.xy, _Dimension)/255.0);
+    float base = saturate(_ReducedSource[i]/255.0);
+    float blend = stroke * base;
+    
+    _IterationOutputs[i] = blend * 255.0;
+}
+
+uint _BufferSize;
+uint _SplitBufferSize;
+uint _BufferOffset;
+RWStructuredBuffer<uint> _Tone_GlobalCache;
+RWStructuredBuffer<uint> _ToneResults;
+groupshared uint Tone_GroupCache[64];
+[numthreads(64, 1, 1)]
+void FindAverageTextureFillRate(uint gid : SV_GroupIndex, uint3 g : SV_GroupID)
+{
+    //Heavily based on implementation of parallel reduction found in https://www.nvidia.com/content/pdf/gdc2011/nathan_hoobler.pdf
+    uint index = _SplitBufferSize + (64 * g.x + gid);
+
+    if (index < _BufferSize)
+    {
+        #if defined(IS_FIRST_ITERATION)
+        Tone_GroupCache[gid] = _IterationOutputs[index];
+        #else
+        Tone_GroupCache[gid] = _Tone_GlobalCache[index];
+        #endif        
+    }
+    else
+    {
+        Tone_GroupCache[gid] = 0;
+    }
+    GroupMemoryBarrierWithGroupSync();
+    //bit-wise right shift on s always halves s size in half!
+    [unroll(6)]
+    for (uint s = 64/2; s > 0;  s>>=1)
+    {
+        if(gid < s)
+        {
+            Tone_GroupCache[gid] += Tone_GroupCache[gid + s];
+        }
+        GroupMemoryBarrier();
+    }
+
+    #if defined(IS_LAST_REDUCTION)
+    if (gid < 1)
+        _ToneResults[_Iteration] = Tone_GroupCache[gid];
+    #else
+    if (gid < 1)
+        _Tone_GlobalCache[g.x + _BufferOffset] = Tone_GroupCache[gid];
+    #endif
+}
+
+StructuredBuffer<uint> _BlitResult;
+
+[numthreads(8, 8, 1)]
+void BlitFinalSelectedStroke(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _Dimension || id.y >= _Dimension)
+        return;
+
+    int i = id.y * _Dimension + id.x;
+    float value = (float)_BlitResult[i]/255.0;
+    _OriginalSource[id.xy] = float4(value.rrr, 1);
+}
+
+RWTexture2D<float4> _PackTextR;
+RWTexture2D<float4> _PackTextG;
+RWTexture2D<float4> _PackTextB;
+
+[numthreads(8, 8, 1)]
+void PackStrokeTextures(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _Dimension || id.y >= _Dimension)
+        return;
+
+    float rSource = 1 -_PackTextR[id.xy].r;
+    float gSource = 0;
+    float bSource = 0;
+    #if defined(PACK_TEXTURES_2) || defined(PACK_TEXTURES_3)
+    gSource = 1 - _PackTextG[id.xy].r;
+    #endif
+    #if defined(PACK_TEXTURES_3)
+    bSource = 1 - _PackTextB[id.xy].r;
+    #endif
+    _OriginalSource[id.xy] = float4(rSource, gSource, bSource, 1);
+}
