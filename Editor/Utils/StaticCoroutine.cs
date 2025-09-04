@@ -1,7 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace SketchRenderer.Editor.Utils
 {
@@ -11,6 +13,15 @@ namespace SketchRenderer.Editor.Utils
         static StaticCoroutine()
         {
             EditorApplication.update += Update;
+            EditorApplication.playModeStateChanged += Clear;
+            EditorApplication.quitting += Clear;
+        }
+        
+        private static void ClearBinds()
+        {
+            EditorApplication.update -= Update;
+            EditorApplication.playModeStateChanged -= Clear;
+            EditorApplication.quitting -= Clear;
         }
         
         private class CoroutineHost : MonoBehaviour {}
@@ -24,8 +35,7 @@ namespace SketchRenderer.Editor.Utils
             {
                 if (instance == null)
                 {
-                    instance = new GameObject("Static Coroutine Host").AddComponent<CoroutineHost>();
-                    instance.hideFlags = HideFlags.HideAndDontSave;
+                    instance = EditorUtility.CreateGameObjectWithHideFlags("CoroutineHost", HideFlags.HideAndDontSave, typeof(CoroutineHost)).GetComponent<CoroutineHost>();
                 }
 
                 return instance;
@@ -64,6 +74,32 @@ namespace SketchRenderer.Editor.Utils
             }
             runningRoutines.Clear();
             runningRoutines = persistingRoutines;
+            if(runningRoutines.Count == 0)
+                Clear();
+        }
+
+        private static void Clear(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.ExitingEditMode)
+            {
+                Clear();
+                ClearBinds();
+            }
+        }
+
+        private static void Clear()
+        {
+            if (instance != null)
+            {
+                Object.DestroyImmediate(instance);
+                instance = null;
+            }
+
+            if (runningRoutines != null)
+            {
+                runningRoutines.Clear();
+                runningRoutines = null;
+            }
         }
     }
 }

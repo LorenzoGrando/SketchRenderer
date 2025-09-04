@@ -57,7 +57,7 @@ MonoBehaviour:
     OutlineAngleConstraint: 0.36
     OutlineNormalSensitivity: 0.683
     OutputType: 0
-  UseSmoothOutlineFeature: 0
+  UseSmoothOutlineFeature: 1
   AccentedOutlineFeatureData:
     UseAccentedOutlines: 1
     BakeDistortionDuringRuntime: 1
@@ -72,13 +72,13 @@ MonoBehaviour:
   ThicknessDilationFeatureData:
     ThicknessRange: 0
     ThicknessStrength: 1
-  UseSketchyOutlineFeature: 1
+  UseSketchyOutlineFeature: 0
   SketchyOutlineFeatureData:
     OutlineStrokeData: {fileID: 11400000, guid: 124e01ad43f4eab489253c56fcd37a5a, type: 2}
     SampleArea: 0
-    StrokeSampleScale: 0
+    StrokeSampleScale: 1
     DoDownscale: 0
-    DownscaleFactor: 0
+    DownscaleFactor: 2
     StrokeThreshold: 0
     FrameSmoothingFactor: 0
     UsePerpendicularDirection: 0
@@ -89,4 +89,4 @@ MonoBehaviour:
     MaterialAccumulationStrength: 0.246
     StrokeBlendMode: 0
     BlendStrength: 0.982
-    featuresToCompose: 0200000005000000
+    featuresToCompose: 0100000005000000

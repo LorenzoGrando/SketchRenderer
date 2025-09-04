@@ -26,6 +26,7 @@ namespace SketchRenderer.Editor.TextureTools
             TonalArtMapGeneratorWindow tamWindow = EditorWindow.GetWindow<TonalArtMapGeneratorWindow>();
             tamWindow.minSize = tamWindow.ExpectedMinWindowSize;
             tamWindow.maxSize = tamWindow.ExpectedMaxWindowSize;
+            tamWindow.OnWindowClosed += DestroyTonalArtMapWindow;
             tamWindow.InitializeTool(SketchRendererManager.ResourceAsset);
             tamWindow.Show();
             TonalArtMapGeneratorWindow.window = tamWindow;
@@ -33,8 +34,8 @@ namespace SketchRenderer.Editor.TextureTools
 
         internal static void DestroyTonalArtMapWindow()
         {
+            TonalArtMapGeneratorWindow.window.OnWindowClosed -= DestroyTonalArtMapWindow;
             TonalArtMapGeneratorWindow.window.FinalizeTool();
-            TonalArtMapGeneratorWindow.window.Close();
             TonalArtMapGeneratorWindow.window = (TonalArtMapGeneratorWindow) null;
         }
 
@@ -47,7 +48,7 @@ namespace SketchRenderer.Editor.TextureTools
                     //Do this instead of EditorWindow.GetWindow so we find the window regardless of docked state
                     TonalArtMapGeneratorWindow.window = Resources.FindObjectsOfTypeAll<TonalArtMapGeneratorWindow>()[0];
                 }
-
+                //Clear any existing buffers before they are lost
                 TonalArtMapGeneratorWindow.window.InitializeTool(SketchRendererManager.ResourceAsset);
             }
         }

@@ -9,6 +9,9 @@ namespace SketchRenderer.Runtime.TextureTools.TonalArtMap
         [Range(1, 9)]
         public int ExpectedTones = 6;
         public Texture2D[] Tones = new Texture2D[1];
+
+        public bool ForceFirstToneFullWhite = true;
+        public bool ForceFinalToneFullBlack = false;
     
         [SerializeField] [HideInInspector] public bool isPrePacked = false;
         [SerializeField] [HideInInspector] public Vector4 TAMBasisDirection;

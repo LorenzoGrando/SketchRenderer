@@ -8,11 +8,20 @@ namespace SketchRenderer.Runtime.TextureTools.Strokes
     [CreateAssetMenu(fileName = "SimpleStrokeAsset", menuName = SketchRendererData.PackageAssetItemPath + "StrokeAssets/Simple")]
     public class StrokeAsset : ScriptableObject
     {
-        public StrokeData StrokeData;
+        public StrokeData StrokeData = new StrokeData()
+        {
+            OriginPoint = Vector4.zero,
+            Direction = new Vector4(1, 0, 0, 0),
+            Thickness = 0.25f,
+            ThicknessFalloffConstraint = 0.1f,
+            Length = 0.5f,
+            LengthThicknessFalloff = 0.35f,
+            Pressure = 1f,
+            PressureFalloff = 0.25f,
+            Iterations = 1,
+        };
         public FalloffFunction SelectedFalloffFunction;
         
-        [Space(5)]
-        [Header("Per Iteration Variability")]
         public StrokeVariationData VariationData;
         
         public virtual StrokeSDFType PatternType => StrokeSDFType.SIMPLE;

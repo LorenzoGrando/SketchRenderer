@@ -1,11 +1,13 @@
-using System;
 using SketchRenderer.Runtime.Data;
+using SketchRenderer.Runtime.Extensions;
 using SketchRenderer.Runtime.TextureTools.Strokes;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.Experimental.Rendering;
 using UnityEngine.UIElements;
+using Button = UnityEngine.UIElements.Button;
+using Image = UnityEngine.UIElements.Image;
+using Slider = UnityEngine.UIElements.Slider;
 
 namespace SketchRenderer.Editor.TextureTools
 {
@@ -13,26 +15,33 @@ namespace SketchRenderer.Editor.TextureTools
     internal class TonalArtMapGeneratorWindow : SketchEditorToolWindow<TonalArtMapGeneratorWindow>
     {
         internal VisualElement root;
+        
         internal VisualElement settingsPanel;
         internal VisualElement previewPanel;
-        internal Image previewImage;
         
-        internal RenderTexture previewTexture;
-        internal StrokeAsset strokeAsset;
-
+        // Filed binding elements
+        internal Image previewImage;
         internal ObjectField strokeAssetField;
+        internal UnityEditor.Editor strokeAssetEditor;
         
         internal override void InitializeTool(SketchResourceAsset resources)
         {
             TonalArtMapGenerator.OnTextureUpdated += UpdatePreviewTargetTexture;
+            TextureGenerator.OnRecreateTargetTexture += UpdatePreviewTargetTexture;
+            
             TonalArtMapGenerator.OnTextureUpdated += FinalizeProgressBar;
+            
             TonalArtMapGenerator.Init(resources);
+            ApplyToMatchGeneratorSettings();
         }
 
         internal override void FinalizeTool()
         {
             TonalArtMapGenerator.OnTextureUpdated -= UpdatePreviewTargetTexture;
+            TextureGenerator.OnRecreateTargetTexture -= UpdatePreviewTargetTexture;
+            
             TonalArtMapGenerator.OnTextureUpdated -= FinalizeProgressBar;
+            
             TonalArtMapGenerator.Finish();
         }
 
@@ -40,7 +49,7 @@ namespace SketchRenderer.Editor.TextureTools
         {
             if (!TonalArtMapGenerator.Generating)
             {
-                TonalArtMapGenerator.DisplaySDF();
+                ForceRepaint();
             }
         }
 
@@ -66,7 +75,7 @@ namespace SketchRenderer.Editor.TextureTools
             
             //---- Configure Settings Scroll Panel
             
-            ScrollView settingsPanel = new ScrollView();
+            settingsPanel = new ScrollView();
             settingsPanel.style.flexGrow = 0;
             settingsPanel.style.justifyContent = Justify.FlexStart;
             root.Add(settingsPanel);
@@ -74,13 +83,13 @@ namespace SketchRenderer.Editor.TextureTools
             var settingsLabel = new Label("Tonal Art Map Generator");
             settingsPanel.Add(settingsLabel);
             
-            VisualElement strokeRegion = CreateStrokeAssetRegion();
-            settingsPanel.Add(strokeRegion);
+            var settingsStrokePanel = CreateStrokeAssetRegion();
+            settingsPanel.Add(settingsStrokePanel);
 
-            VisualElement outputRegion = CreateOutputSettingsRegion();
-            settingsPanel.Add(outputRegion);
+            var settingsOutputPanel = CreateOutputSettingsRegion();
+            settingsPanel.Add(settingsOutputPanel);
             
-            VisualElement exportRegion = CreateExportRegion();
+            var exportRegion = CreateExportRegion();
             settingsPanel.Add(exportRegion);
             
             settingsPanel.RegisterCallback<ClickEvent>(AnySettings_Clicked);
@@ -113,9 +122,28 @@ namespace SketchRenderer.Editor.TextureTools
             var strokeDataRegion = new Foldout();
             strokeDataRegion.text = "Stroke Settings";
 
-            strokeAssetField = new ObjectField("Stroke Asset");
-            strokeAssetField.objectType = typeof(StrokeAsset);
+            if (strokeAssetField == null)
+            {
+                strokeAssetField = new ObjectField("Stroke Asset");
+                strokeAssetField.objectType = typeof(StrokeAsset);
+                strokeAssetField.RegisterValueChangedCallback(StrokeAsset_Changed);
+                strokeAssetField.SetValueWithoutNotify(TonalArtMapGenerator.StrokeDataAsset);
+            }
+            else
+            {
+                strokeAssetField.MarkDirtyRepaint();
+            }
             strokeDataRegion.Add(strokeAssetField);
+
+            if (strokeAssetField.value != null)
+            {
+                if (strokeAssetEditor == null)
+                    strokeAssetEditor = UnityEditor.Editor.CreateEditor(strokeAssetField.value);
+                var strokeEditorElement = strokeAssetEditor.CreateInspectorGUI();
+                strokeEditorElement.RegisterCallback<SerializedPropertyChangeEvent>(StrokeData_Changed);
+                strokeDataRegion.Add(strokeEditorElement);
+            }
+
             return strokeDataRegion;
         }
         
@@ -151,22 +179,61 @@ namespace SketchRenderer.Editor.TextureTools
 
         internal void UpdatePreviewTargetTexture()
         {
-            if(previewImage != null)
+            if (previewImage != null)
+            {
                 previewImage.image = TextureGenerator.TargetRT;
+            }
+        }
+
+        internal void ForceRepaint()
+        {
+            TonalArtMapGenerator.DisplaySDF();
+            Repaint();
+        }
+
+        internal void ForceRebuildGUI()
+        {
+            if (strokeAssetEditor != null)
+            {
+                DestroyImmediate(strokeAssetEditor);
+                strokeAssetEditor = null;
+            }
+
+            root.Clear();
+            CreateGUI();
+            ForceRepaint();
         }
         
         #region Action Handlers
 
+        internal void ApplyToMatchGeneratorSettings()
+        {
+            //Container must be initialized for children to exist
+            if (settingsPanel != null)
+            {
+                //--Stroke Panel
+                strokeAssetField.SetValueWithoutNotify(TonalArtMapGenerator.StrokeDataAsset);
+            }
+
+            ForceRepaint();
+        }
+
         internal void AnySettings_Clicked(ClickEvent e)
         {
-            UpdatePreviewToMatchSettings();
+            ForceRepaint();
         }
-
-        internal void UpdatePreviewToMatchSettings()
+        
+        // -- Stroke Panel
+        internal void StrokeAsset_Changed(ChangeEvent<UnityEngine.Object> bind)
         {
-            TonalArtMapGenerator.DisplaySDF();
+            StrokeAsset strokeAsset = (StrokeAsset)bind.newValue;
+            TonalArtMapGenerator.StrokeDataAsset = strokeAsset;
+            ForceRebuildGUI();
         }
 
+        internal void StrokeData_Changed(SerializedPropertyChangeEvent bind) => ForceRepaint();
+        
+        // -- Export Panel
         internal void GenerateTonalArtMap_Clicked()
         {
             TonalArtMapGenerator.GenerateTAMToneTextures();

@@ -60,7 +60,7 @@ namespace SketchRenderer.Editor.TextureTools
                 directories[0] = pathRoot;
             
             if(directories[0] != "Assets")
-                throw new UnityException("Invalid path, must begin at Assets folder");
+                throw new UnityException($"Invalid path, must begin at Assets folder. Given path: {path}");
             
             //create the full path until it exists
             string currentDirectoryPath = directories[0];

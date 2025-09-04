@@ -37,6 +37,7 @@ namespace SketchRenderer.Editor.TextureTools
         internal static int IterationsPerStroke = 1;
         [Range(0, 1)] 
         internal static float TargetFillRate = 1f;
+        internal static TextureResolution TargetResolution = TextureResolution.SIZE_512;
         internal static StrokeAsset StrokeDataAsset;
         private static bool hasNonDefaultStrokeAsset = false;
         internal static TonalArtMapAsset TonalArtMapAsset;
@@ -118,7 +119,7 @@ namespace SketchRenderer.Editor.TextureTools
 
         internal static void Init(SketchResourceAsset resources)
         {
-            if(TAMGeneratorShader == null)
+            if (TAMGeneratorShader == null)
                 TAMGeneratorShader = resources.ComputeShaders.TonalArtMapGenerator;
 
             if (TonalArtMapAsset == null)
@@ -126,8 +127,10 @@ namespace SketchRenderer.Editor.TextureTools
                 TonalArtMapAsset = resources.Scriptables.TonalArtMap;
                 hasNonDefaultTonalArtMapAsset = false;
             }
-            else
+            else if (TonalArtMapAsset != resources.Scriptables.TonalArtMap)
                 hasNonDefaultTonalArtMapAsset = true;
+            else
+                hasNonDefaultTonalArtMapAsset = false;
 
             if (StrokeDataAsset == null)
             {
@@ -135,7 +138,15 @@ namespace SketchRenderer.Editor.TextureTools
                 hasNonDefaultStrokeAsset = false;
             }
             else
-                hasNonDefaultStrokeAsset = true;
+            {
+                if (StrokeDataAsset != resources.Scriptables.Strokes.DefaultSimpleStroke &&
+                    StrokeDataAsset != resources.Scriptables.Strokes.DefaultHatchingStroke &&
+                    StrokeDataAsset != resources.Scriptables.Strokes.DefaultZigzagStroke &&
+                    StrokeDataAsset != resources.Scriptables.Strokes.DefaultFeatheringStroke)
+                    hasNonDefaultStrokeAsset = true;
+                else
+                    hasNonDefaultStrokeAsset = false;
+            }
 
             ConfigureGeneratorData();
             DisplaySDF();
@@ -151,8 +162,13 @@ namespace SketchRenderer.Editor.TextureTools
         {
             if(!IsGeneratorValid())
                 return;
-            
-            TextureGenerator.PrepareGeneratorForRender();
+
+            if (TextureGenerator.Resolution != TargetResolution)
+            {
+                TextureGenerator.Resolution = TargetResolution;
+                TextureGenerator.PrepareGeneratorForRender();
+            }
+
             TextureGenerator.OverwriteGeneratorOutputSettings(DefaultFileOutputName, DefaultFileOutputPath);
             
             ConfigureBuffers();
@@ -366,20 +382,27 @@ namespace SketchRenderer.Editor.TextureTools
 
         internal static void DisplaySDF()
         {
-            if(!IsGeneratorValid())
+            if (!IsGeneratorValid())
+            {
+                TextureGenerator.PrepareGeneratorForRender();
                 return;
-            
-            if(Generating)
+            }
+
+            if (Generating)
+            {
                 return;
+            }
             
-            TextureGenerator.PrepareGeneratorForRender();
             int prevIterations = IterationsPerStroke;
             IterationsPerStroke = 1;
+            TextureGenerator.PrepareGeneratorForRender();
             ConfigureGeneratorData();
             strokeDataBuffer.SetData(new [] {StrokeDataAsset.PreviewDisplay()});
             ExecuteIteratedStrokeKernel();
             IterationsPerStroke = prevIterations;
             
+            
+            ReleaseBuffers();
             OnTextureUpdated?.Invoke();
         }
         private static float ExecuteIteratedStrokeKernel()
@@ -511,6 +534,7 @@ namespace SketchRenderer.Editor.TextureTools
                 return;
             
             //Force Clear
+            TextureGenerator.PrepareGeneratorForRender();
             ConfigureGeneratorData();
             ClearAndReleaseTAMTones();
             currentRoutine = StaticCoroutine.StartCoroutine(GenerateTAMTonesRoutine());
@@ -557,8 +581,6 @@ namespace SketchRenderer.Editor.TextureTools
                     strokesApplied++;
                 }
             }
-
-            currentRoutine = null;
         }
 
         private static IEnumerator GenerateTAMTonesRoutine()
@@ -567,11 +589,15 @@ namespace SketchRenderer.Editor.TextureTools
             float expectedFillRateThreshold = TonalArtMapAsset.GetHomogenousFillRateThreshold();
             for (int i = 0; i < TonalArtMapAsset.ExpectedTones; i++)
             {
-                yield return ApplyStrokesUntilFillRateRoutine(currentFillRate);
+                float target = currentFillRate + expectedFillRateThreshold;
+                if(i == 0)
+                    target = TonalArtMapAsset.ForceFirstToneFullWhite ? 0f : target;
+                else if (i == TonalArtMapAsset.ExpectedTones - 1)
+                    target = TonalArtMapAsset.ForceFinalToneFullBlack ? 1f : Mathf.Lerp(currentFillRate, 1f, 0.5f);
+                yield return StaticCoroutine.StartCoroutine(ApplyStrokesUntilFillRateRoutine(target, currentFillRate));
                 Texture2D output = DispatchSaveTexture(true, $"Tone_{i}");
                 if (output == null)
                 {
-                    Debug.LogException(new Exception("Failed to generate TAM texture"));
                     yield break;
                 }
                 TonalArtMapAsset.Tones[i] = output;
@@ -583,6 +609,7 @@ namespace SketchRenderer.Editor.TextureTools
                 PackAllTAMTextures();
 
             TonalArtMapAsset.TAMBasisDirection = StrokeDataAsset.StrokeData.Direction;
+            ReleaseBuffers();
             
             EditorUtility.SetDirty(TonalArtMapAsset);
             AssetDatabase.SaveAssets();
@@ -627,7 +654,17 @@ namespace SketchRenderer.Editor.TextureTools
         private static Texture2D DispatchSaveTexture(bool overwriteExisting, string fileNameOverwrite)
         {
             TextureGenerator.OverwriteGeneratorOutputSettings(fileNameOverwrite, DefaultFileOutputPath);
-            return TextureGenerator.SaveCurrentTargetTexture(overwriteExisting, fileNameOverwrite);
+            try
+            {
+                return TextureGenerator.SaveCurrentTargetTexture(overwriteExisting, fileNameOverwrite);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                if(Generating)
+                    Generating = false;
+                return null;
+            }
         }
         
         #endregion

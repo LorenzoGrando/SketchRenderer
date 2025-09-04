@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using SketchRenderer.Runtime.Data;
 using UnityEditor;
@@ -8,6 +9,7 @@ namespace SketchRenderer.Editor.TextureTools
 {
     internal static class TextureGenerator
     {
+        internal static event Action OnRecreateTargetTexture;
         private static RenderTexture targetRT;
 
         internal static RenderTexture TargetRT
@@ -105,6 +107,7 @@ namespace SketchRenderer.Editor.TextureTools
 
             targetRT = CreateRT(Dimension);
             targetRT.hideFlags = HideFlags.HideAndDontSave;
+            OnRecreateTargetTexture?.Invoke();
         }
         
         internal static RenderTexture CreateRT(int dimension)
