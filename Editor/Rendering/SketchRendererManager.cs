@@ -8,10 +8,10 @@ using UnityEngine;
 
 namespace SketchRenderer.Editor.Rendering
 {
-    public static class SketchRendererManager
+    internal static class SketchRendererManager
     {
         private static SketchRendererContext currentRendererContext;
-        public static SketchRendererContext CurrentRendererContext
+        internal static SketchRendererContext CurrentRendererContext
         {
             get
             {
@@ -27,7 +27,7 @@ namespace SketchRenderer.Editor.Rendering
         
         private static SketchResourceAsset resourceAsset;
 
-        public static SketchResourceAsset ResourceAsset
+        internal static SketchResourceAsset ResourceAsset
         {
             get
             {
@@ -42,13 +42,8 @@ namespace SketchRenderer.Editor.Rendering
         }
         private static readonly SketchRendererFeatureType[] featureTypesInPackage = Enum.GetValues(typeof(SketchRendererFeatureType)) as SketchRendererFeatureType[];
         private static readonly int totalFeatureTypes = featureTypesInPackage.Length;
-            
-        public static bool IsSketchRendererPresent()
-        {
-            return SketchRendererFeatureWrapper.CheckHasActiveFeature(SketchRendererFeatureType.COMPOSITOR);
-        }
 
-        public static void UpdateRendererToCurrentContext()
+        internal static void UpdateRendererToCurrentContext()
         {
             if (CurrentRendererContext == null)
                 throw new NullReferenceException("[SketchRenderer] Current renderer context is not set.");
@@ -56,7 +51,7 @@ namespace SketchRenderer.Editor.Rendering
             UpdateRendererByContext(CurrentRendererContext);
         }
 
-        private static void UpdateRendererByContext(SketchRendererContext rendererContext)
+        internal static void UpdateRendererByContext(SketchRendererContext rendererContext)
         {
             if (rendererContext == null)
                 throw new NullReferenceException("[SketchRenderer] Renderer context used to configure is not set.");
@@ -74,6 +69,24 @@ namespace SketchRenderer.Editor.Rendering
                 else
                     SketchRendererFeatureWrapper.RemoveRendererFeature(features[i].Feature);
             }
+        }
+
+        internal static void UpdateFeatureByCurrentContext(SketchRendererFeatureType featureType)
+        {
+            UpdateFeatureByContext(featureType, CurrentRendererContext);
+        }
+        
+        internal static void UpdateFeatureByContext(SketchRendererFeatureType featureType, SketchRendererContext rendererContext)
+        {
+            if (rendererContext == null)
+                throw new NullReferenceException("[SketchRenderer] Renderer context used to configure is not set.");
+
+            if (SketchRendererFeatureWrapper.CheckHasActiveFeature(featureType))
+            {
+                SketchRendererFeatureWrapper.ConfigureRendererFeature(featureType, rendererContext, ResourceAsset);
+            }
+            else
+                Debug.LogWarning($"[SketchRenderer] Current renderer asset does not have {featureType} as an active feature.");
         }
     }
 }

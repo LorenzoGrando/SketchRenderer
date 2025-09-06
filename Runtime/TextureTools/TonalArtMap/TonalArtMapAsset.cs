@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using SketchRenderer.Runtime.Data;
 
@@ -7,8 +8,13 @@ namespace SketchRenderer.Runtime.TextureTools.TonalArtMap
     public class TonalArtMapAsset : ScriptableObject
     {
         [Range(1, 9)] 
-        public int ExpectedTones = 6;   
-        public int TotalTones { get; private set; }
+        public int ExpectedTones = 6;
+        [SerializeField] [HideInInspector]
+        private int numberOfTones;
+        public int TotalTones
+        {
+            get => numberOfTones; private set => numberOfTones = value; 
+        }
         public Texture2D[] Tones = new Texture2D[1];
 
         public bool ForceFirstToneFullWhite = true;

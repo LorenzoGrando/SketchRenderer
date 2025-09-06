@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using SketchRenderer.Editor.Utils;
 using UnityEngine;
 using UnityEditor;
 using Object = UnityEngine.Object;
@@ -39,49 +40,6 @@ namespace SketchRenderer.Editor.TextureTools
         {
             return fileNamePath + IMAGE_FORMAT_IDENTIFIER;
         }
-        
-        private static bool TryValidateOrCreateAssetPath(string path)
-        {
-            if(string.IsNullOrEmpty(path))
-                throw new ArgumentNullException(nameof(path));
-            
-            if (AssetDatabase.IsValidFolder(path))
-                return true;
-
-            string pathRoot = string.Empty;
-            if (Path.IsPathRooted(path))
-                pathRoot = Path.GetPathRoot(path);
-            string[] directories = path.Split(new[] { Path.PathSeparator, Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar },
-                StringSplitOptions.RemoveEmptyEntries);
-            if(directories.Length == 0 || string.IsNullOrEmpty(directories[0]))
-                throw new ArgumentNullException(nameof(path));
-            
-            if(pathRoot != string.Empty)
-                directories[0] = pathRoot;
-            
-            if(directories[0] != "Assets")
-                throw new UnityException($"Invalid path, must begin at Assets folder. Given path: {path}");
-            
-            //create the full path until it exists
-            string currentDirectoryPath = directories[0];
-            for (int i = 1; i < directories.Length; i++)
-            {
-                string nextDirectoryPath = Path.Combine(currentDirectoryPath, directories[i]);
-                
-                if (!AssetDatabase.IsValidFolder(nextDirectoryPath))
-                {
-                    AssetDatabase.CreateFolder(currentDirectoryPath, directories[i]);
-                    AssetDatabase.Refresh();
-                }
-   
-                currentDirectoryPath = nextDirectoryPath;
-            }
-            
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-            //final validation
-            return AssetDatabase.IsValidFolder(currentDirectoryPath);
-        }
 
         public static Texture2D OutputToAssetTexture(RenderTexture tex, string folderPath, string fileName, bool overwrite)
         {
@@ -95,7 +53,7 @@ namespace SketchRenderer.Editor.TextureTools
             outputTexture.Apply(false, false);
             outputTexture.hideFlags = HideFlags.HideAndDontSave;
             
-            if (!TryValidateOrCreateAssetPath(folderPath))
+            if (!SketchAssetCreationWrapper.TryValidateOrCreateAssetPath(folderPath))
                 throw new UnityException("Failed to create texture at specified folder");
             
             string targetPath = Path.Combine(folderPath, fileName);
@@ -135,7 +93,7 @@ namespace SketchRenderer.Editor.TextureTools
                 throw new ArgumentNullException(nameof(tex));
             
 
-            if (!TryValidateOrCreateAssetPath(folderPath))
+            if (!SketchAssetCreationWrapper.TryValidateOrCreateAssetPath(folderPath))
                 throw new UnityException("Failed to create texture at specified folder");
             
             RenderTexture.active = tex;

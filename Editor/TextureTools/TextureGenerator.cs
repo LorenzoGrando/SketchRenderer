@@ -36,7 +36,7 @@ namespace SketchRenderer.Editor.TextureTools
         {
             get
             {
-                return Path.Combine("Assets", SketchRendererData.PackageDisplayName);
+                return SketchRendererData.DefaultPackageAssetDirectoryPath;
             }
         }
         

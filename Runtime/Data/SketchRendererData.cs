@@ -14,6 +14,8 @@ namespace SketchRenderer.Runtime.Data
         
         //Default data holders
         public static readonly string DefaultSketchRendererContextPackagePath = PackagePath + "/Runtime/Data/DefaultScriptables/SketchRendererContext.asset"; 
-        public static readonly string DefaultSketchResourceAssetPackagePath = PackagePath + "/Runtime/Data/DefaultScriptables/SketchResourceAsset.asset"; 
+        public static readonly string DefaultSketchResourceAssetPackagePath = PackagePath + "/Runtime/Data/DefaultScriptables/SketchResourceAsset.asset";
+
+        public static readonly string DefaultPackageAssetDirectoryPath = "Assets/" + PackageDisplayName;
     }
 }

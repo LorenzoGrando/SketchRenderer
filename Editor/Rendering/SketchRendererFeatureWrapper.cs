@@ -10,7 +10,7 @@ using UnityEngine.Rendering.Universal;
 
 namespace SketchRenderer.Editor.Rendering
 {
-    public class SketchRendererFeatureWrapper
+    internal class SketchRendererFeatureWrapper
     {
         //Many behaviours here are directly inspired from the following thread on handling the URP Renderer:
         //https://discussions.unity.com/t/urp-adding-a-renderfeature-from-script/842637/4
@@ -63,7 +63,7 @@ namespace SketchRenderer.Editor.Rendering
             return null;
         }
         
-        public static bool CheckHasActiveFeature(SketchRendererFeatureType featureType)
+        internal static bool CheckHasActiveFeature(SketchRendererFeatureType featureType)
         {
             ScriptableRendererFeature feature = GetRendererFeature(rendererFeatureTypes[featureType]);
             return feature != null;
@@ -93,7 +93,7 @@ namespace SketchRenderer.Editor.Rendering
                 throw new Exception("[SketchRendererDataWrapper] Renderer feature does not implement ISketchRendererFeature interface.");
         }
         
-        public static void AddRendererFeature(SketchRendererFeatureType featureType)
+        internal static void AddRendererFeature(SketchRendererFeatureType featureType)
         {
             if(CheckHasActiveFeature(featureType))
                 return;
@@ -176,7 +176,7 @@ namespace SketchRenderer.Editor.Rendering
             return 0;
         }
         
-        public static void ConfigureRendererFeature(SketchRendererFeatureType featureType, SketchRendererContext rendererContext, SketchResourceAsset resourceAsset)
+        internal static void ConfigureRendererFeature(SketchRendererFeatureType featureType, SketchRendererContext rendererContext, SketchResourceAsset resourceAsset)
         {
             if(!CheckHasActiveFeature(featureType))
                 AddRendererFeature(featureType);
@@ -185,7 +185,9 @@ namespace SketchRenderer.Editor.Rendering
             UniversalRendererData rendererData = GetCurrentRendererData();
             if (EditorUtility.IsPersistent(rendererData))
             {
+                EditorUtility.SetDirty(rendererData);
                 AssetDatabase.SaveAssetIfDirty(rendererData);
+                AssetDatabase.Refresh();
             }
         }
 
@@ -201,7 +203,7 @@ namespace SketchRenderer.Editor.Rendering
             }
         }
         
-        public static void RemoveRendererFeature(SketchRendererFeatureType featureType)
+        internal static void RemoveRendererFeature(SketchRendererFeatureType featureType)
         {
             if(!CheckHasActiveFeature(featureType))
                 return;

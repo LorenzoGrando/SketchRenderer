@@ -22,6 +22,9 @@ namespace SketchRenderer.Editor.TextureTools
         {
             get
             {
+                if(!string.IsNullOrEmpty(OverrideOutputPath))
+                    return OverrideOutputPath;
+                
                 if (TonalArtMapAsset != null && hasNonDefaultTonalArtMapAsset)
                 {
                     return Path.Combine(TextureAssetManager.GetAssetPath(TonalArtMapAsset).Split('.')[0],
@@ -74,7 +77,9 @@ namespace SketchRenderer.Editor.TextureTools
             }
         }
         private static bool hasNonDefaultTonalArtMapAsset = false;
-        
+
+
+        internal static string OverrideOutputPath;
         internal static bool PackTAMTextures = true;
         
         //Compute Data
@@ -224,7 +229,6 @@ namespace SketchRenderer.Editor.TextureTools
                 else
                     TAMGeneratorShader.DisableKeyword(falloffLocalKeywords[i]);
             }
-            
             
             string[] sdfTypes = Enum.GetNames(typeof(StrokeSDFType));
             strokeTypeLocalKeywords = new LocalKeyword[sdfTypes.Length];

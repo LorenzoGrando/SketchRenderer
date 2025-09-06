@@ -39,14 +39,14 @@ MonoBehaviour:
     NormalTexture: {fileID: 0}
     Scale: {x: 1, y: 1}
     BaseColorBlendFactor: 0
-  UseLuminanceFeature: 0
+  UseLuminanceFeature: 1
   LuminanceFeatureData:
-    ActiveTonalMap: {fileID: 0}
-    ProjectionMethod: 0
-    ConstantScaleFalloffFactor: 2
+    ActiveTonalMap: {fileID: 11400000, guid: 098b8c90317d7d049bc747bc5de9c731, type: 2}
+    ProjectionMethod: 2
+    ConstantScaleFalloffFactor: 2.43
     SmoothTransitions: 0
-    ToneScales: {x: 1, y: 1}
-    LuminanceScalar: 0
+    ToneScales: {x: 8, y: 8}
+    LuminanceScalar: 0.05
   EdgeDetectionFeatureData:
     Method: 1
     Source: 3
@@ -89,4 +89,4 @@ MonoBehaviour:
     MaterialAccumulationStrength: 0.246
     StrokeBlendMode: 0
     BlendStrength: 0.982
-    featuresToCompose: 0100000005000000
+    featuresToCompose: 00000000010000000300000005000000

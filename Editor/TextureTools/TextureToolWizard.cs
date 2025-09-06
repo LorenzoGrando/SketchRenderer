@@ -9,9 +9,18 @@ namespace SketchRenderer.Editor.TextureTools
     [InitializeOnLoad]
     internal static class TextureToolWizard
     {
+        internal static bool hasDelayedTonalWindowCall;
         static TextureToolWizard()
         {
-            ValidateTonalArtMapWindow();
+            //Delayed init on project open so layout has time to load.
+            if (!SessionState.GetBool("SketchRendererTonalArtMapWindowInitialized", false))
+            {
+                EditorApplication.delayCall += ValidateTonalArtMapWindow;
+                hasDelayedTonalWindowCall = true;
+                SessionState.SetBool("SketchRendererTonalArtMapWindowInitialized", true);
+            }
+            else
+                ValidateTonalArtMapWindow();
         }
         
         [MenuItem(SketchRendererData.PackageMenuItemPath + SketchRendererData.PackageMenuTextureToolSubPath + "Tonal Art Map Generator", false)]
@@ -50,6 +59,12 @@ namespace SketchRenderer.Editor.TextureTools
                 }
                 //Clear any existing buffers before they are lost
                 TonalArtMapGeneratorWindow.window.InitializeTool(SketchRendererManager.ResourceAsset);
+            }
+
+            if (hasDelayedTonalWindowCall)
+            {
+                EditorApplication.delayCall -= ValidateTonalArtMapWindow;
+                hasDelayedTonalWindowCall = false;
             }
         }
     }

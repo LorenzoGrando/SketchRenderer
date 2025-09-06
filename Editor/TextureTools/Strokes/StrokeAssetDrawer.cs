@@ -7,9 +7,8 @@ using UnityEngine.UIElements;
 namespace SketchRenderer.Editor.TextureTools.Strokes
 {
     [CustomEditor(typeof(StrokeAsset))]
-    public class StrokeAssetEditor : UnityEditor.Editor
+    public class StrokeAssetDrawer : UnityEditor.Editor
     {
-        
         public override VisualElement CreateInspectorGUI()
         {
             serializedObject.Update();

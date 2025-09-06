@@ -9,8 +9,6 @@ namespace SketchRenderer.Runtime.TextureTools.Strokes
     public class ZigzagStrokeAsset : StrokeAsset
     {
         public override StrokeSDFType PatternType => StrokeSDFType.ZIGZAG;
-
-        [Space(5)] [Header("Zigzag Specific")] 
         [Range(-1, 1f)]
         public float SubStrokeDirectionOffset = 0.25f;
         public float SubStrokeLengthMultiplier = 1f;
