@@ -60,7 +60,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
         public void ConfigureMaterial()
         {
-            luminanceMat.SetInt(numTonesShaderID, passData.ActiveTonalMap.ExpectedTones);
+            luminanceMat.SetInt(numTonesShaderID, passData.ActiveTonalMap.TotalTones);
             luminanceMat.SetFloat(luminanceOffsetShaderID, passData.LuminanceOffset);
             luminanceMat.SetVector(tamScalesShaderID, new Vector4(passData.ToneScales.x, passData.ToneScales.y, 0, 0));
 

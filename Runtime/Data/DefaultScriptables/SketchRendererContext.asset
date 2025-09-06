@@ -62,7 +62,7 @@ MonoBehaviour:
     UseAccentedOutlines: 1
     BakeDistortionDuringRuntime: 1
     Rate: 20
-    Strength: 0.13
+    Strength: 0.368
     AdditionalLines: 3
     AdditionalLineTintPersistence: 0.968
     AdditionalLineDistortionJitter: 0.102

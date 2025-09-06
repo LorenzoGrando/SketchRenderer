@@ -34,14 +34,47 @@ namespace SketchRenderer.Editor.TextureTools
         
         internal static ComputeShader TAMGeneratorShader;
         [Range(1, 100)]
-        internal static int IterationsPerStroke = 1;
+        internal static int IterationsPerStroke = 15;
         [Range(0, 1)] 
         internal static float TargetFillRate = 1f;
         internal static TextureResolution TargetResolution = TextureResolution.SIZE_512;
-        internal static StrokeAsset StrokeDataAsset;
+
+        internal static StrokeAsset strokeDataAsset;
+        internal static StrokeAsset[] defaultStrokeDataAssets;
+        internal static StrokeAsset StrokeDataAsset
+        {
+            get => strokeDataAsset;
+            set
+            {
+                strokeDataAsset = value;
+                bool hasNonDefault = strokeDataAsset != null;
+                if (hasNonDefault)
+                {
+                    for (int i = 0; i < defaultStrokeDataAssets.Length; i++)
+                    {
+                        if (strokeDataAsset == defaultStrokeDataAssets[i])
+                            return;
+                    }
+
+                    hasNonDefaultStrokeAsset = false;
+                }
+            }
+        }
         private static bool hasNonDefaultStrokeAsset = false;
-        internal static TonalArtMapAsset TonalArtMapAsset;
+    
+        private static TonalArtMapAsset tonalArtMapAsset;
+        private static TonalArtMapAsset defaultTonalArtMapAsset;
+        internal static TonalArtMapAsset TonalArtMapAsset
+        {
+            get => tonalArtMapAsset;
+            set
+            {
+                tonalArtMapAsset = value;
+                hasNonDefaultTonalArtMapAsset = tonalArtMapAsset != null && tonalArtMapAsset != defaultTonalArtMapAsset;
+            }
+        }
         private static bool hasNonDefaultTonalArtMapAsset = false;
+        
         internal static bool PackTAMTextures = true;
         
         //Compute Data
@@ -122,30 +155,20 @@ namespace SketchRenderer.Editor.TextureTools
             if (TAMGeneratorShader == null)
                 TAMGeneratorShader = resources.ComputeShaders.TonalArtMapGenerator;
 
+            defaultTonalArtMapAsset = resources.Scriptables.TonalArtMap;
             if (TonalArtMapAsset == null)
             {
                 TonalArtMapAsset = resources.Scriptables.TonalArtMap;
-                hasNonDefaultTonalArtMapAsset = false;
             }
-            else if (TonalArtMapAsset != resources.Scriptables.TonalArtMap)
-                hasNonDefaultTonalArtMapAsset = true;
-            else
-                hasNonDefaultTonalArtMapAsset = false;
 
+            defaultStrokeDataAssets = new StrokeAsset[]
+            {
+                resources.Scriptables.Strokes.DefaultSimpleStroke, resources.Scriptables.Strokes.DefaultHatchingStroke,
+                resources.Scriptables.Strokes.DefaultZigzagStroke, resources.Scriptables.Strokes.DefaultFeatheringStroke
+            };
             if (StrokeDataAsset == null)
             {
                 StrokeDataAsset = resources.Scriptables.Strokes.DefaultSimpleStroke;
-                hasNonDefaultStrokeAsset = false;
-            }
-            else
-            {
-                if (StrokeDataAsset != resources.Scriptables.Strokes.DefaultSimpleStroke &&
-                    StrokeDataAsset != resources.Scriptables.Strokes.DefaultHatchingStroke &&
-                    StrokeDataAsset != resources.Scriptables.Strokes.DefaultZigzagStroke &&
-                    StrokeDataAsset != resources.Scriptables.Strokes.DefaultFeatheringStroke)
-                    hasNonDefaultStrokeAsset = true;
-                else
-                    hasNonDefaultStrokeAsset = false;
             }
 
             ConfigureGeneratorData();
@@ -629,7 +652,7 @@ namespace SketchRenderer.Editor.TextureTools
             PrepareComputeData();
             
             List<Texture2D> packedTAMs = new List<Texture2D>();
-            for (int i = 0; i < TonalArtMapAsset.Tones.Length; i += 3)
+            for (int i = 0; i < TonalArtMapAsset.ExpectedTones; i += 3)
             {
                 bool isReduced = i + 1 >= TonalArtMapAsset.Tones.Length;
                 bool isFullReduced = i + 2 >= TonalArtMapAsset.Tones.Length;

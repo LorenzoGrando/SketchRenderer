@@ -6,8 +6,9 @@ namespace SketchRenderer.Runtime.TextureTools.TonalArtMap
     [CreateAssetMenu(fileName = "TonalArtMapAsset", menuName = SketchRendererData.PackageAssetItemPath + "TonalArtMapAsset")]
     public class TonalArtMapAsset : ScriptableObject
     {
-        [Range(1, 9)]
-        public int ExpectedTones = 6;
+        [Range(1, 9)] 
+        public int ExpectedTones = 6;   
+        public int TotalTones { get; private set; }
         public Texture2D[] Tones = new Texture2D[1];
 
         public bool ForceFirstToneFullWhite = true;
@@ -38,6 +39,7 @@ namespace SketchRenderer.Runtime.TextureTools.TonalArtMap
         public void SetPackedTams(Texture2D[] packedTams)
         {
             Tones = packedTams;
+            TotalTones = packedTams.Length;
             isPrePacked = true;
         }
     }

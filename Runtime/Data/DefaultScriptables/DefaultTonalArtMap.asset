@@ -13,8 +13,11 @@ MonoBehaviour:
   m_Name: DefaultTonalArtMap
   m_EditorClassIdentifier: 
   ExpectedTones: 9
-  Tones: []
+  Tones:
+  - {fileID: 2800000, guid: c1392ddd949a05642a0db88ceafc20ad, type: 3}
+  - {fileID: 2800000, guid: 6fceb836973a61946b4ca0f4c0ed2719, type: 3}
+  - {fileID: 2800000, guid: 23d3429df8d79654a87be884d16d7a20, type: 3}
   ForceFirstToneFullWhite: 1
-  ForceFinalToneFullBlack: 0
+  ForceFinalToneFullBlack: 1
   isPrePacked: 1
-  TAMBasisDirection: {x: 0.6891138, y: 0.7246531, z: 0, w: 0}
+  TAMBasisDirection: {x: 0.95671207, y: 0.2910362, z: 0, w: 0}
