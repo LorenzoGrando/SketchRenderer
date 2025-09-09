@@ -11,9 +11,9 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public bool UseAccentedOutlines;
         [Header("Distortion Settings")] 
         public bool BakeDistortionDuringRuntime;
-        public float Rate;
+        public float Rate = 20f;
         [Range(0f, 1f)]
-        public float Strength;
+        public float Strength = 0.3f;
 
         [Header("Additional Lines")] 
         [Range(0, 3)]
@@ -34,6 +34,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         }
         
         public bool RequireMultipleTextures => AdditionalLines > 1;
+        [HideInInspector] public bool ForceRebake;
 
         public void CopyFrom(AccentedOutlinePassData passData)
         {

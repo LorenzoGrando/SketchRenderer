@@ -1,3 +1,4 @@
+using SketchRenderer.Runtime.Data;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -9,9 +10,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         [Header("Parameters")] [Space(5)] [SerializeField]
         public MaterialSurfacePassData MaterialData = new MaterialSurfacePassData();
         
-        [HideInInspector]
         private Material materialMat;
-        [SerializeField]
+        [SerializeField] [HideInInspector]
         private Shader materialSurfaceShader;
         
         private MaterialSurfaceRenderPass materialRenderPass;
@@ -25,11 +25,12 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             materialRenderPass = new MaterialSurfaceRenderPass();
         }
         
-        public void ConfigureByContext(SketchRendererContext context)
+        public void ConfigureByContext(SketchRendererContext context, SketchResourceAsset resources)
         {
             if (context.UseMaterialFeature)
             {
                 MaterialData.CopyFrom(context.MaterialFeatureData);
+                materialSurfaceShader = resources.Shaders.MaterialSurface;
                 Create();
             }
         }

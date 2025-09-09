@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48ace82b37f849e19cf0bd0ac73ef3d8, type: 3}
+  m_Name: DefaultTonalArtMap
+  m_EditorClassIdentifier: 
+  ExpectedTones: 9
+  numberOfTones: 3
+  Tones:
+  - {fileID: 2800000, guid: c1392ddd949a05642a0db88ceafc20ad, type: 3}
+  - {fileID: 2800000, guid: 6fceb836973a61946b4ca0f4c0ed2719, type: 3}
+  - {fileID: 2800000, guid: 23d3429df8d79654a87be884d16d7a20, type: 3}
+  ForceFirstToneFullWhite: 1
+  ForceFinalToneFullBlack: 0
+  isPrePacked: 1
+  TAMBasisDirection: {x: 0.8199521, y: 0.57243216, z: 0, w: 0}

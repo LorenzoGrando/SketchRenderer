@@ -2,7 +2,10 @@
   "name": "LorenzoGrando.SketchRenderer.Editor",
   "references": [
     "Unity.RenderPipelines.Universal.Runtime",
-    "Unity.RenderPipelines.Universal.Editor"
+    "Unity.RenderPipelines.Universal.Editor",
+    "Unity.RenderPipelines.Core.Runtime",
+    "LorenzoGrando.SketchRenderer.Runtime",
+    "LorenzoGrando.SketchRenderer.ShaderLibrary"
   ],
   "includePlatforms": [
     "Editor"

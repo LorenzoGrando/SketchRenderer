@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using SketchRenderer.Runtime.Data;
 
@@ -6,9 +7,18 @@ namespace SketchRenderer.Runtime.TextureTools.TonalArtMap
     [CreateAssetMenu(fileName = "TonalArtMapAsset", menuName = SketchRendererData.PackageAssetItemPath + "TonalArtMapAsset")]
     public class TonalArtMapAsset : ScriptableObject
     {
-        [Range(1, 9)]
-        public int ExpectedTones;
+        [Range(1, 9)] 
+        public int ExpectedTones = 6;
+        [SerializeField] [HideInInspector]
+        private int numberOfTones;
+        public int TotalTones
+        {
+            get => numberOfTones; private set => numberOfTones = value; 
+        }
         public Texture2D[] Tones = new Texture2D[1];
+
+        public bool ForceFirstToneFullWhite = true;
+        public bool ForceFinalToneFullBlack = false;
     
         [SerializeField] [HideInInspector] public bool isPrePacked = false;
         [SerializeField] [HideInInspector] public Vector4 TAMBasisDirection;
@@ -35,6 +45,7 @@ namespace SketchRenderer.Runtime.TextureTools.TonalArtMap
         public void SetPackedTams(Texture2D[] packedTams)
         {
             Tones = packedTams;
+            TotalTones = packedTams.Length;
             isPrePacked = true;
         }
     }

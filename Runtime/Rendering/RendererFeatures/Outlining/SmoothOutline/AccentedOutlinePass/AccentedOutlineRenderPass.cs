@@ -71,10 +71,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             accentedMaterial.SetKeyword(BakeDistortionKeyword, passData.BakeDistortionDuringRuntime);
             accentedMaterial.SetKeyword(DistortionKeyword, passData.Strength > 0 && !passData.BakeDistortionDuringRuntime);
             
-            if(bakedDistortionTexture != null)
-                accentedMaterial.SetTexture(bakedDistortionTexShaderID, bakedDistortionTexture);
-            if(bakedDistortionTexture2 != null)
-                accentedMaterial.SetTexture(bakedDistortionTex2ShaderID, bakedDistortionTexture2);
+            accentedMaterial.SetTexture(bakedDistortionTexShaderID, bakedDistortionTexture);
+            accentedMaterial.SetTexture(bakedDistortionTex2ShaderID, bakedDistortionTexture2);
 
             accentedMaterial.SetKeyword(MaskKeyword, passData.PencilOutlineMask != null && passData.MaskScale != Vector2.zero);
             
@@ -99,13 +97,13 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     scaleFactor *= 0.5f;
                 */
 
-                if (bakedDistortionTexture == null || bakedDistortionTexture.scaleFactor != scaleFactor)
+                if (bakedDistortionTexture == null || passData.ForceRebake)
                 {
                     bakedDistortionTexture = RTHandles.Alloc(scaleFactor, GraphicsFormat.R8G8B8A8_UNorm,
                         enableRandomWrite: true, name: "_BakedUVDistortionTex");
                 }
                 //Only rebuild this if it is being used
-                if (this.passData.RequireMultipleTextures && bakedDistortionTexture2 == null)
+                if (this.passData.RequireMultipleTextures && (bakedDistortionTexture2 == null || passData.ForceRebake))
                 {
                     bakedDistortionTexture2 = RTHandles.Alloc(scaleFactor, GraphicsFormat.R8G8B8A8_UNorm, enableRandomWrite: true, name: "_BakedDistortionTex2");
                 }
@@ -126,7 +124,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 }
             }
         }
-
+        
         public void Dispose()
         {
             if (bakedDistortionTexture != null)
@@ -149,7 +147,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             if (resourceData.isActiveTargetBackBuffer)
                 return;
             
-            var sketchData = frameData.Get<SketchResourceData>();
+            var sketchData = frameData.Get<SketchFrameData>();
             if(sketchData == null)
                 return;
             
@@ -157,6 +155,13 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             dstDesc.name = "AccentedOutlines";
             dstDesc.clearBuffer = true;
             dstDesc.msaaSamples = MSAASamples.None;
+
+            if (passData.ForceRebake)
+            {
+                sketchData.PrebakedDistortedUVs = false;
+                sketchData.PrebakedDistortedMultipleUVs = false;
+                passData.ForceRebake = false;
+            }
 
             bool shouldRebakeIfSingle = !passData.RequireMultipleTextures && !sketchData.PrebakedDistortedUVs;
             bool shouldRebakeIfMultiple = passData.RequireMultipleTextures && !sketchData.PrebakedDistortedMultipleUVs;
@@ -166,7 +171,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             
             if (passData.BakeDistortionDuringRuntime && (shouldRebakeIfSingle || shouldRebakeIfMultiple))
             {
-                TextureHandle distortedDst = renderGraph.ImportTexture(bakedDistortionTexture);
+                ImportResourceParams importParams = new ImportResourceParams();
+                TextureHandle distortedDst = renderGraph.ImportTexture(bakedDistortionTexture, importParams);
                 RenderGraphUtils.BlitMaterialParameters distortParams =
                     new RenderGraphUtils.BlitMaterialParameters(sketchData.OutlinesTexture, distortedDst,
                         accentedMaterial, 1);

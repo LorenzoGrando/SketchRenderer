@@ -64,7 +64,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             if (resourceData.isActiveTargetBackBuffer)
                 return;
 
-            var sketchData = frameData.GetOrCreate<SketchResourceData>();
+            var sketchData = frameData.GetOrCreate<SketchFrameData>();
             
             var dstDesc = renderGraph.GetTextureDesc(resourceData.activeColorTexture);
             dstDesc.name = IsSecondary ? OUTLINE_SECONDARY_TEXTURE_NAME : OUTLINE_TEXTURE_NAME;

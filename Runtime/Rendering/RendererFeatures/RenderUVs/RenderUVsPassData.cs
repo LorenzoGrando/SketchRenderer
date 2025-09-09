@@ -1,7 +1,6 @@
 using SketchRenderer.Runtime.Rendering.Volume;
 using UnityEngine;
 using UnityEngine.Rendering;
-using SketchRenderer.Runtime.Rendering.Volume;
 
 namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 {

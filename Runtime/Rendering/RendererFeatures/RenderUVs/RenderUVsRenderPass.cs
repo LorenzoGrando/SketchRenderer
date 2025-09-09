@@ -82,7 +82,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 var filterSettings = new FilteringSettings(renderQueueRange, ~0);
 
                 TextureDesc desc = renderGraph.GetTextureDesc(resourceData.activeColorTexture);
-                desc.name = SketchResources.ScreenUV.TextureName;
+                desc.name = SketchGlobalFrameData.ScreenUVTexture.TextureName;
                 desc.format = GraphicsFormat.R32G32_SFloat;
                 desc.msaaSamples = MSAASamples.None;
                 TextureHandle dst = renderGraph.CreateTexture(desc);
@@ -101,7 +101,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     builder.SetRenderAttachment(dst, 0, AccessFlags.Write);
                     builder.SetRenderFunc((PassData data, RasterGraphContext context) => RenderUVs(data, context));
                     builder.SetRenderFunc<PassData>(RenderUVs);
-                    builder.SetGlobalTextureAfterPass(dst, SketchResources.ScreenUV.GetUVTextureID);
+                    builder.SetGlobalTextureAfterPass(dst, SketchGlobalFrameData.ScreenUVTexture.GetUVTextureID);
                 }
             }
         }

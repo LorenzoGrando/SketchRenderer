@@ -91,7 +91,7 @@ Shader "SketchRenderer/AccentedOutline"
                float2 distUVs2 = float2(cos(angleStrength2.x), sin(angleStrength2.x)) * angleStrength2.y;
                uv2 = saturate(uv2 + distUVs2 * (_DistortionStrength + _LineStrengthJitter));
                     #if defined MULTIPLE_DISTORTIONS
-               float4 angleStrengths2 = SAMPLE_TEXTURE2D_X_LOD(_BakedUVDistortionTex, sampler_PointClamp, input.texcoord, _BlitMipLevel);
+               float4 angleStrengths2 = SAMPLE_TEXTURE2D_X_LOD(_BakedUVDistortionTex2, sampler_PointClamp, input.texcoord, _BlitMipLevel);
                float2 angleStrength3 = angleStrengths2.xy;
                float2 angleStrength4 = angleStrengths2.zw;
                

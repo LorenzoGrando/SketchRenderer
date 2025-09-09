@@ -1,3 +1,4 @@
+using SketchRenderer.Runtime.Data;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
@@ -8,27 +9,27 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         [Header("Parameters")] [Space(5)] [SerializeField]
         public LuminancePassData LuminanceData = new LuminancePassData();
         
-        [HideInInspector]
         private Material luminanceMaterial;
-        [SerializeField]
+        [SerializeField] [HideInInspector]
         private Shader luminanceShader;
         
         private LuminanceRenderPass luminanceRenderPass;
 
         public override void Create()
         {
-            if(luminanceShader == null)
+            if (luminanceShader == null)
                 return;
             
             luminanceMaterial = CreateLuminanceMaterial();
             luminanceRenderPass = new LuminanceRenderPass();
         }
         
-        public void ConfigureByContext(SketchRendererContext context)
+        public void ConfigureByContext(SketchRendererContext context, SketchResourceAsset resources)
         {
             if (context.UseLuminanceFeature)
             {
                 LuminanceData.CopyFrom(context.LuminanceFeatureData);
+                luminanceShader = resources.Shaders.Luminance;
                 Create();
             }
         }

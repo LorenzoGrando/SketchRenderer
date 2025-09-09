@@ -2,9 +2,9 @@ using UnityEngine;
 
 namespace SketchRenderer.Runtime.Rendering
 {
-    public static class SketchResources
+    public static class SketchGlobalFrameData
     {
-        public static class ScreenUV
+        public static class ScreenUVTexture
         {
             public const string TextureName = "_CameraUVsTexture";
             private static readonly int textureShaderID = Shader.PropertyToID(TextureName);

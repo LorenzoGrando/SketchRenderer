@@ -1,4 +1,5 @@
 using System;
+using SketchRenderer.Runtime.Data;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -12,7 +13,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         [SerializeField] public RenderUVsPassData UvsPassData = new RenderUVsPassData();
         private RenderUVsPassData CurrentUVsPassData { get { return UvsPassData.GetPassDataByVolume(); } }
 
-        [SerializeField] private Shader renderUVsShader;
+        [SerializeField] [HideInInspector]
+        private Shader renderUVsShader;
         
         private Material renderUVsMaterial;
         
@@ -24,11 +26,12 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             renderUVsRenderPass = new RenderUVsRenderPass();
         }
         
-        public void ConfigureByContext(SketchRendererContext context)
+        public void ConfigureByContext(SketchRendererContext context, SketchResourceAsset resources)
         {
-            if (context.UseSketchyOutlineFeature)
+            if (context.UseUVsFeature)
             {
                 UvsPassData.CopyFrom(context.UVSFeatureData);
+                renderUVsShader = resources.Shaders.RenderUVs;
                 Create();
             }
         }

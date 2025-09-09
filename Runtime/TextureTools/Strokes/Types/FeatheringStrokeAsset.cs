@@ -8,14 +8,12 @@ namespace SketchRenderer.Runtime.TextureTools.Strokes
     public class FeatheringStrokeAsset : StrokeAsset
     {
         public override StrokeSDFType PatternType => StrokeSDFType.FEATHERING;
-
-        [Space(5)] [Header("Feathering Specific")] 
         [Range(-1, 1f)]
-        public float FirstSubStrokeDirectionOffset;
-        public float FirstSubStrokeLengthMultiplier;
+        public float FirstSubStrokeDirectionOffset = 0.25f;
+        public float FirstSubStrokeLengthMultiplier = 1f;
         [Range(-1, 1f)]
-        public float SecondSubStrokeDirectionOffset;
-        public float SecondSubStrokeLengthMultiplier;
+        public float SecondSubStrokeDirectionOffset = 0.25f;
+        public float SecondSubStrokeLengthMultiplier = 1f;
         [Range(1, 5)]
         public int Repetitions = 1;
 
