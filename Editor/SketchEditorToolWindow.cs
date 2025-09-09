@@ -14,7 +14,7 @@ namespace SketchRenderer.Editor
         {
             get
             {
-                return new Vector2(250, 500);
+                return new Vector2(275, 400);
             }
         }
         
@@ -22,8 +22,14 @@ namespace SketchRenderer.Editor
         {
             get
             {
-                return new Vector2(350, 900);
+                return new Vector2(500, 1000);
             }
+        }
+
+        internal virtual void OnEnable()
+        {
+            minSize = ExpectedMinWindowSize;
+            maxSize = ExpectedMaxWindowSize;
         }
 
         internal abstract void InitializeTool(SketchResourceAsset resources);

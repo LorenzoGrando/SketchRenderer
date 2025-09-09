@@ -18,17 +18,20 @@ namespace SketchRenderer.Editor.TextureTools
     {
         internal VisualElement root;
         
-        internal VisualElement settingsPanel;
+        internal ScrollView settingsPanel;
         internal VisualElement previewPanel;
         
         // Field binding elements
         internal Image previewImage;
-        internal ObjectField strokeAssetField;
+        internal SketchElement<ObjectField> strokeAssetField;
         internal UnityEditor.Editor strokeAssetEditor;
         
-        internal ObjectField tonalArtMapAssetField;
+        internal SketchElement<ObjectField> tonalArtMapAssetField;
         internal UnityEditor.Editor tonalArtMapAssetEditor;
-        internal TextField pathField;
+        internal HelpBox sanityHelpBox;
+        
+        internal SketchElement<TextField> pathField;
+        internal TextureToolGenerationStatusArgs toolStatusDisplay;
         
         internal override void InitializeTool(SketchResourceAsset resources)
         {
@@ -59,16 +62,19 @@ namespace SketchRenderer.Editor.TextureTools
             }
         }
 
+        private void UpdateToolStatus(TextureToolGenerationStatusArgs args) => toolStatusDisplay = args;
+
         internal void Update()
         {
             if (TonalArtMapGenerator.Generating)
             {
-                EditorUtility.DisplayProgressBar("Generating Tam Tones", "Test", 0.5f);
+                EditorUtility.DisplayProgressBar(toolStatusDisplay.toolProcess, toolStatusDisplay.toolSubprocess, toolStatusDisplay.toolTotalProgress);
             }
         }
 
         internal void FinalizeProgressBar()
         {
+            TonalArtMapGenerator.OnTonalArtMapGenerationStep -= UpdateToolStatus;
             EditorUtility.ClearProgressBar();
         }
 
@@ -84,10 +90,8 @@ namespace SketchRenderer.Editor.TextureTools
             settingsPanel = new ScrollView();
             settingsPanel.style.flexGrow = 0;
             settingsPanel.style.justifyContent = Justify.FlexStart;
+            settingsPanel.style.alignItems = Align.FlexStart;
             root.Add(settingsPanel);
-            
-            var settingsLabel = new Label("Tonal Art Map Generator");
-            settingsPanel.Add(settingsLabel);
             
             var settingsStrokePanel = CreateStrokeAssetRegion();
             settingsPanel.Add(settingsStrokePanel);
@@ -111,29 +115,21 @@ namespace SketchRenderer.Editor.TextureTools
 
         internal VisualElement CreateStrokeAssetRegion()
         {
-            var strokeDataRegion = new Foldout();
-            strokeDataRegion.text = "Stroke Settings";
+            var strokeDataRegion = SketchRendererUI.SketchFoldout("Stroke Settings", applyMargins:false);
 
             if (strokeAssetField == null)
-            {
-                strokeAssetField = new ObjectField("Stroke Asset");
-                strokeAssetField.objectType = typeof(StrokeAsset);
-                strokeAssetField.RegisterValueChangedCallback(StrokeAsset_Changed);
-                strokeAssetField.SetValueWithoutNotify(TonalArtMapGenerator.StrokeDataAsset);
-            }
+                strokeAssetField = SketchRendererUI.SketchObjectField("Stroke Asset", typeof(StrokeAsset), TonalArtMapGenerator.StrokeDataAsset, changeCallback:StrokeAsset_Changed);
             else
-            {
-                strokeAssetField.MarkDirtyRepaint();
-            }
-            strokeDataRegion.Add(strokeAssetField);
+                strokeAssetField.Container.MarkDirtyRepaint();
+            SketchRendererUIUtils.AddWithMargins(strokeDataRegion, strokeAssetField.Container, SketchRendererUIData.BaseFieldMargins);
 
-            if (strokeAssetField.value != null)
+            if (strokeAssetField.Field.value != null)
             {
                 if (strokeAssetEditor == null)
-                    strokeAssetEditor = UnityEditor.Editor.CreateEditor(strokeAssetField.value);
+                    strokeAssetEditor = UnityEditor.Editor.CreateEditor(strokeAssetField.Field.value);
                 var strokeEditorElement = strokeAssetEditor.CreateInspectorGUI();
                 strokeEditorElement.RegisterCallback<SerializedPropertyChangeEvent>(StrokeData_Changed);
-                strokeDataRegion.Add(strokeEditorElement);
+                SketchRendererUIUtils.AddWithMargins(strokeDataRegion, strokeEditorElement, SketchRendererUIData.BaseFieldMargins);
             }
 
             return strokeDataRegion;
@@ -141,57 +137,74 @@ namespace SketchRenderer.Editor.TextureTools
         
         internal VisualElement CreateOutputSettingsRegion()
         {
-            var outputSettingsRegion = new Foldout();
-            outputSettingsRegion.text = "Output Settings";
+            var outputSettingsRegion = SketchRendererUI.SketchFoldout("Output Settings", applyMargins:false);
+            outputSettingsRegion.style.justifyContent = Justify.FlexStart;
             
             if (tonalArtMapAssetField == null)
-            {
-                tonalArtMapAssetField = new ObjectField("Tonal Art Map Asset");
-                tonalArtMapAssetField.objectType = typeof(TonalArtMapAsset);
-                tonalArtMapAssetField.RegisterValueChangedCallback(TonalArtMap_Changed);
-                tonalArtMapAssetField.SetValueWithoutNotify(TonalArtMapGenerator.TonalArtMapAsset);
-            }
+                tonalArtMapAssetField = SketchRendererUI.SketchObjectField("Tonal Art Map Asset", typeof(TonalArtMapAsset), TonalArtMapGenerator.TonalArtMapAsset, changeCallback:TonalArtMap_Changed);
             else
-            {
-                tonalArtMapAssetField.MarkDirtyRepaint();
-            }
-            outputSettingsRegion.Add(tonalArtMapAssetField);
-            
-            if (tonalArtMapAssetField.value != null && !TonalArtMapWizard.IsCurrentTonalArtMap((TonalArtMapAsset)tonalArtMapAssetField.value))
-            {
-                var setActiveButton = new Button(SetActiveTonalArtMap_Clicked) { text = "Assign to Renderer Context" };
-                outputSettingsRegion.Add(setActiveButton);
-            }
+                tonalArtMapAssetField.Container.MarkDirtyRepaint();
 
-            if (tonalArtMapAssetField.value != null)
+            TonalArtMapAsset fieldAsset = (TonalArtMapAsset)tonalArtMapAssetField.Field.value;
+
+            CornerData outputMargins = (fieldAsset != null && TonalArtMapWizard.IsCurrentTonalArtMap(fieldAsset)) ? SketchRendererUIData.BaseFieldMargins : SketchRendererUIData.BaseFieldNoVerticalMargins;
+            SketchRendererUIUtils.AddWithMargins(outputSettingsRegion, tonalArtMapAssetField.Container, outputMargins);
+            
+            if (fieldAsset != null)
             {
+                if (!TonalArtMapWizard.IsCurrentTonalArtMap(fieldAsset))
+                {
+                    var setActiveButton = new Button(SetActiveTonalArtMap_Clicked) { text = "Assign to Renderer Context" };
+                    SketchRendererUIUtils.AddWithMargins(outputSettingsRegion, setActiveButton, SketchRendererUIData.BaseFieldMargins);
+                }
+
+                if (fieldAsset.HasDirtyProperties())
+                {
+                    if (sanityHelpBox == null)
+                    {
+                        sanityHelpBox = new HelpBox();
+                        sanityHelpBox.text = $"The selected TonalArtMap has baked settings different from the current displayed.\nPlease regenerate the TAM to apply the properties.";
+                        sanityHelpBox.style.justifyContent = Justify.Center;
+                        sanityHelpBox.style.unityTextAlign = TextAnchor.MiddleCenter;
+                        TonalArtMapGenerator.OnTonalArtMapGenerated += CheckSanityBoxValid;
+                    }
+                    SketchRendererUIUtils.AddWithMargins(outputSettingsRegion, sanityHelpBox, SketchRendererUIData.BaseFieldMargins);
+                }
+                else if (!fieldAsset.HasDirtyProperties() && sanityHelpBox != null)
+                {
+                    TonalArtMapGenerator.OnTonalArtMapGenerated -= CheckSanityBoxValid;
+                    sanityHelpBox = null;
+                }
+
                 var tonalArtMapRegion = new VisualElement();
                 var tonalArtMapLabel = new Label("Tonal Art Map Settings");
-                tonalArtMapRegion.Add(tonalArtMapLabel);
+                SketchRendererUIUtils.AddWithMargins(tonalArtMapRegion, tonalArtMapLabel, SketchRendererUIData.MinorFieldMargins);
                 
                 if (tonalArtMapAssetEditor == null)
-                    tonalArtMapAssetEditor = UnityEditor.Editor.CreateEditor(tonalArtMapAssetField.value);
+                    tonalArtMapAssetEditor = UnityEditor.Editor.CreateEditor(fieldAsset);
                 var tonesEditorElement = tonalArtMapAssetEditor.CreateInspectorGUI();
-                tonalArtMapRegion.Add(tonesEditorElement);
+                tonesEditorElement.RegisterCallback<SerializedPropertyChangeEvent>(TonalArtMapAssetData_Changed);
+                SketchRendererUIUtils.AddWithMargins(tonalArtMapRegion, tonesEditorElement, SketchRendererUIData.MinorFieldMargins);
+
+                TextureResolution initialResolution;
+                if(fieldAsset.Tones[0] != null)
+                    initialResolution = TextureAssetManager.GetClosestResolutionFromTexture(fieldAsset.Tones[0]);
+                else
+                    initialResolution = TextureGenerator.Resolution;
+                var resolutionField = SketchRendererUI.SketchEnumField("Texture Size", initialResolution, changeCallback:Resolution_Changed);
                 
-                var resolutionField = new EnumField("Texture Size", TextureResolution.SIZE_512);
-                resolutionField.RegisterValueChangedCallback(Resolution_Changed);
-                resolutionField.SetValueWithoutNotify(TonalArtMapGenerator.TargetResolution);
-                tonalArtMapRegion.Add(resolutionField);
+                SketchRendererUIUtils.AddWithMargins(tonalArtMapRegion, resolutionField.Container, SketchRendererUIData.MinorFieldMargins);
             
-                var iterationsField = new IntegerField("Iterations Per Stroke Applied");
-                iterationsField.isDelayed = true;
-                iterationsField.AddManipulator(new ClampedIntegerManipulator(iterationsField, 1, 100));
-                iterationsField.RegisterValueChangedCallback(IterationsPerStroke_Changed);
-                iterationsField.SetValueWithoutNotify(TonalArtMapGenerator.IterationsPerStroke);
-                tonalArtMapRegion.Add(iterationsField);
+                ClampedIntegerManipulator manipulator = new ClampedIntegerManipulator(1, 100);
+                var iterationsField = SketchRendererUI.SketchIntegerField("Strokes per Iteration", TonalArtMapGenerator.IterationsPerStroke, isDelayed:true, manipulator:manipulator, changeCallback:IterationsPerStroke_Changed);
+                SketchRendererUIUtils.AddWithMargins(tonalArtMapRegion, iterationsField.Container, SketchRendererUIData.MinorFieldMargins);
                 
-                outputSettingsRegion.Add(tonalArtMapRegion);
+                SketchRendererUIUtils.AddWithMargins(outputSettingsRegion, tonalArtMapRegion, SketchRendererUIData.BaseFieldMargins);
             }
             else
             {
                 var createCustomTonalArtMap = new Button(CreateTonalArtMap_Clicked) { text = "Create And Assign to Renderer Context"};
-                outputSettingsRegion.Add(createCustomTonalArtMap);
+                SketchRendererUIUtils.AddWithMargins(outputSettingsRegion, createCustomTonalArtMap, SketchRendererUIData.BaseFieldMargins);
             }
             
             return outputSettingsRegion;
@@ -199,34 +212,30 @@ namespace SketchRenderer.Editor.TextureTools
         
         internal VisualElement CreateExportRegion()
         {
-            var exportRegion = new VisualElement();
-            var exportLabel = new Label("Export Settings");
-            exportRegion.Add(exportLabel);
+            var exportRegion = SketchRendererUI.SketchFoldout("Export Settings", applyMargins:false);
+            var settingsContainer = new VisualElement();
             
-            pathField = new TextField("Override Directory Path");
-            pathField.isDelayed = true;
-            var pathManipulator = new AssetsDirectoryManipulator(pathField);
-            pathField.AddManipulator(pathManipulator);
+            var pathManipulator = new AssetsDirectoryManipulator();
+            pathField = SketchRendererUI.SketchTextField("Override Directory Path", isDelayed:true, pathManipulator);
             pathManipulator.OnValidated += Path_Changed;
-            exportRegion.Add(pathField);
+            SketchRendererUIUtils.AddWithMargins(settingsContainer, pathField.Container, SketchRendererUIData.MinorFieldMargins);
             
-            var pathButton = new Button(ChoosePath_Clicked) { text = "Set Override Directory Path"};
-            exportRegion.Add(pathButton);
+            var pathButton = new Button(ChoosePath_Clicked) { text = "Choose Override Directory Path"};
+            SketchRendererUIUtils.AddWithMargins(settingsContainer, pathButton, SketchRendererUIData.MinorFieldMargins);
 
-            var generateTamButton = new Button(GenerateTonalArtMap_Clicked) { text = "Generate Tonal Art Map" };
-            exportRegion.Add(generateTamButton);
+            var generateTamButton = SketchRendererUI.SketchMajorButton("Generate Tonal Art Map", GenerateTonalArtMap_Clicked);
+            SketchRendererUIUtils.AddWithMargins(settingsContainer, generateTamButton, SketchRendererUIData.MinorFieldMargins);
+            
+            SketchRendererUIUtils.AddWithMargins(exportRegion, settingsContainer, SketchRendererUIData.BaseFieldMargins);
             return exportRegion;
         }
 
         internal VisualElement CreatePreviewRegion()
         {
-            previewPanel = new VisualElement();
+            previewPanel = SketchRendererUI.SketchMajorArea("Preview Texture");
             previewPanel.style.minHeight = ExpectedMinWindowSize.x;
             previewPanel.style.maxHeight = ExpectedMaxWindowSize.x;
-            
-            var previewLabel = new Label("Preview Texture");
-            previewPanel.Add(previewLabel);
-            
+
             previewImage = new Image();
             previewImage.scaleMode = ScaleMode.ScaleToFit;
 
@@ -288,7 +297,7 @@ namespace SketchRenderer.Editor.TextureTools
             if (settingsPanel != null)
             {
                 //--Stroke Panel
-                strokeAssetField.SetValueWithoutNotify(TonalArtMapGenerator.StrokeDataAsset);
+                strokeAssetField.Field.SetValueWithoutNotify(TonalArtMapGenerator.StrokeDataAsset);
             }
 
             ForceRebuildGUI();
@@ -313,16 +322,35 @@ namespace SketchRenderer.Editor.TextureTools
             ForceRebuildGUI();
         }
 
+        internal void TonalArtMapAssetData_Changed(SerializedPropertyChangeEvent bind)
+        {
+            CheckSanityBoxValid();
+        }
+
         internal void CreateTonalArtMap_Clicked()
         {
             TonalArtMapAsset asset = TonalArtMapWizard.CreateTonalArtMapAndSetActive();
-            tonalArtMapAssetField.value = asset;
+            tonalArtMapAssetField.Field.value = asset;
         }
 
         internal void SetActiveTonalArtMap_Clicked()
         {
-            TonalArtMapWizard.SetAsCurrentTonalArtMap((TonalArtMapAsset)tonalArtMapAssetField.value);
+            TonalArtMapWizard.SetAsCurrentTonalArtMap((TonalArtMapAsset)tonalArtMapAssetField.Field.value);
             ForceRebuildGUI();
+        }
+
+        internal void CheckSanityBoxValid()
+        {
+            if (tonalArtMapAssetField.Field.value == null)
+                return;
+            
+            TonalArtMapAsset asset = (TonalArtMapAsset)tonalArtMapAssetField.Field.value;
+            if ((asset.HasDirtyProperties() && sanityHelpBox == null) || (!asset.HasDirtyProperties() && sanityHelpBox != null))
+            {
+                ForceRebuildGUI();
+                if(sanityHelpBox != null)
+                    settingsPanel.ScrollTo(sanityHelpBox);
+            }
         }
         
         internal void Resolution_Changed(ChangeEvent<Enum> bind)
@@ -346,11 +374,12 @@ namespace SketchRenderer.Editor.TextureTools
         internal void ChoosePath_Clicked()
         {
             string path = EditorUtility.OpenFolderPanel("Choose Path", "Assets/", "");
-            pathField.value = path;
+            pathField.Field.value = path;
         }
         
         internal void GenerateTonalArtMap_Clicked()
         {
+            TonalArtMapGenerator.OnTonalArtMapGenerationStep += UpdateToolStatus;
             TonalArtMapGenerator.GenerateTAMToneTextures();
         }
         

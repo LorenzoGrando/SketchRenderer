@@ -1,7 +1,7 @@
+using SketchRenderer.Editor.UIToolkit;
 using SketchRenderer.Runtime.TextureTools.Strokes;
 using UnityEditor;
 using UnityEditor.UIElements;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace SketchRenderer.Editor.TextureTools.Strokes
@@ -16,24 +16,20 @@ namespace SketchRenderer.Editor.TextureTools.Strokes
             var assetField = new VisualElement();
             var settingsField = new VisualElement();
             
-            var settingsLabel = new Label("General Stroke Data");
-            settingsField.Add(settingsLabel);
-
             SerializedProperty strokeDataProp = serializedObject.FindProperty("StrokeData");
             var strokeDataField = new PropertyField(strokeDataProp);
             strokeDataField.BindProperty(strokeDataProp);
             strokeDataField.RegisterValueChangeCallback(StrokeData_Changed);
-            settingsField.Add(strokeDataField);
+            SketchRendererUIUtils.AddWithMargins(settingsField, strokeDataField, SketchRendererUIData.MinorFieldMargins);
             
             SerializedProperty variationDataProp = serializedObject.FindProperty("VariationData");
             var variationDataField = new PropertyField(variationDataProp);
             variationDataField.BindProperty(variationDataProp);
-            settingsField.Add(variationDataField);
+            SketchRendererUIUtils.AddWithMargins(settingsField, variationDataField, SketchRendererUIData.MinorFieldMargins);
             
             SerializedProperty falloffProp = serializedObject.FindProperty("SelectedFalloffFunction");
-            var falloffField = new PropertyField(falloffProp);
-            falloffField.BindProperty(falloffProp);
-            settingsField.Add(falloffField);
+            var falloffField = SketchRendererUI.SketchEnumProperty(falloffProp, ((StrokeAsset)target).SelectedFalloffFunction, nameOverride:"Falloff Function");
+            SketchRendererUIUtils.AddWithMargins(settingsField, falloffField.Container, SketchRendererUIData.MinorFieldMargins);
             
             assetField.Add(settingsField);
             

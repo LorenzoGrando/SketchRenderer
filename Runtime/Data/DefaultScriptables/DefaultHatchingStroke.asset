@@ -19,15 +19,15 @@ MonoBehaviour:
     Thickness: 0.053
     ThicknessFalloffConstraint: 0.192
     Length: 0.637
-    LengthThicknessFalloff: 0.858
+    LengthThicknessFalloff: 0.816
     Pressure: 1
-    PressureFalloff: 1
+    PressureFalloff: 0.917
     Iterations: 0
   SelectedFalloffFunction: 1
   VariationData:
-    DirectionVariationRange: 0.06
+    DirectionVariationRange: 0.142
     ThicknessVariationRange: 0.029
     LengthVariationRange: 0.47
     PressureVariationRange: 0.1
-  MinCrossHatchingThreshold: 0.278
-  MaxCrossHatchingThreshold: 0.545
+  MinCrossHatchingThreshold: 0.462
+  MaxCrossHatchingThreshold: 0.729

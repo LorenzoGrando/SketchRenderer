@@ -1,7 +1,6 @@
+using SketchRenderer.Editor.UIToolkit;
 using SketchRenderer.Runtime.TextureTools.Strokes;
 using UnityEditor;
-using UnityEditor.UIElements;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace SketchRenderer.Editor.TextureTools.Strokes
@@ -16,14 +15,14 @@ namespace SketchRenderer.Editor.TextureTools.Strokes
             var variationDataLabel = new Label("Variation Data");
             variationDataField.Add(variationDataLabel);
             
-            var directionField = new PropertyField(property.FindPropertyRelative("DirectionVariationRange"));
-            variationDataField.Add(directionField);
-            var thicknessField = new PropertyField(property.FindPropertyRelative("ThicknessVariationRange"));
-            variationDataField.Add(thicknessField);
-            var lengthField = new PropertyField(property.FindPropertyRelative("LengthVariationRange"));
-            variationDataField.Add(lengthField);
-            var pressureField = new PropertyField(property.FindPropertyRelative("PressureVariationRange"));
-            variationDataField.Add(pressureField);
+            var directionField = SketchRendererUI.SketchFloatSliderPropertyWithInput(property.FindPropertyRelative("DirectionVariationRange"));
+            SketchRendererUIUtils.AddWithMargins(variationDataField,directionField.Container, SketchRendererUIData.MajorIndentCorners );
+            var thicknessField = SketchRendererUI.SketchFloatSliderPropertyWithInput(property.FindPropertyRelative("ThicknessVariationRange"));
+            SketchRendererUIUtils.AddWithMargins(variationDataField,thicknessField.Container, SketchRendererUIData.MajorIndentCorners );
+            var lengthField = SketchRendererUI.SketchFloatSliderPropertyWithInput(property.FindPropertyRelative("LengthVariationRange"));
+            SketchRendererUIUtils.AddWithMargins(variationDataField,lengthField.Container, SketchRendererUIData.MajorIndentCorners );
+            var pressureField = SketchRendererUI.SketchFloatSliderPropertyWithInput(property.FindPropertyRelative("PressureVariationRange"));
+            SketchRendererUIUtils.AddWithMargins(variationDataField,pressureField.Container, SketchRendererUIData.MajorIndentCorners );
         
             return variationDataField;
         }

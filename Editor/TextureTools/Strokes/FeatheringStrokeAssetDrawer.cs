@@ -1,3 +1,4 @@
+using SketchRenderer.Editor.UIToolkit;
 using SketchRenderer.Runtime.TextureTools.Strokes;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -23,34 +24,29 @@ namespace SketchRenderer.Editor.TextureTools.Strokes
             var firstStrokeLabel = new Label("First Feathering Stroke");
             firstStrokeRegion.Add(firstStrokeLabel);
             SerializedProperty firstDirectionProp = serializedObject.FindProperty("FirstSubStrokeDirectionOffset");
-            var firstDirectionField = new PropertyField(firstDirectionProp);
-            firstDirectionField.BindProperty(firstDirectionProp);
-            firstStrokeRegion.Add(firstDirectionField);
+            var firstDirectionField = SketchRendererUI.SketchFloatSliderPropertyWithInput(firstDirectionProp, nameOverride:"Direction Offset");
+            SketchRendererUIUtils.AddWithMargins(firstStrokeRegion, firstDirectionField.Container, SketchRendererUIData.MajorIndentCorners);
             
             SerializedProperty firstLengthProp = serializedObject.FindProperty("FirstSubStrokeLengthMultiplier");
-            var firstLengthField = new PropertyField(firstLengthProp);
-            firstLengthField.BindProperty(firstLengthProp);
-            firstStrokeRegion.Add(firstLengthField);
-            featheringRegion.Add(firstStrokeRegion);
+            var firstLengthField = SketchRendererUI.SketchFloatProperty(firstLengthProp, nameOverride:"Length Multiplier");
+            SketchRendererUIUtils.AddWithMargins(firstStrokeRegion, firstLengthField.Container, SketchRendererUIData.MajorIndentCorners);
+            SketchRendererUIUtils.AddWithMargins(featheringRegion, firstStrokeRegion, SketchRendererUIData.MajorIndentCorners);
             
             var secondStrokeRegion = new VisualElement();
             var secondStrokeLabel = new Label("Second Feathering Stroke");
             secondStrokeRegion.Add(secondStrokeLabel);
             SerializedProperty secondDirectionProp = serializedObject.FindProperty("SecondSubStrokeDirectionOffset");
-            var secondDirectionField = new PropertyField(secondDirectionProp);
-            secondDirectionField.BindProperty(secondDirectionProp);
-            secondStrokeRegion.Add(secondDirectionField);
+            var secondDirectionField = SketchRendererUI.SketchFloatSliderPropertyWithInput(secondDirectionProp, nameOverride:"Direction Offset");
+            SketchRendererUIUtils.AddWithMargins(secondStrokeRegion, secondDirectionField.Container, SketchRendererUIData.MajorIndentCorners);
             
             SerializedProperty secondLengthProp = serializedObject.FindProperty("SecondSubStrokeLengthMultiplier");
-            var secondLengthField = new PropertyField(secondLengthProp);
-            secondLengthField.BindProperty(secondLengthProp);
-            secondStrokeRegion.Add(secondLengthField);
-            featheringRegion.Add(secondStrokeRegion);
+            var secondLengthField = SketchRendererUI.SketchFloatProperty(secondLengthProp, nameOverride:"Length Multiplier");
+            SketchRendererUIUtils.AddWithMargins(secondStrokeRegion, secondLengthField.Container, SketchRendererUIData.MajorIndentCorners);
+            SketchRendererUIUtils.AddWithMargins(featheringRegion, secondStrokeRegion, SketchRendererUIData.MajorIndentCorners);
             
             SerializedProperty repetitionsProp = serializedObject.FindProperty("Repetitions");
-            var repetitionsField = new PropertyField(repetitionsProp);
-            repetitionsField.BindProperty(repetitionsProp);
-            featheringRegion.Add(repetitionsField);
+            var repetitionsField = SketchRendererUI.SketchIntSliderPropertyWithInput(repetitionsProp);
+            SketchRendererUIUtils.AddWithMargins(featheringRegion, repetitionsField.Container, SketchRendererUIData.MajorIndentCorners);
             
             baseAsset.Add(featheringRegion);
             return baseAsset;

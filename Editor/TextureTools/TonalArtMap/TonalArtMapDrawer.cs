@@ -2,6 +2,7 @@ using SketchRenderer.Editor.UIToolkit;
 using SketchRenderer.Runtime.TextureTools.TonalArtMap;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace SketchRenderer.Editor.TextureTools
@@ -15,23 +16,17 @@ namespace SketchRenderer.Editor.TextureTools
             
             TonalArtMapAsset asset = (TonalArtMapAsset)target;
             
-            var tonesField = new IntegerField("Number of Tones");
-            tonesField.AddManipulator(new ClampedIntegerManipulator(tonesField, 1, 9));
-            tonesField.RegisterValueChangedCallback(Tones_Changed);
-            tonesField.SetValueWithoutNotify(asset.ExpectedTones);
-            assetField.Add(tonesField);
+            var tonesField = SketchRendererUI.SketchIntegerField("Number of Tones", asset.ExpectedTones, isDelayed:true, manipulator:new ClampedIntegerManipulator(1, 9), changeCallback:Tones_Changed);
+            tonesField.Field.TrackPropertyValue(serializedObject.FindProperty("ExpectedTones"));
+            SketchRendererUIUtils.AddWithMargins(assetField, tonesField.Container, SketchRendererUIData.MajorIndentCorners);
             
             SerializedProperty forceWhiteProp = serializedObject.FindProperty("ForceFirstToneFullWhite");
-            var forceWhite = new PropertyField(forceWhiteProp);
-            forceWhite.BindProperty(forceWhiteProp);
-            forceWhite.label = "Set First Tone to full white";
-            assetField.Add(forceWhite);
+            var forceWhite = SketchRendererUI.SketchBoolProperty(forceWhiteProp, nameOverride:"Set First Tone to Full White");
+            SketchRendererUIUtils.AddWithMargins(assetField, forceWhite.Container, SketchRendererUIData.MajorIndentCorners);
             
             SerializedProperty forceBlackProp = serializedObject.FindProperty("ForceFinalToneFullBlack");
-            var forceBlack = new PropertyField(forceBlackProp);
-            forceBlack.BindProperty(forceBlackProp);
-            forceBlack.label = "Set Last Tone to full black";
-            assetField.Add(forceBlack);
+            var forceBlack = SketchRendererUI.SketchBoolProperty(forceBlackProp, nameOverride:"Set Last Tone to Full Black");
+            SketchRendererUIUtils.AddWithMargins(assetField, forceBlack.Container, SketchRendererUIData.MajorIndentCorners);
             
             return assetField;
         }
@@ -41,6 +36,7 @@ namespace SketchRenderer.Editor.TextureTools
             serializedObject.Update();
             TonalArtMapAsset asset = (TonalArtMapAsset)target;
             asset.ExpectedTones = evt.newValue;
+            Debug.Log("Asset tones: " + asset.ExpectedTones);
             serializedObject.ApplyModifiedProperties();
         }
     }

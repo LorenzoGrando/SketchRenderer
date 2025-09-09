@@ -3,20 +3,26 @@ using UnityEngine.UIElements;
 
 namespace SketchRenderer.Editor.UIToolkit
 {
-    public class ClampedIntegerManipulator : Manipulator
+    public class ClampedIntegerManipulator : Manipulator, ISketchManipulator<IntegerField>
     {
         private IntegerField integerField;
         public int minValue;
         public int maxValue;
 
-        public ClampedIntegerManipulator(IntegerField integerField, int minValue, int maxValue)
+        public ClampedIntegerManipulator(int minValue, int maxValue)
         {
-            this.integerField = integerField;
             this.minValue = minValue;
             this.maxValue = maxValue;
+        }
 
+        public void Initialize(IntegerField integerField)
+        {
+            this.integerField = integerField;
+            
             integerField.RegisterValueChangedCallback(OnValueChanged);
         }
+        
+        public Manipulator GetBaseManipulator() => this;
 
         private void OnValueChanged(ChangeEvent<int> evt)
         {
