@@ -1,3 +1,4 @@
+using SketchRenderer.Editor.UIToolkit;
 using SketchRenderer.Runtime.Extensions;
 using SketchRenderer.Runtime.TextureTools.Strokes;
 using UnityEditor;
@@ -11,51 +12,47 @@ namespace SketchRenderer.Editor.TextureTools.Strokes
     public class StrokeDataDrawer : PropertyDrawer
     {
         SerializedProperty customDirectionProperty;
-        Slider directionSlider;
+        VisualElement directionSlider;
         
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             var strokeDataField = new VisualElement();
             
-            var strokeDataLabel = new Label("Stroke Data");
-            strokeDataField.Add(strokeDataLabel);
-            
             customDirectionProperty = property.FindPropertyRelative("Direction");
-            directionSlider = new Slider("Base Direction", 0f, 1f);
-            directionSlider.RegisterValueChangedCallback(Direction_Changed);
-            directionSlider.TrackPropertyValue(customDirectionProperty, Direction_OnTrack);
-            Direction_OnTrack(customDirectionProperty);
-            strokeDataField.Add(directionSlider);
+            directionSlider = SketchRendererUI.SketchSlider("Base Direction", 0f, 1f, Direction_Changed, customDirectionProperty, Direction_OnTrack).Container;
+            
+            SketchRendererUIUtils.AddWithMargins(strokeDataField, directionSlider, CornerData.Empty);
 
             var thicknessRegion = new VisualElement();
             var thicknessLabel = new Label("Thickness");
             thicknessRegion.Add(thicknessLabel);
-            var thicknessField = new PropertyField(property.FindPropertyRelative("Thickness"));
-            thicknessRegion.Add(thicknessField);
-            var thicknessConstraintField = new PropertyField(property.FindPropertyRelative("ThicknessFalloffConstraint"));
-            thicknessRegion.Add(thicknessConstraintField);
+            var thicknessField = SketchRendererUI.SketchFloatSliderPropertyWithInput(property.FindPropertyRelative("Thickness"));
+            SketchRendererUIUtils.AddWithMargins(thicknessRegion, thicknessField.Container, SketchRendererUIData.MajorIndentCorners);
+            var thicknessConstraintField = SketchRendererUI.SketchFloatSliderPropertyWithInput(property.FindPropertyRelative("ThicknessFalloffConstraint"));
+            SketchRendererUIUtils.AddWithMargins(thicknessRegion, thicknessConstraintField.Container, SketchRendererUIData.MajorIndentCorners);
             
-            strokeDataField.Add(thicknessRegion);
+            SketchRendererUIUtils.AddWithMargins(strokeDataField,thicknessRegion, CornerData.Empty);
+            
             
             var lengthRegion = new VisualElement(); 
             var lengthLabel = new Label("Length");
             lengthRegion.Add(lengthLabel);
-            var lengthField = new PropertyField(property.FindPropertyRelative("Length"));
-            lengthRegion.Add(lengthField);
-            var lengthFalloffField = new PropertyField(property.FindPropertyRelative("LengthThicknessFalloff"));
-            lengthRegion.Add(lengthFalloffField);
+            var lengthField = SketchRendererUI.SketchFloatSliderPropertyWithInput(property.FindPropertyRelative("Length"));
+            SketchRendererUIUtils.AddWithMargins(lengthRegion, lengthField.Container, SketchRendererUIData.MajorIndentCorners);
+            var lengthFalloffField = SketchRendererUI.SketchFloatSliderPropertyWithInput(property.FindPropertyRelative("LengthThicknessFalloff"));
+            SketchRendererUIUtils.AddWithMargins(lengthRegion, lengthFalloffField.Container, SketchRendererUIData.MajorIndentCorners);
             
-            strokeDataField.Add(lengthRegion);
+            SketchRendererUIUtils.AddWithMargins(strokeDataField, lengthRegion, CornerData.Empty);
             
             var pressureRegion = new VisualElement(); 
             var pressureLabel = new Label("Pressure");
             pressureRegion.Add(pressureLabel);
-            var pressureField = new PropertyField(property.FindPropertyRelative("Pressure"));
-            pressureRegion.Add(pressureField);
-            var pressureFalloffField = new PropertyField(property.FindPropertyRelative("PressureFalloff"));
-            pressureRegion.Add(pressureFalloffField);
+            var pressureField = SketchRendererUI.SketchFloatSliderPropertyWithInput(property.FindPropertyRelative("Pressure"));
+            SketchRendererUIUtils.AddWithMargins(pressureRegion, pressureField.Container, SketchRendererUIData.MajorIndentCorners);
+            var pressureFalloffField = SketchRendererUI.SketchFloatSliderPropertyWithInput(property.FindPropertyRelative("PressureFalloff"));
+            SketchRendererUIUtils.AddWithMargins(pressureRegion, pressureFalloffField.Container, SketchRendererUIData.MajorIndentCorners);
             
-            strokeDataField.Add(pressureRegion);
+            SketchRendererUIUtils.AddWithMargins(strokeDataField, pressureRegion, CornerData.Empty);
         
             return strokeDataField;
         }
@@ -69,9 +66,9 @@ namespace SketchRenderer.Editor.TextureTools.Strokes
             so.ApplyModifiedProperties();
         }
 
-        internal void Direction_OnTrack(SerializedProperty property)
+        internal void Direction_OnTrack(Slider slider, SerializedProperty property)
         {
-            directionSlider.SetValueWithoutNotify(MathUtilities.GetNormalizedAngle(property.vector4Value));
+            slider.SetValueWithoutNotify(MathUtilities.GetNormalizedAngle(property.vector4Value));
             property.serializedObject.ApplyModifiedProperties();
         }
     }

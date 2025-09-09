@@ -29,8 +29,8 @@ MonoBehaviour:
     ThicknessVariationRange: 0.019
     LengthVariationRange: 0.128
     PressureVariationRange: 0.048
-  FirstSubStrokeDirectionOffset: 0.952
-  FirstSubStrokeLengthMultiplier: 0.48
-  SecondSubStrokeDirectionOffset: 0.096
-  SecondSubStrokeLengthMultiplier: 0.13
-  Repetitions: 2
+  FirstSubStrokeDirectionOffset: 0.889
+  FirstSubStrokeLengthMultiplier: 0.3
+  SecondSubStrokeDirectionOffset: 0.194
+  SecondSubStrokeLengthMultiplier: 0.1
+  Repetitions: 1

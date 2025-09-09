@@ -22,7 +22,28 @@ namespace SketchRenderer.Editor.TextureTools
                 case TextureResolution.SIZE_1024:
                     return 1024;
                 default:
-                    return 520;
+                    return 512;
+            }
+        }
+
+        public static TextureResolution GetClosestResolutionFromTexture(Texture texture)
+        {
+            int powerWidth = Mathf.ClosestPowerOfTwo(texture.width);
+            int powerHeigth = Mathf.ClosestPowerOfTwo(texture.height);
+            int max = Mathf.Max(powerHeigth, powerWidth);
+
+            switch (max)
+            {
+                case < 256:
+                case 256:
+                    return TextureResolution.SIZE_256;
+                case 512:
+                    return TextureResolution.SIZE_512;
+                case 1024:
+                case > 1024:
+                    return TextureResolution.SIZE_1024;
+                default:
+                    return TextureResolution.SIZE_512;
             }
         }
         

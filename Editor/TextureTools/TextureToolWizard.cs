@@ -33,8 +33,6 @@ namespace SketchRenderer.Editor.TextureTools
             }
             
             TonalArtMapGeneratorWindow tamWindow = EditorWindow.GetWindow<TonalArtMapGeneratorWindow>();
-            tamWindow.minSize = tamWindow.ExpectedMinWindowSize;
-            tamWindow.maxSize = tamWindow.ExpectedMaxWindowSize;
             tamWindow.OnWindowClosed += DestroyTonalArtMapWindow;
             tamWindow.InitializeTool(SketchRendererManager.ResourceAsset);
             tamWindow.Show();

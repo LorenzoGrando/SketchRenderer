@@ -1,3 +1,4 @@
+using SketchRenderer.Editor.UIToolkit;
 using SketchRenderer.Runtime.TextureTools.Strokes;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -23,38 +24,32 @@ namespace SketchRenderer.Editor.TextureTools.Strokes
             hatchingRegion.Add(hatchingLabel);
             
             minHatchingProp = serializedObject.FindProperty("MinCrossHatchingThreshold");
-            var minHatchingField = new PropertyField(minHatchingProp);
-            minHatchingField.label = "CrossHatching Start Threshold";
-            minHatchingField.BindProperty(minHatchingProp);
-            minHatchingField.RegisterValueChangeCallback(MinHatching_Changed);
-            hatchingRegion.Add(minHatchingField);
+            var minHatchingField = SketchRendererUI.SketchFloatSliderPropertyWithInput(minHatchingProp, nameOverride: "CrossHatching Start", MinHatching_Changed);
+            SketchRendererUIUtils.AddWithMargins(hatchingRegion, minHatchingField.Container, SketchRendererUIData.MajorIndentCorners);
             
             maxHatchingProp = serializedObject.FindProperty("MaxCrossHatchingThreshold");
-            var maxHatchingField = new PropertyField(maxHatchingProp);
-            maxHatchingField.label = "CrossHatching Mix Direction Threshold";
-            maxHatchingField.BindProperty(maxHatchingProp);
-            maxHatchingField.RegisterValueChangeCallback(MaxHatching_Changed);
-            hatchingRegion.Add(maxHatchingField);
+            var maxHatchingField = SketchRendererUI.SketchFloatSliderPropertyWithInput(maxHatchingProp, nameOverride: "CrossHatching Mix Start", MaxHatching_Changed);
+            SketchRendererUIUtils.AddWithMargins(hatchingRegion, maxHatchingField.Container, SketchRendererUIData.MajorIndentCorners);
             
             baseAsset.Add(hatchingRegion);
             return baseAsset;
         }
 
-        private void MinHatching_Changed(SerializedPropertyChangeEvent bind)
+        private void MinHatching_Changed(ChangeEvent<float> bind)
         {
-            float newValue = bind.changedProperty.floatValue;
+            float newValue = bind.newValue;
             float maxHatchingValue = maxHatchingProp.floatValue;
-            bind.changedProperty.floatValue = Mathf.Min(newValue, maxHatchingValue);
-            bind.changedProperty.serializedObject.ApplyModifiedProperties();
+            minHatchingProp.floatValue = Mathf.Min(newValue, maxHatchingValue);
+            minHatchingProp.serializedObject.ApplyModifiedProperties();
             Repaint();
         }
 
-        private void MaxHatching_Changed(SerializedPropertyChangeEvent bind)
+        private void MaxHatching_Changed(ChangeEvent<float>  bind)
         {
-            float newValue = bind.changedProperty.floatValue;
+            float newValue = bind.newValue;
             float minHatchingValue = minHatchingProp.floatValue;
-            bind.changedProperty.floatValue = Mathf.Max(newValue, minHatchingValue);
-            bind.changedProperty.serializedObject.ApplyModifiedProperties();
+            maxHatchingProp.floatValue = Mathf.Max(newValue, minHatchingValue);
+            maxHatchingProp.serializedObject.ApplyModifiedProperties();
             Repaint();
         }
     }

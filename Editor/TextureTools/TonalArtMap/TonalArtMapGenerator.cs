@@ -16,6 +16,8 @@ namespace SketchRenderer.Editor.TextureTools
     internal static class TonalArtMapGenerator
     {
         internal static event Action OnTextureUpdated;
+        internal static event Action<TextureToolGenerationStatusArgs> OnTonalArtMapGenerationStep; 
+        internal static event Action OnTonalArtMapGenerated;
         
         internal static string DefaultFileOutputName => "TonalArtMapTexture";
         internal static string DefaultFileOutputPath
@@ -209,6 +211,15 @@ namespace SketchRenderer.Editor.TextureTools
                 return false;
 
             return true;
+        }
+
+        internal static TextureToolGenerationStatusArgs CreateStatusArgs(string subProcess, float relativeProgress)
+        {
+            TextureToolGenerationStatusArgs args = new TextureToolGenerationStatusArgs();
+            args.toolProcess = "Generating Tonal Art Maps";
+            args.toolSubprocess = subProcess;
+            args.toolTotalProgress = relativeProgress;
+            return args;
         }
         
         #region Compute
@@ -564,6 +575,7 @@ namespace SketchRenderer.Editor.TextureTools
             TextureGenerator.PrepareGeneratorForRender();
             ConfigureGeneratorData();
             ClearAndReleaseTAMTones();
+            OnTonalArtMapGenerationStep?.Invoke(CreateStatusArgs("Preparing Data...", 0f));
             currentRoutine = StaticCoroutine.StartCoroutine(GenerateTAMTonesRoutine());
             Generating = true;
         }
@@ -621,7 +633,9 @@ namespace SketchRenderer.Editor.TextureTools
                     target = TonalArtMapAsset.ForceFirstToneFullWhite ? 0f : target;
                 else if (i == TonalArtMapAsset.ExpectedTones - 1)
                     target = TonalArtMapAsset.ForceFinalToneFullBlack ? 1f : Mathf.Lerp(currentFillRate, 1f, 0.5f);
+                OnTonalArtMapGenerationStep?.Invoke(CreateStatusArgs($"Creating Tonal Value Texture {i}...", (float)(i * 2f)/(float)(TonalArtMapAsset.ExpectedTones * 2f)));
                 yield return StaticCoroutine.StartCoroutine(ApplyStrokesUntilFillRateRoutine(target, currentFillRate));
+                OnTonalArtMapGenerationStep?.Invoke(CreateStatusArgs($"Creating Tonal Value Texture {i}...", (float)(i * 2f + 1)/(float)(TonalArtMapAsset.ExpectedTones * 2f)));
                 Texture2D output = DispatchSaveTexture(true, $"Tone_{i}");
                 if (output == null)
                 {
@@ -644,6 +658,7 @@ namespace SketchRenderer.Editor.TextureTools
 
             currentRoutine = null;
             Generating = false;
+            OnTonalArtMapGenerated?.Invoke();
         }
 
         private static void PackAllTAMTextures()
@@ -658,6 +673,7 @@ namespace SketchRenderer.Editor.TextureTools
             List<Texture2D> packedTAMs = new List<Texture2D>();
             for (int i = 0; i < TonalArtMapAsset.ExpectedTones; i += 3)
             {
+                OnTonalArtMapGenerationStep?.Invoke(CreateStatusArgs($"Packing Tones{i}-{i+2}...", (float)i/((float)TonalArtMapAsset.ExpectedTones/3f)));
                 bool isReduced = i + 1 >= TonalArtMapAsset.Tones.Length;
                 bool isFullReduced = i + 2 >= TonalArtMapAsset.Tones.Length;
                 if (!isReduced && !isFullReduced)

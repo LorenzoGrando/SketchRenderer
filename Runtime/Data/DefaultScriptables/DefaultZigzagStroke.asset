@@ -29,7 +29,7 @@ MonoBehaviour:
     ThicknessVariationRange: 0.039
     LengthVariationRange: 0.207
     PressureVariationRange: 0.091
-  SubStrokeDirectionOffset: -0.891
-  SubStrokeLengthMultiplier: 0.91
+  SubStrokeDirectionOffset: -0.729
+  SubStrokeLengthMultiplier: 0.5
   OnlyMultiplyZigStroke: 0
-  Repetitions: 4
+  Repetitions: 2

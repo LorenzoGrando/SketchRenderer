@@ -5,17 +5,21 @@ using UnityEngine.UIElements;
 
 namespace SketchRenderer.Editor.UIToolkit
 {
-    public class AssetsDirectoryManipulator : Manipulator
+    public class AssetsDirectoryManipulator : Manipulator, ISketchManipulator<TextField>
     {
         private TextField pathField;
         
         public event Action<string> OnValidated;
-
-        public AssetsDirectoryManipulator(TextField pathField)
+        
+        public void Initialize(TextField field)
         {
-            this.pathField = pathField;
+            pathField = field;
+            pathField.RegisterValueChangedCallback(OnValueChanged);
+        }
 
-            this.pathField.RegisterValueChangedCallback(OnValueChanged);
+        public Manipulator GetBaseManipulator()
+        {
+            return this;
         }
 
         private void OnValueChanged(ChangeEvent<string> evt)

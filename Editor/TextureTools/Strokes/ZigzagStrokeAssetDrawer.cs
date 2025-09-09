@@ -1,3 +1,4 @@
+using SketchRenderer.Editor.UIToolkit;
 using SketchRenderer.Runtime.TextureTools.Strokes;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -20,24 +21,20 @@ namespace SketchRenderer.Editor.TextureTools.Strokes
             zigzagRegion.Add(zigzagLabel);
             
             SerializedProperty directionOffsetProp = serializedObject.FindProperty("SubStrokeDirectionOffset");
-            var directionOffsetField = new PropertyField(directionOffsetProp);
-            directionOffsetField.BindProperty(directionOffsetProp);
-            zigzagRegion.Add(directionOffsetField);
+            var directionOffsetField = SketchRendererUI.SketchFloatSliderPropertyWithInput(directionOffsetProp);
+            SketchRendererUIUtils.AddWithMargins(zigzagRegion, directionOffsetField.Container, SketchRendererUIData.MajorIndentCorners);
             
             SerializedProperty lengthModifierProp = serializedObject.FindProperty("SubStrokeLengthMultiplier");
-            var lengthModifierField = new PropertyField(lengthModifierProp);
-            lengthModifierField.BindProperty(lengthModifierProp);
-            zigzagRegion.Add(lengthModifierField);
+            var lengthModifierField = SketchRendererUI.SketchFloatProperty(lengthModifierProp);
+            SketchRendererUIUtils.AddWithMargins(zigzagRegion, lengthModifierField.Container, SketchRendererUIData.MajorIndentCorners);
             
             SerializedProperty onlyZigProp = serializedObject.FindProperty("OnlyMultiplyZigStroke");
-            var onlyZigField = new PropertyField(onlyZigProp);
-            onlyZigField.BindProperty(onlyZigProp);
-            zigzagRegion.Add(onlyZigField);
+            var onlyZigField = SketchRendererUI.SketchBoolProperty(onlyZigProp);
+            SketchRendererUIUtils.AddWithMargins(zigzagRegion, onlyZigField.Container, SketchRendererUIData.MajorIndentCorners);
             
             SerializedProperty repetitionsProp = serializedObject.FindProperty("Repetitions");
-            var repetitionsField = new PropertyField(repetitionsProp);
-            repetitionsField.BindProperty(repetitionsProp);
-            zigzagRegion.Add(repetitionsField);
+            var repetitionsField = SketchRendererUI.SketchIntSliderPropertyWithInput(repetitionsProp);
+            SketchRendererUIUtils.AddWithMargins(zigzagRegion, repetitionsField.Container, SketchRendererUIData.MajorIndentCorners);
             
             baseAsset.Add(zigzagRegion);
             return baseAsset;
