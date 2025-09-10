@@ -58,7 +58,8 @@ namespace SketchRenderer.Editor.TextureTools
         {
             if (!TonalArtMapGenerator.Generating || EditorApplication.isCompiling || EditorApplication.isPlayingOrWillChangePlaymode)
             {
-                ForceRepaint();
+                if(window.hasFocus)
+                    ForceRepaint();
             }
         }
 

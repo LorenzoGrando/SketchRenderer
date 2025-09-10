@@ -2,6 +2,7 @@ using System;
 using SketchRenderer.Runtime.Data;
 using SketchRenderer.Runtime.TextureTools.Strokes;
 using SketchRenderer.Runtime.TextureTools.TonalArtMap;
+using TextureTools.Material;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -21,6 +22,9 @@ namespace SketchRenderer.Runtime.Data
             
             [SerializeField] [HideInInspector] [Reload("Shader/MaterialSurface.shader")]
             public Shader MaterialSurface;
+            
+            [SerializeField] [HideInInspector] [Reload("Shader/MaterialGenerator.shader")]
+            public Shader MaterialGenerator;
             
             [SerializeField] [HideInInspector] [Reload("Shader/Outlining/EdgeDetection/ColorSilhouette.shader")]
             public Shader ColorEdgeDetection;
@@ -90,6 +94,9 @@ namespace SketchRenderer.Runtime.Data
             
             [SerializeField] [HideInInspector] [Reload("Runtime/Data/DefaultScriptables/DefaultTonalArtMap.asset")]
             public TonalArtMapAsset TonalArtMap;
+            
+            [SerializeField] [HideInInspector] [Reload("Runtime/Data/DefaultScriptables/DefaultMaterialData.asset")]
+            public MaterialDataAsset MaterialData;
         }
         
         [SerializeField] [HideInInspector]

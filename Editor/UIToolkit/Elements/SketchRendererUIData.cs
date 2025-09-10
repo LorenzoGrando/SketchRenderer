@@ -30,6 +30,11 @@ namespace SketchRenderer.Editor.UIToolkit
         {
             return new CornerData(left.left * scalar, left.top * scalar, left.right * scalar, left.bottom * scalar);
         }
+        
+        public static CornerData operator *(CornerData left, CornerData right)
+        {
+            return new CornerData(left.left * right.left, left.top * right.top, left.right * right.right, left.bottom * right.bottom);
+        }
     }
     
     internal static class SketchRendererUIData
