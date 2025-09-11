@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using SketchRenderer.Editor.UIToolkit;
+using SketchRenderer.Editor.Utils;
 using SketchRenderer.Runtime.Data;
 using TextureTools.Material;
 using UnityEditor;
@@ -26,10 +28,10 @@ namespace SketchRenderer.Editor.TextureTools
         
         internal override void InitializeTool(SketchResourceAsset resources)
         {
-            //TonalArtMapGenerator.OnTextureUpdated += UpdatePreviewTargetTexture;
+            MaterialGenerator.OnTextureUpdated += UpdatePreviewTargetTexture;
             TextureGenerator.OnRecreateTargetTexture += UpdatePreviewTargetTexture;
             
-            //TonalArtMapGenerator.OnTextureUpdated += FinalizeProgressBar;
+            MaterialGenerator.OnTextureUpdated += FinalizeProgressBar;
             
             MaterialGenerator.Init(resources);
             ApplyToMatchGeneratorSettings();
@@ -37,19 +39,17 @@ namespace SketchRenderer.Editor.TextureTools
 
         internal override void FinalizeTool()
         {
-            //TonalArtMapGenerator.OnTextureUpdated -= UpdatePreviewTargetTexture;
+            MaterialGenerator.OnTextureUpdated -= UpdatePreviewTargetTexture;
             TextureGenerator.OnRecreateTargetTexture -= UpdatePreviewTargetTexture;
             
-            //TonalArtMapGenerator.OnTextureUpdated -= FinalizeProgressBar;
-            
-            //TonalArtMapGenerator.Finish();
+            MaterialGenerator.OnTextureUpdated -= FinalizeProgressBar;
         }
 
         internal void OnValidate()
         {
-            if (/*!TonalArtMapGenerator.Generating ||*/ EditorApplication.isCompiling || EditorApplication.isPlayingOrWillChangePlaymode)
+            if (EditorApplication.isCompiling || EditorApplication.isPlayingOrWillChangePlaymode)
             {
-                if(window.hasFocus)
+                if(window != null && window.hasFocus)
                     ForceRepaint();
             }
         }
@@ -58,15 +58,15 @@ namespace SketchRenderer.Editor.TextureTools
 
         internal void Update()
         {
-            //if (TonalArtMapGenerator.Generating)
-            //{
-                //EditorUtility.DisplayProgressBar(toolStatusDisplay.toolProcess, toolStatusDisplay.toolSubprocess, toolStatusDisplay.toolTotalProgress);
-            //}
+            if (MaterialGenerator.Generating)
+            {
+                EditorUtility.DisplayProgressBar(toolStatusDisplay.toolProcess, toolStatusDisplay.toolSubprocess, toolStatusDisplay.toolTotalProgress);
+            }
         }
 
         internal void FinalizeProgressBar()
         {
-            //TonalArtMapGenerator.OnTonalArtMapGenerationStep -= UpdateToolStatus;
+            MaterialGenerator.OnMaterialGenerationStep -= UpdateToolStatus;
             EditorUtility.ClearProgressBar();
         }
         
@@ -110,15 +110,24 @@ namespace SketchRenderer.Editor.TextureTools
                 materialAssetField = SketchRendererUI.SketchObjectField("Material Data Asset", typeof(MaterialDataAsset), MaterialGenerator.MaterialDataAsset, changeCallback:MaterialAsset_Changed);
             else
                 materialAssetField.Container.MarkDirtyRepaint();
-            SketchRendererUIUtils.AddWithMargins(materialDataRegion, materialAssetField.Container, SketchRendererUIData.BaseFieldMargins);
+            
+            MaterialDataAsset materialAsset = materialAssetField.Field.value as MaterialDataAsset;
+            
+            CornerData assetMargins = (materialAsset != null ? SketchRendererUIData.BaseFieldMargins : SketchRendererUIData.BaseFieldNoVerticalMargins);
+            SketchRendererUIUtils.AddWithMargins(materialDataRegion, materialAssetField.Container, assetMargins);
 
-            if (materialAssetField.Field.value != null)
+            if (materialAsset != null)
             {
                 if (materialAssetEditor == null)
                     materialAssetEditor = UnityEditor.Editor.CreateEditor(materialAssetField.Field.value);
                 var materialEditorElement = materialAssetEditor.CreateInspectorGUI();
                 materialEditorElement.RegisterCallback<SerializedPropertyChangeEvent>(MaterialData_Changed);
                 SketchRendererUIUtils.AddWithMargins(materialDataRegion, materialEditorElement, SketchRendererUIData.BaseFieldMargins);
+            }
+            else
+            {
+                var createCustomMaterialAsset = new Button(CreateMaterialData_Clicked) { text = "Create New And Assign"};
+                SketchRendererUIUtils.AddWithMargins(materialDataRegion, createCustomMaterialAsset, SketchRendererUIData.BaseFieldMargins);
             }
             
             TextureResolution initialResolution = TextureGenerator.Resolution;
@@ -142,8 +151,11 @@ namespace SketchRenderer.Editor.TextureTools
             var pathButton = new Button(ChoosePath_Clicked) { text = "Choose Override Directory Path"};
             SketchRendererUIUtils.AddWithMargins(settingsContainer, pathButton, SketchRendererUIData.MinorFieldMargins);
 
-            var generateTamButton = SketchRendererUI.SketchMajorButton("Generate Material Textures", GenerateTextures_Clicked);
-            SketchRendererUIUtils.AddWithMargins(settingsContainer, generateTamButton, SketchRendererUIData.MinorFieldMargins);
+            var generateTexButton = SketchRendererUI.SketchMajorButton("Generate Material Textures", GenerateTextures_Clicked);
+            SketchRendererUIUtils.AddWithMargins(settingsContainer, generateTexButton, SketchRendererUIData.MinorFieldMargins);
+                
+            var generateAndAssignTexButton = SketchRendererUI.SketchMajorButton("Generate and Assign to Renderer Context", GenerateAndAssignTextures_Clicked);
+            SketchRendererUIUtils.AddWithMargins(settingsContainer, generateAndAssignTexButton, SketchRendererUIData.MinorFieldMargins);
             
             SketchRendererUIUtils.AddWithMargins(exportRegion, settingsContainer, SketchRendererUIData.BaseFieldMargins);
             return exportRegion;
@@ -216,12 +228,18 @@ namespace SketchRenderer.Editor.TextureTools
             ForceRebuildGUI();
         }
         
-        // -- Stroke Panel
+        // -- Material Panel
         internal void MaterialAsset_Changed(ChangeEvent<UnityEngine.Object> bind)
         {
             MaterialDataAsset materialAsset = (MaterialDataAsset)bind.newValue;
             MaterialGenerator.MaterialDataAsset = materialAsset;
             ForceRebuildGUI();
+        }
+
+        internal void CreateMaterialData_Clicked()
+        {
+            MaterialDataAsset asset = MaterialGeneratorWizard.CreateMaterialDataAsset();
+            materialAssetField.Field.value = asset;
         }
 
         internal void MaterialData_Changed(SerializedPropertyChangeEvent bind) => ForceRepaint();
@@ -245,8 +263,33 @@ namespace SketchRenderer.Editor.TextureTools
         
         internal void GenerateTextures_Clicked()
         {
-            //TonalArtMapGenerator.OnTonalArtMapGenerationStep += UpdateToolStatus;
+            if(MaterialGenerator.Generating)
+                return;
+            MaterialGenerator.OnMaterialGenerationStep += UpdateToolStatus;
             MaterialGenerator.GenerateMaterialTextures();
+        }
+
+        internal void GenerateAndAssignTextures_Clicked()
+        {
+            if(MaterialGenerator.Generating)
+                return;
+            
+            GenerateTextures_Clicked();
+            StaticCoroutine.StartCoroutine(AwaitTextureGenerationCoroutine(AssignToCurrentContext));
+        }
+
+        private void AssignToCurrentContext()
+        {
+            MaterialGeneratorWizard.SetAsActiveAlbedo(MaterialGenerator.LastGeneratedAlbedoTexture);
+            MaterialGeneratorWizard.SetAsActiveDirectional(MaterialGenerator.LastGeneratedDirectionalTexture);
+        }
+
+        private IEnumerator AwaitTextureGenerationCoroutine(Action callback)
+        {
+            while (MaterialGenerator.Generating)
+                yield return null;
+
+            callback?.Invoke();
         }
         
         #endregion

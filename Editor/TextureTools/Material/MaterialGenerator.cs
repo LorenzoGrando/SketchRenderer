@@ -1,3 +1,4 @@
+using System;
 using SketchRenderer.Runtime.Data;
 using SketchRenderer.Runtime.TextureTools.Strokes;
 using SketchRenderer.Runtime.TextureTools.TonalArtMap;
@@ -10,6 +11,9 @@ namespace SketchRenderer.Editor.TextureTools
 {
     public static class MaterialGenerator
     {
+        internal static event Action OnTextureUpdated;
+        internal static event Action<TextureToolGenerationStatusArgs> OnMaterialGenerationStep; 
+        
         internal static string DefaultFileOutputName
         {
             get
@@ -100,6 +104,11 @@ namespace SketchRenderer.Editor.TextureTools
         private static LocalKeyword CrumpleKeyword;
         private static LocalKeyword NotebookLineKeyword;
         
+        internal static bool Generating { get; private set; }
+
+        internal static Texture LastGeneratedAlbedoTexture {get; private set;}
+        internal static Texture LastGeneratedDirectionalTexture { get; private set; }
+        
         internal static void Init(SketchResourceAsset resources)
         {
             if (MaterialGeneratorShader == null)
@@ -139,6 +148,15 @@ namespace SketchRenderer.Editor.TextureTools
                 return false;
 
             return true;
+        }
+        
+        internal static TextureToolGenerationStatusArgs CreateStatusArgs(string subProcess, float relativeProgress)
+        {
+            TextureToolGenerationStatusArgs args = new TextureToolGenerationStatusArgs();
+            args.toolProcess = "Generating Material Textures";
+            args.toolSubprocess = subProcess;
+            args.toolTotalProgress = relativeProgress;
+            return args;
         }
 
         private static void PrepareData()
@@ -262,10 +280,10 @@ namespace SketchRenderer.Editor.TextureTools
         {
             if(!IsGeneratorValid())
                 return;
-            
+            OnMaterialGenerationStep?.Invoke(CreateStatusArgs("Creating Albedo Texture", 0.25f));
             UpdateMaterialAlbedoTexture();
             ConfigureGeneratorData();
-            TextureGenerator.SaveCurrentTargetTexture(TextureOutputType, overwrite: true);
+            LastGeneratedAlbedoTexture = TextureGenerator.SaveCurrentTargetTexture(TextureOutputType, overwrite: true);
         }
 
         internal static void GenerateDirectionalTexture()
@@ -273,15 +291,19 @@ namespace SketchRenderer.Editor.TextureTools
             if(!IsGeneratorValid())
                 return;
             
+            OnMaterialGenerationStep?.Invoke(CreateStatusArgs("Creating Normal Texture", 0.25f));
             UpdateMaterialDirectionalTexture();
             ConfigureGeneratorData();
-            TextureGenerator.SaveCurrentTargetTexture(TextureOutputType, overwrite: true);
+            LastGeneratedDirectionalTexture = TextureGenerator.SaveCurrentTargetTexture(TextureOutputType, overwrite: true);
         }
 
         internal static void GenerateMaterialTextures()
         {
+            Generating = true;
             GenerateAlbedoTexture();
             GenerateDirectionalTexture();
+            Generating = false;
+            OnTextureUpdated?.Invoke();
         }
         
         #endregion

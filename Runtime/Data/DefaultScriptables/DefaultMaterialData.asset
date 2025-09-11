@@ -16,33 +16,33 @@ MonoBehaviour:
   Granularity:
     Scale: {x: 7, y: 7}
     DetailLevel: 4
-    DetailFrequency: 5
-    DetailPersistence: 0.19
-    MinimumGranularity: 0.497
-    MaximumGranularity: 0.84
+    DetailFrequency: 7
+    DetailPersistence: 0.227
+    MinimumGranularity: 0.454
+    MaximumGranularity: 0.871
     GranularityTint: {r: 1, g: 0.9780997, b: 0.9386792, a: 1}
   UseLaidLines: 1
   LaidLines:
     LineFrequency: 50
-    LineThickness: 0.344
+    LineThickness: 0.38
     LineStrength: 0.08
     LineGranularityDisplacement: 0.166
-    LineGranularityMasking: 0.503
+    LineGranularityMasking: 0.301
     LineTint: {r: 0.5849056, g: 0.5180442, b: 0.40005338, a: 1}
   UseCrumples: 1
   Crumples:
     CrumpleScale: {x: 3, y: 3}
-    CrumpleJitter: 0.534
-    CrumpleStrength: 0.785
+    CrumpleJitter: 0.589
+    CrumpleStrength: 0.65
     CrumpleDetailLevel: 3
     CrumpleDetailFrequency: 3
-    CrumpleDetailPersistence: 0.276
+    CrumpleDetailPersistence: 0.35
     CrumpleTintStrength: 0.086
     CrumpleTintSharpness: 3.93
     CrumpleTint: {r: 0.4811321, g: 0.4189102, b: 0.374466, a: 1}
   UseNotebookLines: 1
   NotebookLines:
-    NotebookLineGranularitySensitivity: 0.288
+    NotebookLineGranularitySensitivity: 0.638
     HorizontalLineFrequency: 20
     HorizontalLineOffset: 0
     HorizontalLineThickness: 0.005

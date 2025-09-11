@@ -146,7 +146,7 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
                 notebookLines = step(1.0 - (_NotebookLineSize), notebookLines);
                 float notebookSensitivity = 1.0;
                 #if defined(USE_GRANULARITY)
-                notebookSensitivity = step(_NotebookLineGranularitySensitivity, 1.0 - granularity);
+                notebookSensitivity = step(_NotebookLineGranularitySensitivity, granularity);
                 #endif
                 notebookLines *= notebookSensitivity;
                 #endif

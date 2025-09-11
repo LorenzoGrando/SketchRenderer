@@ -101,5 +101,21 @@ namespace SketchRenderer.Runtime.Data
         
         [SerializeField] [HideInInspector]
         public DefaultScriptables Scriptables = new DefaultScriptables();
+        
+        /// <summary>
+        /// Class holding references to all texture files used in the package.
+        /// </summary>
+        [Serializable, ReloadGroup]
+        public class TextureData
+        {
+            [SerializeField] [HideInInspector] [Reload("Runtime/Data/DefaultTextures/Material/DefaultMaterialAlbedo.png")]
+            public Texture2D MaterialAlbedo;
+            
+            [SerializeField] [HideInInspector] [Reload("Runtime/Data/DefaultTextures/Material/DefaultMaterialDirectional.png")]
+            public Texture2D MaterialDirection;
+        }
+        
+        [SerializeField] [HideInInspector]
+        public TextureData Textures = new TextureData();
     }
 }
