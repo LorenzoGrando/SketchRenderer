@@ -96,5 +96,15 @@ namespace SketchRenderer.Runtime.TextureTools.Strokes
         }
         
         protected virtual StrokeData PackAdditionalData(StrokeData data) =>  data;
+
+        public void CopyFrom(StrokeAsset asset)
+        {
+            if(asset == null)
+                return;
+
+            StrokeData = asset.StrokeData;
+            SelectedFalloffFunction = asset.SelectedFalloffFunction;
+            VariationData = asset.VariationData;
+        }
     }
 }

@@ -15,10 +15,10 @@ MonoBehaviour:
   UseGranularity: 1
   Granularity:
     Scale: {x: 7, y: 7}
-    DetailLevel: 3
-    DetailFrequency: 7
-    DetailPersistence: 0.166
-    MinimumGranularity: 0.399
+    DetailLevel: 5
+    DetailFrequency: 4
+    DetailPersistence: 0.411
+    MinimumGranularity: 0.307
     MaximumGranularity: 0.81
     GranularityTint: {r: 1, g: 0.96603775, b: 0.9009434, a: 1}
   UseLaidLines: 1
@@ -32,13 +32,13 @@ MonoBehaviour:
   UseCrumples: 1
   Crumples:
     CrumpleScale: {x: 3, y: 3}
-    CrumpleJitter: 0.562
-    CrumpleStrength: 0.65
+    CrumpleJitter: 0.571
+    CrumpleStrength: 0.871
     CrumpleDetailLevel: 2
     CrumpleDetailFrequency: 2
-    CrumpleDetailPersistence: 0.444
-    CrumpleTintStrength: 0.623
-    CrumpleTintSharpness: 8.28
+    CrumpleDetailPersistence: 0.399
+    CrumpleTintStrength: 1
+    CrumpleTintSharpness: 5.69
     CrumpleTint: {r: 0.4811321, g: 0.4189102, b: 0.374466, a: 1}
   UseNotebookLines: 1
   NotebookLines:

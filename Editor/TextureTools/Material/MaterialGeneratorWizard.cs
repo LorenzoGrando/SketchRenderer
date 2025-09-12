@@ -24,6 +24,7 @@ namespace SketchRenderer.Editor.TextureTools
                 SketchAssetCreationWrapper.TryValidateOrCreateAssetPath(validatedPath);
 
                 MaterialDataAsset materialDataAsset = ScriptableObject.CreateInstance<MaterialDataAsset>();
+                materialDataAsset.CopyFrom(SketchRendererManager.ResourceAsset.Scriptables.MaterialData);
                 string assetName = nameof(MaterialDataAsset) + ".asset";
                 int copiesCount = 0;
                 while (AssetDatabase.AssetPathExists(validatedPath + "/" +  assetName))

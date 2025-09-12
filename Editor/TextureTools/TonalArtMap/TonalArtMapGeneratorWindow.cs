@@ -267,7 +267,7 @@ namespace SketchRenderer.Editor.TextureTools
         {
             if (previewImage != null)
             {
-                previewImage.visible = IsActiveWindow || hasDirtyRepaint;
+                previewImage.visible = (strokeAssetField != null && strokeAssetField.Field.value != null) && (IsActiveWindow || hasDirtyRepaint);
                 previewImage.image = TextureGenerator.TargetRT;
             }
         }

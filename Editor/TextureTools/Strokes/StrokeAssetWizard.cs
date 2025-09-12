@@ -1,4 +1,5 @@
 using System;
+using SketchRenderer.Editor.Rendering;
 using SketchRenderer.Editor.Utils;
 using SketchRenderer.Runtime.Data;
 using SketchRenderer.Runtime.TextureTools.Strokes;
@@ -47,13 +48,21 @@ namespace SketchRenderer.Editor.TextureTools.Strokes
             switch (sdfType)
             {
                 case StrokeSDFType.SIMPLE:
-                    return ScriptableObject.CreateInstance<StrokeAsset>();
+                    StrokeAsset asset = ScriptableObject.CreateInstance<StrokeAsset>();
+                    asset.CopyFrom(SketchRendererManager.ResourceAsset.Scriptables.Strokes.DefaultSimpleStroke);
+                    return asset;
                 case StrokeSDFType.HATCHING:
-                    return ScriptableObject.CreateInstance<HatchingStrokeAsset>();
+                    HatchingStrokeAsset hatchingAsset = ScriptableObject.CreateInstance<HatchingStrokeAsset>();
+                    hatchingAsset.CopyFrom(SketchRendererManager.ResourceAsset.Scriptables.Strokes.DefaultHatchingStroke);
+                    return hatchingAsset;
                 case StrokeSDFType.ZIGZAG:
-                    return ScriptableObject.CreateInstance<ZigzagStrokeAsset>();
+                    ZigzagStrokeAsset zigzagAsset = ScriptableObject.CreateInstance<ZigzagStrokeAsset>();
+                    zigzagAsset.CopyFrom(SketchRendererManager.ResourceAsset.Scriptables.Strokes.DefaultZigzagStroke);
+                    return zigzagAsset;
                 case StrokeSDFType.FEATHERING:
-                    return ScriptableObject.CreateInstance<FeatheringStrokeAsset>();
+                    FeatheringStrokeAsset featheringAsset = ScriptableObject.CreateInstance<FeatheringStrokeAsset>();
+                    featheringAsset.CopyFrom(SketchRendererManager.ResourceAsset.Scriptables.Strokes.DefaultFeatheringStroke);
+                    return featheringAsset;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(sdfType), sdfType, null);
             }

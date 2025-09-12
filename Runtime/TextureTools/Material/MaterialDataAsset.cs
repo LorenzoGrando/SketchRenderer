@@ -21,5 +21,23 @@ namespace TextureTools.Material
         [Space(10)]
         public bool UseNotebookLines;
         public NotebookLineData NotebookLines;
+
+        public void CopyFrom(MaterialDataAsset materialDataAsset)
+        {
+            if(materialDataAsset == null)
+                return;
+            
+            UseGranularity = materialDataAsset.UseGranularity;
+            Granularity = materialDataAsset.Granularity;
+            
+            UseLaidLines = materialDataAsset.UseLaidLines;
+            LaidLines = materialDataAsset.LaidLines;
+            
+            UseCrumples = materialDataAsset.UseCrumples;
+            Crumples = materialDataAsset.Crumples;
+            
+            UseNotebookLines = materialDataAsset.UseNotebookLines;
+            NotebookLines = materialDataAsset.NotebookLines;
+        }
     }
 }
