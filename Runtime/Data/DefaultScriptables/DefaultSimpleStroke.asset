@@ -18,14 +18,14 @@ MonoBehaviour:
     AdditionalPackedData: {x: 0, y: 0, z: 0, w: 0}
     Thickness: 0.132
     ThicknessFalloffConstraint: 0.153
-    Length: 0.712
+    Length: 0.54
     LengthThicknessFalloff: 1
-    Pressure: 0.778
+    Pressure: 0.81
     PressureFalloff: 1
     Iterations: 0
   SelectedFalloffFunction: 0
   VariationData:
-    DirectionVariationRange: 0.059
-    ThicknessVariationRange: 0.029
+    DirectionVariationRange: 0.037
+    ThicknessVariationRange: 0.166
     LengthVariationRange: 0.076
     PressureVariationRange: 0.36

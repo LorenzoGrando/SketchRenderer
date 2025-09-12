@@ -1,4 +1,5 @@
 using System;
+using SketchRenderer.Editor.TextureTools.Strokes;
 using SketchRenderer.Editor.UIToolkit;
 using SketchRenderer.Runtime.Data;
 using SketchRenderer.Runtime.Extensions;
@@ -25,6 +26,7 @@ namespace SketchRenderer.Editor.TextureTools
         internal Image previewImage;
         internal SketchElement<ObjectField> strokeAssetField;
         internal UnityEditor.Editor strokeAssetEditor;
+        internal EnumField strokeCreationField;
         
         internal SketchElement<ObjectField> tonalArtMapAssetField;
         internal UnityEditor.Editor tonalArtMapAssetEditor;
@@ -131,6 +133,14 @@ namespace SketchRenderer.Editor.TextureTools
                 var strokeEditorElement = strokeAssetEditor.CreateInspectorGUI();
                 strokeEditorElement.RegisterCallback<SerializedPropertyChangeEvent>(StrokeData_Changed);
                 SketchRendererUIUtils.AddWithMargins(strokeDataRegion, strokeEditorElement, SketchRendererUIData.BaseFieldMargins);
+            }
+            else
+            {
+                var strokeCreation = SketchRendererUI.SketchEnumField("Stroke To Create", StrokeSDFType.SIMPLE);
+                strokeCreationField = strokeCreation.Field;
+                SketchRendererUIUtils.AddWithMargins(strokeDataRegion, strokeCreation.Container, SketchRendererUIData.BaseFieldNoVerticalMargins);
+                var createCustomStrokeAsset = new Button(CreateStrokeAsset_Clicked) { text = "Create from Type and Assign"};
+                SketchRendererUIUtils.AddWithMargins(strokeDataRegion, createCustomStrokeAsset, SketchRendererUIData.BaseFieldMargins);
             }
 
             return strokeDataRegion;
@@ -257,14 +267,17 @@ namespace SketchRenderer.Editor.TextureTools
         {
             if (previewImage != null)
             {
+                previewImage.visible = IsActiveWindow || hasDirtyRepaint;
                 previewImage.image = TextureGenerator.TargetRT;
             }
         }
 
         internal void ForceRepaint()
         {
+            hasDirtyRepaint = true;
             TonalArtMapGenerator.DisplaySDF();
             Repaint();
+            hasDirtyRepaint = false;
         }
 
         internal void ForceRebuildGUI()
@@ -310,6 +323,12 @@ namespace SketchRenderer.Editor.TextureTools
             StrokeAsset strokeAsset = (StrokeAsset)bind.newValue;
             TonalArtMapGenerator.StrokeDataAsset = strokeAsset;
             ForceRebuildGUI();
+        }
+        
+        internal void CreateStrokeAsset_Clicked()
+        {
+            StrokeAsset strokeAsset = StrokeAssetWizard.CreateStrokeAsset((StrokeSDFType)strokeCreationField.value);
+            strokeAssetField.Field.value = strokeAsset;
         }
 
         internal void StrokeData_Changed(SerializedPropertyChangeEvent bind) => ForceRepaint();

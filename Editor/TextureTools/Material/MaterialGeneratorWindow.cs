@@ -187,14 +187,17 @@ namespace SketchRenderer.Editor.TextureTools
         {
             if (previewImage != null)
             {
+                previewImage.visible = IsActiveWindow || hasDirtyRepaint;
                 previewImage.image = TextureGenerator.TargetRT;
             }
         }
 
         internal void ForceRepaint()
         {
+            hasDirtyRepaint = true;
             MaterialGenerator.UpdateMaterialAlbedoTexture();
             Repaint();
+            hasDirtyRepaint = false;
         }
 
         internal void ForceRebuildGUI()
