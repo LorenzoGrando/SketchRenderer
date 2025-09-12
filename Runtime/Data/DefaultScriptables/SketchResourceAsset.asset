@@ -15,6 +15,7 @@ MonoBehaviour:
   Shaders:
     Luminance: {fileID: 4800000, guid: 0dc0c03f8ac3405a918cc34ab212bbb3, type: 3}
     MaterialSurface: {fileID: 4800000, guid: b9a65f67921b4089ba9319e2c27f9a4a, type: 3}
+    MaterialGenerator: {fileID: 4800000, guid: 30a8f436cdba49d59680b3846583b77f, type: 3}
     ColorEdgeDetection: {fileID: 4800000, guid: 84901570067844fc93a8f177342db207, type: 3}
     DepthNormalsEdgeDetection: {fileID: 4800000, guid: 4652e81a978a4916a533e2afa91e8bcd, type: 3}
     AccentedOutline: {fileID: 4800000, guid: 961bcb1c9ebd46c2be713b07ec9a0d63, type: 3}
@@ -32,3 +33,7 @@ MonoBehaviour:
       DefaultZigzagStroke: {fileID: 11400000, guid: 7fd7e4399679ebb4ca2f3f15a479e037, type: 2}
       DefaultFeatheringStroke: {fileID: 11400000, guid: 283e21c8956af8840b79caa0f932bc38, type: 2}
     TonalArtMap: {fileID: 11400000, guid: 098b8c90317d7d049bc747bc5de9c731, type: 2}
+    MaterialData: {fileID: 11400000, guid: 4d6d90287d1f7214f95e4f74c711d5c2, type: 2}
+  Textures:
+    MaterialAlbedo: {fileID: 2800000, guid: 878c8bc558700bd408be460c4a02ce46, type: 3}
+    MaterialDirection: {fileID: 2800000, guid: 246db1f1e87541a4eae5d2560f1bacda, type: 3}

@@ -46,16 +46,6 @@ namespace SketchRenderer.Editor.TextureTools
                     return TextureResolution.SIZE_512;
             }
         }
-        
-        public static string GetAssetPath(Object asset)
-        {
-            if(AssetDatabase.Contains(asset))
-            {
-                return AssetDatabase.GetAssetPath(asset);
-            }
-            
-            return null;
-        }
 
         private static string GetCompleteTextureAssetPath(string fileNamePath)
         {
@@ -165,7 +155,7 @@ namespace SketchRenderer.Editor.TextureTools
             
             if (AssetDatabase.Contains(texture))
             {
-                AssetDatabase.DeleteAsset(GetAssetPath(texture));
+                AssetDatabase.DeleteAsset(SketchAssetCreationWrapper.GetAssetPath(texture));
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
             }

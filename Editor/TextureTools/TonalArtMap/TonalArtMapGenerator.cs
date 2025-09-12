@@ -29,15 +29,16 @@ namespace SketchRenderer.Editor.TextureTools
                 
                 if (TonalArtMapAsset != null && hasNonDefaultTonalArtMapAsset)
                 {
-                    return Path.Combine(TextureAssetManager.GetAssetPath(TonalArtMapAsset).Split('.')[0],
+                    return Path.Combine(SketchAssetCreationWrapper.GetAssetPath(TonalArtMapAsset).Split('.')[0],
                         "ToneTextures");
                 }
 
                 return Path.Combine(TextureGenerator.DefaultFileOutputPath, DefaultFileOutputName);
             }
         }
+        internal static string OverrideOutputPath;
         
-        internal static ComputeShader TAMGeneratorShader;
+        private static ComputeShader TAMGeneratorShader;
         [Range(1, 100)]
         internal static int IterationsPerStroke = 15;
         [Range(0, 1)] 
@@ -79,9 +80,6 @@ namespace SketchRenderer.Editor.TextureTools
             }
         }
         private static bool hasNonDefaultTonalArtMapAsset = false;
-
-
-        internal static string OverrideOutputPath;
         internal static bool PackTAMTextures = true;
         
         //Compute Data

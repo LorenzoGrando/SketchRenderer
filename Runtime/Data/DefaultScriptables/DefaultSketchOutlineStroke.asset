@@ -10,22 +10,22 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bbb9a40dab48443bbe84ec5dc12800e5, type: 3}
-  m_Name: DefaultSimpleStroke
+  m_Name: DefaultSketchOutlineStroke
   m_EditorClassIdentifier: 
   StrokeData:
     OriginPoint: {x: 0, y: 0, z: 0, w: 0}
-    Direction: {x: 0.94506305, y: 0.32688802, z: 0, w: 0}
+    Direction: {x: 1, y: 0, z: 0, w: 0}
     AdditionalPackedData: {x: 0, y: 0, z: 0, w: 0}
-    Thickness: 0.132
-    ThicknessFalloffConstraint: 0.153
-    Length: 0.54
-    LengthThicknessFalloff: 1
-    Pressure: 0.81
-    PressureFalloff: 1
+    Thickness: 1
+    ThicknessFalloffConstraint: 0.448
+    Length: 0.994
+    LengthThicknessFalloff: 0.147
+    Pressure: 1
+    PressureFalloff: 0
     Iterations: 0
   SelectedFalloffFunction: 0
   VariationData:
-    DirectionVariationRange: 0.037
-    ThicknessVariationRange: 0.166
+    DirectionVariationRange: 0.141
+    ThicknessVariationRange: 0
     LengthVariationRange: 0.076
-    PressureVariationRange: 0.36
+    PressureVariationRange: 0

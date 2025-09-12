@@ -7,6 +7,16 @@ namespace SketchRenderer.Editor.Utils
 {
     public static class SketchAssetCreationWrapper
     {
+        public static string GetAssetPath(UnityEngine.Object asset)
+        {
+            if(AssetDatabase.Contains(asset))
+            {
+                return AssetDatabase.GetAssetPath(asset);
+            }
+            
+            return null;
+        }
+        
         internal static bool TryValidateOrCreateAssetPath(string path)
         {
             if(string.IsNullOrEmpty(path))

@@ -2,6 +2,7 @@ using System;
 using SketchRenderer.Runtime.Data;
 using SketchRenderer.Runtime.TextureTools.Strokes;
 using SketchRenderer.Runtime.TextureTools.TonalArtMap;
+using TextureTools.Material;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -21,6 +22,9 @@ namespace SketchRenderer.Runtime.Data
             
             [SerializeField] [HideInInspector] [Reload("Shader/MaterialSurface.shader")]
             public Shader MaterialSurface;
+            
+            [SerializeField] [HideInInspector] [Reload("Shader/MaterialGenerator.shader")]
+            public Shader MaterialGenerator;
             
             [SerializeField] [HideInInspector] [Reload("Shader/Outlining/EdgeDetection/ColorSilhouette.shader")]
             public Shader ColorEdgeDetection;
@@ -90,9 +94,28 @@ namespace SketchRenderer.Runtime.Data
             
             [SerializeField] [HideInInspector] [Reload("Runtime/Data/DefaultScriptables/DefaultTonalArtMap.asset")]
             public TonalArtMapAsset TonalArtMap;
+            
+            [SerializeField] [HideInInspector] [Reload("Runtime/Data/DefaultScriptables/DefaultMaterialData.asset")]
+            public MaterialDataAsset MaterialData;
         }
         
         [SerializeField] [HideInInspector]
         public DefaultScriptables Scriptables = new DefaultScriptables();
+        
+        /// <summary>
+        /// Class holding references to all texture files used in the package.
+        /// </summary>
+        [Serializable, ReloadGroup]
+        public class TextureData
+        {
+            [SerializeField] [HideInInspector] [Reload("Runtime/Data/DefaultTextures/Material/DefaultMaterialAlbedo.png")]
+            public Texture2D MaterialAlbedo;
+            
+            [SerializeField] [HideInInspector] [Reload("Runtime/Data/DefaultTextures/Material/DefaultMaterialDirectional.png")]
+            public Texture2D MaterialDirection;
+        }
+        
+        [SerializeField] [HideInInspector]
+        public TextureData Textures = new TextureData();
     }
 }

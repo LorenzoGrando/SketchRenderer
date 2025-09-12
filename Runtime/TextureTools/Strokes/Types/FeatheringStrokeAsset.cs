@@ -82,5 +82,20 @@ namespace SketchRenderer.Runtime.TextureTools.Strokes
             data.Iterations = Repetitions;
             return data;
         }
+        
+        public void CopyFrom(FeatheringStrokeAsset asset)
+        {
+            if(asset == null)
+                return;
+
+            StrokeData = asset.StrokeData;
+            SelectedFalloffFunction = asset.SelectedFalloffFunction;
+            VariationData = asset.VariationData;
+            FirstSubStrokeDirectionOffset = asset.FirstSubStrokeDirectionOffset;
+            SecondSubStrokeDirectionOffset = asset.SecondSubStrokeDirectionOffset;
+            FirstSubStrokeLengthMultiplier = asset.FirstSubStrokeLengthMultiplier;
+            SecondSubStrokeLengthMultiplier = asset.SecondSubStrokeLengthMultiplier;
+            Repetitions = asset.Repetitions;
+        }
     }
 }

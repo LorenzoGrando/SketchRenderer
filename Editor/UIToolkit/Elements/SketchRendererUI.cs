@@ -40,7 +40,7 @@ namespace SketchRenderer.Editor.UIToolkit
             return button;
         }
         
-        internal static Foldout SketchFoldout(string name, bool applyMargins = true)
+        internal static Foldout SketchFoldout(string name, bool applyMargins = true, bool hasActivationToggle = false)
         {
             Foldout foldout = new Foldout();
             foldout.text = name;
@@ -68,6 +68,57 @@ namespace SketchRenderer.Editor.UIToolkit
                 foldoutLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
                 foldoutLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
                 SketchRendererUIUtils.ApplyToMargins(foldoutLabel, CornerData.Empty);
+                
+                foldout.style.unityTextAlign = TextAnchor.MiddleLeft;
+            }
+            
+            return foldout;
+        }
+        
+        internal static Foldout SketchFoldoutWithToggle(string name, SerializedProperty toggleableFeature, bool applyMargins = true)
+        {
+            Foldout foldout = new Foldout();
+            foldout.text = name;
+            foldout.userData = applyMargins;
+            
+            foldout.RegisterCallbackOnce<GeometryChangedEvent>(evt => ApplyFoldoutStyle(evt, toggleableFeature));
+            
+            static void ApplyFoldoutStyle(GeometryChangedEvent evt, SerializedProperty toggleableFeature)
+            {
+                Foldout foldout = (Foldout)evt.target;
+                bool applyMargins = (bool)foldout.userData;
+                
+                var foldoutToggle = foldout.Q<Toggle>(className: Foldout.toggleUssClassName);
+                foldoutToggle.style.borderTopColor = SketchRendererUIData.BorderColor;
+                foldoutToggle.style.borderTopWidth = SketchRendererUIData.BorderWidth;
+                foldoutToggle.style.backgroundColor = SketchRendererUIData.ExpandableHeaderBackgroundColor;
+                
+                foldoutToggle.style.minHeight = foldoutToggle.resolvedStyle.height * SketchRendererUIData.ExpandableHeaderHeightModifier;
+                SketchRendererUIUtils.ApplyToPadding(foldoutToggle, SketchRendererUIData.MajorIndentCorners);
+
+                if (!applyMargins)
+                    SketchRendererUIUtils.ApplyToMargins(foldoutToggle, CornerData.Empty);
+                
+                var foldoutLabel = foldout.Q<Label>(className: Foldout.textUssClassName);
+                foldoutLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
+                foldoutLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+                SketchRendererUIUtils.ApplyToMargins(foldoutLabel, CornerData.Empty);
+                
+                Toggle featureToggle = new Toggle();
+                featureToggle.BindProperty(toggleableFeature);
+                featureToggle.TrackPropertyValue(toggleableFeature);
+                foldoutLabel.hierarchy.parent.Add(featureToggle);
+                foldoutLabel.hierarchy.parent.style.justifyContent = Justify.SpaceBetween;
+                
+                var contentElement = foldout.Q<VisualElement>(className: Foldout.contentUssClassName);
+
+                featureToggle.RegisterValueChangedCallback(evt => ToggleFoldoutFeatures(evt, contentElement));
+
+                static void ToggleFoldoutFeatures(ChangeEvent<bool> evt, VisualElement content)
+                {
+                    foreach(var child in content.Children())
+                        child.SetEnabled(evt.newValue);
+                }
                 
                 foldout.style.unityTextAlign = TextAnchor.MiddleLeft;
             }
@@ -192,6 +243,70 @@ namespace SketchRenderer.Editor.UIToolkit
             return element;
         }
 
+        internal static SketchElement<Vector2Field> SketchVector2Property(SerializedProperty property, ISketchManipulator<Vector2Field> manipulator = null, string nameOverride = null)
+        {
+            SketchElement<Vector2Field> element = new SketchElement<Vector2Field>();
+            Vector2Field vectorField = new Vector2Field();
+            element.Field = vectorField;
+            
+            foreach (var floatField in vectorField.Query<FloatField>().ToList())
+                floatField.style.marginRight = 0;
+
+            bool isFirst = false;
+            foreach (var label in vectorField.Query<Label>().ToList())
+            {
+                if (!isFirst)
+                {
+                    isFirst = true;
+                    continue;
+                }
+                label.style.marginLeft = SketchRendererUIData.MinorIndentValue;
+            }
+            
+            if (manipulator != null)
+            {
+                manipulator.Initialize(vectorField);
+                vectorField.AddManipulator(manipulator.GetBaseManipulator());
+            }
+            vectorField.BindProperty(property);
+            vectorField.TrackPropertyValue(property);
+            
+            ConfigureSketchElementProperty(element, property, vectorField, nameOverride);
+            return element;
+        }
+        
+        internal static SketchElement<Vector2IntField> SketchVector2IntProperty(SerializedProperty property, ISketchManipulator<Vector2IntField> manipulator = null, string nameOverride = null)
+        {
+            SketchElement<Vector2IntField> element = new SketchElement<Vector2IntField>();
+            Vector2IntField vectorField = new Vector2IntField();
+            element.Field = vectorField;
+            
+            foreach (var intField in vectorField.Query<IntegerField>().ToList())
+                intField.style.marginRight = 0;
+
+            bool isFirst = false;
+            foreach (var label in vectorField.Query<Label>().ToList())
+            {
+                if (!isFirst)
+                {
+                    isFirst = true;
+                    continue;
+                }
+                label.style.marginLeft = SketchRendererUIData.MinorIndentValue;
+            }
+
+            if (manipulator != null)
+            {
+                manipulator.Initialize(vectorField);
+                vectorField.AddManipulator(manipulator.GetBaseManipulator());
+            }
+            vectorField.BindProperty(property);
+            vectorField.TrackPropertyValue(property);
+            
+            ConfigureSketchElementProperty(element, property, vectorField, nameOverride);
+            return element;
+        }
+
         internal static SketchElement<Toggle> SketchBoolProperty(SerializedProperty property, ISketchManipulator<Toggle> manipulator = null, string nameOverride = null)
         {
             SketchElement<Toggle> element = new SketchElement<Toggle>();
@@ -241,6 +356,23 @@ namespace SketchRenderer.Editor.UIToolkit
             enumField.TrackPropertyValue(property);
             
             ConfigureSketchElementProperty(element, property, enumField, nameOverride);
+            return element;
+        }
+        
+        internal static SketchElement<ColorField> SketchColorProperty(SerializedProperty property, ISketchManipulator<ColorField> manipulator = null, string nameOverride = null)
+        {
+            SketchElement<ColorField> element = new SketchElement<ColorField>();
+            ColorField colorField = new ColorField();
+            element.Field = colorField;
+            if (manipulator != null)
+            {
+                manipulator.Initialize(colorField);
+                colorField.AddManipulator(manipulator.GetBaseManipulator());
+            }
+            colorField.BindProperty(property);
+            colorField.TrackPropertyValue(property);
+            
+            ConfigureSketchElementProperty(element, property, colorField, nameOverride);
             return element;
         }
 

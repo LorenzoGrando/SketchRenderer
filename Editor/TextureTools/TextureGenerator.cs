@@ -143,6 +143,11 @@ namespace SketchRenderer.Editor.TextureTools
         #endregion
         
         #region Asset Management
+
+        internal static void BlitToTargetTexture(Material blitMat, int pass = 0)
+        {
+            Graphics.Blit(null, targetRT,  blitMat, pass);
+        }
         
         internal static Texture2D SaveCurrentTargetTexture(bool overwrite, string fileName = null)
         {

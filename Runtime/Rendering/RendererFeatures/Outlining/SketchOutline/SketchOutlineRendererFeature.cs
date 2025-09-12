@@ -9,9 +9,9 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
     {
         [Header("Base Parameters")]
         [Space(5)]
-        public EdgeDetectionPassData EdgeDetectionPassData;
+        public EdgeDetectionPassData EdgeDetectionPassData = new EdgeDetectionPassData();
         private EdgeDetectionPassData CurrentEdgeDetectionPassData { get { return EdgeDetectionPassData.GetPassDataByVolume(); } }
-        public SketchStrokesPassData SketchStrokesPassData;
+        public SketchStrokesPassData SketchStrokesPassData = new SketchStrokesPassData();
         private SketchStrokesPassData CurrentSketchStrokesPassData { get { return SketchStrokesPassData.GetPassDataByVolume(); } }
         
         [SerializeField] [HideInInspector]
@@ -35,7 +35,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public override void Create()
         {
             //This pass needs angles to calculate stroke directins, so set this here
-            EdgeDetectionPassData.OutputType = EdgeDetectionGlobalData.EdgeDetectionOutputType.OUTPUT_DIRECTION_DATA_ANGLE;
+            if(EdgeDetectionPassData != null)
+                EdgeDetectionPassData.OutputType = EdgeDetectionGlobalData.EdgeDetectionOutputType.OUTPUT_DIRECTION_DATA_ANGLE;
 
             if (CurrentEdgeDetectionPassData.Source != EdgeDetectionGlobalData.EdgeDetectionSource.ALL)
             {
@@ -51,7 +52,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 secondaryEdgeDetectionPass = CreateEdgeDetectionPass(EdgeDetectionGlobalData.EdgeDetectionSource.COLOR);
             }
             
-            edgeCompositorMaterial = new Material(edgeDetectionCompositorShader);
+            if(edgeDetectionCompositorShader != null)
+                edgeCompositorMaterial = new Material(edgeDetectionCompositorShader);
             edgeCompositorPass = new EdgeCompositorRenderPass();
 
             strokesComputePass = new SketchStrokesComputeRenderPass();
@@ -62,6 +64,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             if (context.UseSketchyOutlineFeature)
             {
                 EdgeDetectionPassData.CopyFrom(context.EdgeDetectionFeatureData);
+                EdgeDetectionPassData.OutputType = EdgeDetectionGlobalData.EdgeDetectionOutputType.OUTPUT_DIRECTION_DATA_ANGLE;
                 SketchStrokesPassData.CopyFrom(context.SketchyOutlineFeatureData);
                 depthNormalsEdgeDetectionShader = resources.Shaders.DepthNormalsEdgeDetection;
                 colorEdgeDetectionShader = resources.Shaders.ColorEdgeDetection;

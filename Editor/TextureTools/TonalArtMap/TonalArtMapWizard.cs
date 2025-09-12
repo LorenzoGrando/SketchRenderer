@@ -40,7 +40,6 @@ namespace SketchRenderer.Editor.TextureTools
                 SketchAssetCreationWrapper.TryValidateOrCreateAssetPath(validatedPath);
 
                 TonalArtMapAsset tonalArtMapAsset = ScriptableObject.CreateInstance<TonalArtMapAsset>();
-                Debug.Log($"Tam asset created? {tonalArtMapAsset != null}");
                 string assetName = nameof(TonalArtMapAsset) + ".asset";
                 int copiesCount = 0;
                 while (AssetDatabase.AssetPathExists(validatedPath + "/" +  assetName))
@@ -49,7 +48,6 @@ namespace SketchRenderer.Editor.TextureTools
                     assetName = $"{nameof(TonalArtMapAsset)}_{copiesCount}.asset";
                 }
                 string assetPath = validatedPath + "/" +  assetName;
-                Debug.Log($"Tam asset path: {assetPath}");
                 AssetDatabase.CreateAsset(tonalArtMapAsset, assetPath);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();

@@ -80,5 +80,19 @@ namespace SketchRenderer.Runtime.TextureTools.Strokes
             data.Iterations = Repetitions;
             return data;
         }
+        
+        public void CopyFrom(ZigzagStrokeAsset asset)
+        {
+            if(asset == null)
+                return;
+
+            StrokeData = asset.StrokeData;
+            SelectedFalloffFunction = asset.SelectedFalloffFunction;
+            VariationData = asset.VariationData;
+            SubStrokeDirectionOffset = asset.SubStrokeDirectionOffset;
+            SubStrokeLengthMultiplier = asset.SubStrokeLengthMultiplier;
+            OnlyMultiplyZigStroke = asset.OnlyMultiplyZigStroke;
+            Repetitions = asset.Repetitions;
+        }
     }
 }
