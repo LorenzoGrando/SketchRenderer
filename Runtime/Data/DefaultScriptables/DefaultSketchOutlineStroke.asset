@@ -16,16 +16,16 @@ MonoBehaviour:
     OriginPoint: {x: 0, y: 0, z: 0, w: 0}
     Direction: {x: 1, y: 0, z: 0, w: 0}
     AdditionalPackedData: {x: 0, y: 0, z: 0, w: 0}
-    Thickness: 1
-    ThicknessFalloffConstraint: 0.448
+    Thickness: 0.35
+    ThicknessFalloffConstraint: 0
     Length: 0.994
-    LengthThicknessFalloff: 0.147
+    LengthThicknessFalloff: 1
     Pressure: 1
-    PressureFalloff: 0
+    PressureFalloff: 1
     Iterations: 0
   SelectedFalloffFunction: 0
   VariationData:
-    DirectionVariationRange: 0.141
-    ThicknessVariationRange: 0
-    LengthVariationRange: 0.076
+    DirectionVariationRange: 0.079
+    ThicknessVariationRange: 1
+    LengthVariationRange: 0
     PressureVariationRange: 0

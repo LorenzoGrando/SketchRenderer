@@ -53,15 +53,39 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
             TextureHandle dst = renderGraph.CreateTexture(dstDesc);
             TextureHandle ping = renderGraph.CreateTexture(dstDesc);
-
-            if (passData.Method == EdgeDetectionGlobalData.EdgeDetectionMethod.SOBEL_1X3 || passData.Method == EdgeDetectionGlobalData.EdgeDetectionMethod.SOBEL_3X3)
+            
+            //Pass 0 = Sobel Horizontal Pass
+            using (var builder = renderGraph.AddRasterRenderPass(PassName + "_Horizontal", out BlitPassData blitPassData))
             {
-                //Pass 0 = Sobel Horizontal Pass
-                RenderGraphUtils.BlitMaterialParameters horParams = new(dst, ping, edgeDetectionMaterial, 0);
-                renderGraph.AddBlitPass(horParams, passName: PassName + "_SobelHorizontal");
-                //Pass 1 = Sobel Vertical Pass
-                RenderGraphUtils.BlitMaterialParameters verParams = new(ping, dst, edgeDetectionMaterial, 1);
-                renderGraph.AddBlitPass(verParams, passName: PassName + "_SobelVertical");
+                if (passData.Method == EdgeDetectionGlobalData.EdgeDetectionMethod.SOBEL_1X3 ||
+                    passData.Method == EdgeDetectionGlobalData.EdgeDetectionMethod.SOBEL_3X3)
+                {
+                    blitPassData.mat = edgeDetectionMaterial;
+                    builder.UseTexture(resourceData.activeColorTexture, AccessFlags.Read);
+                    builder.UseTexture(dst, AccessFlags.Read);
+                    blitPassData.src = dst;
+                    blitPassData.passID = 0;
+                    
+                    builder.SetRenderAttachment(ping, 0, AccessFlags.ReadWrite);
+                    builder.SetRenderFunc((BlitPassData passData, RasterGraphContext context) => ExecuteSobelEdgePass(passData, context));
+                }
+            }
+            
+            //Pass 1 = Sobel Vertical Pass
+            using (var builder = renderGraph.AddRasterRenderPass(PassName + "_Horizontal", out BlitPassData blitPassData))
+            {
+                if (passData.Method == EdgeDetectionGlobalData.EdgeDetectionMethod.SOBEL_1X3 ||
+                    passData.Method == EdgeDetectionGlobalData.EdgeDetectionMethod.SOBEL_3X3)
+                {
+                    blitPassData.mat = edgeDetectionMaterial;
+                    builder.UseTexture(resourceData.activeColorTexture, AccessFlags.Read);
+                    builder.UseTexture(ping, AccessFlags.Read);
+                    blitPassData.src = ping;
+                    blitPassData.passID = 1;
+                    
+                    builder.SetRenderAttachment(dst, 0, AccessFlags.ReadWrite);
+                    builder.SetRenderFunc((BlitPassData passData, RasterGraphContext context) => ExecuteSobelEdgePass(passData, context));
+                }
             }
             
             if(!IsSecondary)

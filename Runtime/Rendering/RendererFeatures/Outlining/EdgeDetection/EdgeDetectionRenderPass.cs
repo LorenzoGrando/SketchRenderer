@@ -27,6 +27,10 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         protected LocalKeyword outputGreyscaleKeyword;
         protected LocalKeyword outputDirectionAngleDataKeyword;
         protected LocalKeyword outputDirectionVectorDataKeyword;
+        
+        // Scale bias is used to control how the blit operation is done. The x and y parameter controls the scale
+        // and z and w controls the offset.
+        static protected Vector4 scaleBias = new Vector4(1f, 1f, 0f, 0f);
 
         public virtual void Setup(EdgeDetectionPassData passData, Material mat)
         {
@@ -75,6 +79,18 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         }
 
         public virtual void Dispose() {}
+        
+        protected class BlitPassData
+        {
+            public TextureHandle src;
+            public int passID;
+            public Material mat;
+        }
+        
+        protected static void ExecuteSobelEdgePass(BlitPassData data, RasterGraphContext context)
+        {
+            Blitter.BlitTexture(context.cmd, data.src, scaleBias, data.mat, data.passID);
+        }
         
         public abstract override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData);
     }

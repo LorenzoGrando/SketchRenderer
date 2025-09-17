@@ -11,6 +11,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public bool UseAccentedOutlines;
         [Header("Distortion Settings")] 
         public bool BakeDistortionDuringRuntime;
+        public float BakedTextureScaleFactor = 1f;
         public float Rate = 20f;
         [Range(0f, 1f)]
         public float Strength = 0.3f;
@@ -64,9 +65,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             AccentedOutlinePassData overrideData = new AccentedOutlinePassData();
             
             overrideData.UseAccentedOutlines = volumeComponent.UseAccentedOutlines.overrideState ? volumeComponent.UseAccentedOutlines.value : UseAccentedOutlines;
-            overrideData.BakeDistortionDuringRuntime = volumeComponent.BakeDistortion.overrideState
-                ? volumeComponent.BakeDistortion.value
-                : BakeDistortionDuringRuntime;
+            overrideData.BakeDistortionDuringRuntime = volumeComponent.BakeDistortion.overrideState ? volumeComponent.BakeDistortion.value : BakeDistortionDuringRuntime;
+            overrideData.BakedTextureScaleFactor = volumeComponent.BakedDistortionTextureScale.overrideState ? volumeComponent.BakedDistortionTextureScale.value : BakedTextureScaleFactor;
             overrideData.Rate = volumeComponent.DistortionRate.overrideState ? volumeComponent.DistortionRate.value : Rate;
             overrideData.Strength = volumeComponent.DistortionStrength.overrideState ? volumeComponent.DistortionStrength.value : Strength;
             overrideData.AdditionalLines = volumeComponent.AdditionalDistortionLines.overrideState ? volumeComponent.AdditionalDistortionLines.value : AdditionalLines;

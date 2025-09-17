@@ -184,7 +184,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
                 TextureHandle dst = renderGraph.CreateTexture(dstDesc);
 
-                builder.UseTexture(resourceData.activeColorTexture, AccessFlags.ReadWrite);
+                builder.UseTexture(resourceData.activeColorTexture, AccessFlags.Read);
                 passData.src = resourceData.activeColorTexture;
                 builder.SetRenderAttachment(dst, 0, AccessFlags.ReadWrite);
                 passData.dst = dst;
