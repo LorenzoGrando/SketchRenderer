@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SketchRenderer.Runtime.TextureTools.Strokes
 {
     [System.Serializable]
-    public struct TAMVariationData
+    public struct StrokeVariationData
     {
         [Range(0f, 1f)]
         public float DirectionVariationRange;

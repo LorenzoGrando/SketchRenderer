@@ -52,7 +52,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 if (resourceData.isActiveTargetBackBuffer)
                     return;
 
-                var sketchData = frameData.GetOrCreate<SketchResourceData>();
+                var sketchData = frameData.GetOrCreate<SketchFrameData>();
 
                 var dstDesc = renderGraph.GetTextureDesc(sketchData.OutlinesTexture);
                 dstDesc.name = "CompositeOutlineTexture";

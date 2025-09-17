@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e450a485c5a24ca9a0391f1f4c3d93a0, type: 3}
+  m_Name: DefaultMaterialData
+  m_EditorClassIdentifier: 
+  UseGranularity: 1
+  Granularity:
+    Scale: {x: 7, y: 7}
+    DetailLevel: 5
+    DetailFrequency: 4
+    DetailPersistence: 0.411
+    MinimumGranularity: 0.307
+    MaximumGranularity: 0.81
+    GranularityTint: {r: 1, g: 0.96603775, b: 0.9009434, a: 1}
+  UseLaidLines: 1
+  LaidLines:
+    LineFrequency: 50
+    LineThickness: 0.142
+    LineStrength: 0.364
+    LineGranularityDisplacement: 0.074
+    LineGranularityMasking: 0.301
+    LineTint: {r: 0.5849056, g: 0.5180442, b: 0.40005338, a: 1}
+  UseCrumples: 1
+  Crumples:
+    CrumpleScale: {x: 3, y: 3}
+    CrumpleJitter: 0.571
+    CrumpleStrength: 0.871
+    CrumpleDetailLevel: 2
+    CrumpleDetailFrequency: 2
+    CrumpleDetailPersistence: 0.399
+    CrumpleTintStrength: 1
+    CrumpleTintSharpness: 5.69
+    CrumpleTint: {r: 0.4811321, g: 0.4189102, b: 0.374466, a: 1}
+  UseNotebookLines: 1
+  NotebookLines:
+    NotebookLineGranularitySensitivity: 0.466
+    HorizontalLineFrequency: 20
+    HorizontalLineOffset: 0.1
+    HorizontalLineThickness: 0.025
+    HorizontalLineTint: {r: 0.14627092, g: 0.15130092, b: 0.1792453, a: 0.13725491}
+    VerticalLineFrequency: 20
+    VerticalLineOffset: 0.1
+    VerticalLineThickness: 0.025
+    VerticalLineTint: {r: 0.14509805, g: 0.15294118, b: 0.18039216, a: 0.13725491}

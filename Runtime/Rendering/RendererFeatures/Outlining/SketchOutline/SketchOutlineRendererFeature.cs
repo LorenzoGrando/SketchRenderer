@@ -1,4 +1,5 @@
 using System;
+using SketchRenderer.Runtime.Data;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
@@ -8,15 +9,19 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
     {
         [Header("Base Parameters")]
         [Space(5)]
-        public EdgeDetectionPassData EdgeDetectionPassData;
+        public EdgeDetectionPassData EdgeDetectionPassData = new EdgeDetectionPassData();
         private EdgeDetectionPassData CurrentEdgeDetectionPassData { get { return EdgeDetectionPassData.GetPassDataByVolume(); } }
-        public SketchStrokesPassData SketchStrokesPassData;
+        public SketchStrokesPassData SketchStrokesPassData = new SketchStrokesPassData();
         private SketchStrokesPassData CurrentSketchStrokesPassData { get { return SketchStrokesPassData.GetPassDataByVolume(); } }
         
-        [SerializeField] private Shader depthNormalsEdgeDetectionShader;
-        [SerializeField] private Shader colorEdgeDetectionShader;
-        [SerializeField] private Shader edgeDetectionCompositorShader;
-        [SerializeField] private ComputeShader sketchStrokesComputeShader;
+        [SerializeField] [HideInInspector]
+        private Shader depthNormalsEdgeDetectionShader;
+        [SerializeField] [HideInInspector]
+        private Shader colorEdgeDetectionShader;
+        [SerializeField] [HideInInspector]
+        private Shader edgeDetectionCompositorShader;
+        [SerializeField] [HideInInspector]
+        private ComputeShader sketchStrokesComputeShader;
         
         private Material edgeDetectionMaterial;
         private Material secondaryEdgeDetectionMaterial;
@@ -30,7 +35,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public override void Create()
         {
             //This pass needs angles to calculate stroke directins, so set this here
-            EdgeDetectionPassData.OutputType = EdgeDetectionGlobalData.EdgeDetectionOutputType.OUTPUT_DIRECTION_DATA_ANGLE;
+            if(EdgeDetectionPassData != null)
+                EdgeDetectionPassData.OutputType = EdgeDetectionGlobalData.EdgeDetectionOutputType.OUTPUT_DIRECTION_DATA_ANGLE;
 
             if (CurrentEdgeDetectionPassData.Source != EdgeDetectionGlobalData.EdgeDetectionSource.ALL)
             {
@@ -46,18 +52,24 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 secondaryEdgeDetectionPass = CreateEdgeDetectionPass(EdgeDetectionGlobalData.EdgeDetectionSource.COLOR);
             }
             
-            edgeCompositorMaterial = new Material(edgeDetectionCompositorShader);
+            if(edgeDetectionCompositorShader != null)
+                edgeCompositorMaterial = new Material(edgeDetectionCompositorShader);
             edgeCompositorPass = new EdgeCompositorRenderPass();
 
             strokesComputePass = new SketchStrokesComputeRenderPass();
         }
 
-        public void ConfigureByContext(SketchRendererContext context)
+        public void ConfigureByContext(SketchRendererContext context, SketchResourceAsset resources)
         {
             if (context.UseSketchyOutlineFeature)
             {
                 EdgeDetectionPassData.CopyFrom(context.EdgeDetectionFeatureData);
+                EdgeDetectionPassData.OutputType = EdgeDetectionGlobalData.EdgeDetectionOutputType.OUTPUT_DIRECTION_DATA_ANGLE;
                 SketchStrokesPassData.CopyFrom(context.SketchyOutlineFeatureData);
+                depthNormalsEdgeDetectionShader = resources.Shaders.DepthNormalsEdgeDetection;
+                colorEdgeDetectionShader = resources.Shaders.ColorEdgeDetection;
+                edgeDetectionCompositorShader = resources.Shaders.EdgeCompositor;
+                sketchStrokesComputeShader = resources.ComputeShaders.SketchStrokes;
                 Create();
             }
         }

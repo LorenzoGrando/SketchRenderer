@@ -1,0 +1,79 @@
+using System;
+using System.IO;
+using SketchRenderer.Editor.Rendering;
+using SketchRenderer.Editor.Utils;
+using SketchRenderer.Runtime.Data;
+using SketchRenderer.Runtime.Rendering.RendererFeatures;
+using SketchRenderer.Runtime.TextureTools.TonalArtMap;
+using UnityEditor;
+using UnityEngine;
+
+namespace SketchRenderer.Editor.TextureTools
+{
+    internal static class TonalArtMapWizard
+    {
+        internal static bool IsCurrentTonalArtMap(TonalArtMapAsset asset)
+        {
+            if(asset == null)
+                return false;
+            
+            return SketchRendererManager.CurrentRendererContext.LuminanceFeatureData.ActiveTonalMap == asset;
+        }
+        
+        internal static TonalArtMapAsset CreateTonalArtMapAndSetActive()
+        {
+            return CreateTonalArtMapAndSetActive(SketchRendererData.DefaultPackageAssetDirectoryPath);
+        }
+        
+        internal static TonalArtMapAsset CreateTonalArtMapAndSetActive(string path)
+        {
+            TonalArtMapAsset asset = CreateTonalArtMap(path);
+            SetAsCurrentTonalArtMap(asset);
+            return asset;
+        }
+
+        internal static TonalArtMapAsset CreateTonalArtMap(string path)
+        {
+            try
+            {
+                string validatedPath = SketchAssetCreationWrapper.ConvertToAssetsPath(path);
+                SketchAssetCreationWrapper.TryValidateOrCreateAssetPath(validatedPath);
+
+                TonalArtMapAsset tonalArtMapAsset = ScriptableObject.CreateInstance<TonalArtMapAsset>();
+                string assetName = nameof(TonalArtMapAsset) + ".asset";
+                int copiesCount = 0;
+                while (AssetDatabase.AssetPathExists(validatedPath + "/" +  assetName))
+                {
+                    copiesCount++;
+                    assetName = $"{nameof(TonalArtMapAsset)}_{copiesCount}.asset";
+                }
+                string assetPath = validatedPath + "/" +  assetName;
+                AssetDatabase.CreateAsset(tonalArtMapAsset, assetPath);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+                return AssetDatabase.LoadAssetAtPath<TonalArtMapAsset>(assetPath);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                return null;
+            }
+        }
+
+        internal static void SetAsCurrentTonalArtMap(TonalArtMapAsset asset)
+        {
+            if(asset == null)
+                throw new ArgumentNullException(nameof(asset));
+            
+            if (SketchRendererManager.CurrentRendererContext != null)
+            {
+                SketchRendererManager.CurrentRendererContext.LuminanceFeatureData.ActiveTonalMap = asset;
+                EditorUtility.SetDirty(SketchRendererManager.CurrentRendererContext);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+                
+                SketchRendererManager.UpdateFeatureByCurrentContext(SketchRendererFeatureType.LUMINANCE);
+            }
+        }
+    }
+}

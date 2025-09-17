@@ -15,9 +15,10 @@ namespace SketchRenderer.Runtime.Rendering.Volume
         [Header("Accented Outlines - Thickness")]
         public ClampedIntParameter ThicknessRange = new ClampedIntParameter(0, 0, 5);
         public ClampedFloatParameter ThicknessStrength = new ClampedFloatParameter(0, 0, 1);
-        [Space(2.5f)]
-        [Header("Accented Outlines - Distortion")]
+
+        [Space(2.5f)] [Header("Accented Outlines - Distortion")]
         public BoolParameter BakeDistortion = new BoolParameter(false);
+        public FloatParameter BakedDistortionTextureScale = new ClampedFloatParameter(1f, 0.25f, 1f);
         public FloatParameter DistortionRate = new FloatParameter(20f);
         public ClampedFloatParameter DistortionStrength = new ClampedFloatParameter(0, 0, 1);
         public ClampedIntParameter AdditionalDistortionLines = new ClampedIntParameter(0, 0, 3);

@@ -42,6 +42,10 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         private LocalKeyword BakeDistortionKeyword;
         private LocalKeyword MultipleDistortionKeyword;
         private LocalKeyword MaskKeyword;
+        
+        // Scale bias is used to control how the blit operation is done. The x and y parameter controls the scale
+        // and z and w controls the offset.
+        static Vector4 scaleBias = new Vector4(1f, 1f, 0f, 0f);
 
         public void Setup(AccentedOutlinePassData passData, Material mat)
         {
@@ -51,7 +55,6 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
             requiresIntermediateTexture = false;
             
-            ConfigureBakedTextures();
             ConfigureMaterial();
         }
 
@@ -71,10 +74,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             accentedMaterial.SetKeyword(BakeDistortionKeyword, passData.BakeDistortionDuringRuntime);
             accentedMaterial.SetKeyword(DistortionKeyword, passData.Strength > 0 && !passData.BakeDistortionDuringRuntime);
             
-            if(bakedDistortionTexture != null)
-                accentedMaterial.SetTexture(bakedDistortionTexShaderID, bakedDistortionTexture);
-            if(bakedDistortionTexture2 != null)
-                accentedMaterial.SetTexture(bakedDistortionTex2ShaderID, bakedDistortionTexture2);
+            accentedMaterial.SetTexture(bakedDistortionTexShaderID, bakedDistortionTexture);
+            accentedMaterial.SetTexture(bakedDistortionTex2ShaderID, bakedDistortionTexture2);
 
             accentedMaterial.SetKeyword(MaskKeyword, passData.PencilOutlineMask != null && passData.MaskScale != Vector2.zero);
             
@@ -85,29 +86,37 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             accentedMaterial.SetFloat(additionalLinesTintShaderID, passData.AdditionalLineTintPersistence);
             accentedMaterial.SetFloat(additionalLinesStrengthShaderID, passData.AdditionalLineDistortionJitter);
         }
+        
+        private Vector2Int GetTargetBakedResolution(TextureDesc desc, Vector2 scaleFactor) => new Vector2Int(Mathf.RoundToInt(desc.width * scaleFactor.x), Mathf.RoundToInt(desc.height * scaleFactor.y));
 
-        public void ConfigureBakedTextures()
+        private bool ReValidateBakedTextures(TextureDesc desc)
+        {
+            Vector2Int resolution = GetTargetBakedResolution(desc, Vector2.one * passData.BakedTextureScaleFactor);
+                
+            return bakedDistortionTexture == null || (bakedDistortionTexture != null && (bakedDistortionTexture.rt.width != resolution.x || bakedDistortionTexture.rt.height != resolution.y));
+        }
+
+        public void ConfigureBakedTextures(TextureDesc desc, bool forceBake = false)
         {
             if (this.passData.BakeDistortionDuringRuntime)
             {
-                Vector2 scaleFactor = Vector2.one;
+                Vector2Int resolution = GetTargetBakedResolution(desc, Vector2.one * passData.BakedTextureScaleFactor);
                 
-                //If there are more than two lines, instead assign two textures
-                //TODO: Consider halfing resolution if using more than one texture. Less quality.
-                /*
-                if (passData.RequireMultipleTextures)
-                    scaleFactor *= 0.5f;
-                */
 
-                if (bakedDistortionTexture == null || bakedDistortionTexture.scaleFactor != scaleFactor)
+                if (bakedDistortionTexture == null || passData.ForceRebake || forceBake)
                 {
-                    bakedDistortionTexture = RTHandles.Alloc(scaleFactor, GraphicsFormat.R8G8B8A8_UNorm,
-                        enableRandomWrite: true, name: "_BakedUVDistortionTex");
+                    if (bakedDistortionTexture != null)
+                        bakedDistortionTexture.Release();
+                    bakedDistortionTexture = RTHandles.Alloc(resolution.x, resolution.y, GraphicsFormat.R8G8B8A8_UNorm, enableRandomWrite: true, name: "_BakedUVDistortionTex");
+                    accentedMaterial.SetTexture(bakedDistortionTexShaderID, bakedDistortionTexture);
                 }
                 //Only rebuild this if it is being used
-                if (this.passData.RequireMultipleTextures && bakedDistortionTexture2 == null)
+                if (this.passData.RequireMultipleTextures && (bakedDistortionTexture2 == null || passData.ForceRebake || forceBake))
                 {
-                    bakedDistortionTexture2 = RTHandles.Alloc(scaleFactor, GraphicsFormat.R8G8B8A8_UNorm, enableRandomWrite: true, name: "_BakedDistortionTex2");
+                    if(bakedDistortionTexture2 != null)
+                        bakedDistortionTexture2.Release();
+                    bakedDistortionTexture2 = RTHandles.Alloc(resolution.x, resolution.y, GraphicsFormat.R8G8B8A8_UNorm, enableRandomWrite: true, name: "_BakedDistortionTex2");
+                    accentedMaterial.SetTexture(bakedDistortionTex2ShaderID, bakedDistortionTexture2);
                 }
             }
             
@@ -126,7 +135,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 }
             }
         }
-
+        
         public void Dispose()
         {
             if (bakedDistortionTexture != null)
@@ -141,6 +150,17 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 bakedDistortionTexture2 = null;
             }
         }
+        private class BlitPassData
+        {
+            public Material mat;
+            public TextureHandle src;
+            public int passID;
+        }
+
+        private static void ExecuteBlitPass(BlitPassData passData, RasterGraphContext context)
+        {
+            Blitter.BlitTexture(context.cmd, passData.src, scaleBias, passData.mat, passData.passID);
+        }
         
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
@@ -149,7 +169,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             if (resourceData.isActiveTargetBackBuffer)
                 return;
             
-            var sketchData = frameData.Get<SketchResourceData>();
+            var sketchData = frameData.Get<SketchFrameData>();
             if(sketchData == null)
                 return;
             
@@ -158,25 +178,46 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             dstDesc.clearBuffer = true;
             dstDesc.msaaSamples = MSAASamples.None;
 
+            if (passData.ForceRebake || ReValidateBakedTextures(dstDesc))
+            {
+                sketchData.PrebakedDistortedUVs = false;
+                sketchData.PrebakedDistortedMultipleUVs = false;
+                passData.ForceRebake = false;
+            }
+
             bool shouldRebakeIfSingle = !passData.RequireMultipleTextures && !sketchData.PrebakedDistortedUVs;
             bool shouldRebakeIfMultiple = passData.RequireMultipleTextures && !sketchData.PrebakedDistortedMultipleUVs;
             
             if(passData.BakeDistortionDuringRuntime && (shouldRebakeIfSingle || shouldRebakeIfMultiple))
-                ConfigureBakedTextures();
+                ConfigureBakedTextures(dstDesc, true);
             
             if (passData.BakeDistortionDuringRuntime && (shouldRebakeIfSingle || shouldRebakeIfMultiple))
             {
-                TextureHandle distortedDst = renderGraph.ImportTexture(bakedDistortionTexture);
-                RenderGraphUtils.BlitMaterialParameters distortParams =
-                    new RenderGraphUtils.BlitMaterialParameters(sketchData.OutlinesTexture, distortedDst,
-                        accentedMaterial, 1);
-                renderGraph.AddBlitPass(distortParams, PassName + "_BakeUVDistortion");
-                
+                using (var builder = renderGraph.AddRasterRenderPass(PassName + "_BakeUVDistortion", out BlitPassData blitPassData))
+                {
+                    ImportResourceParams importParams = new ImportResourceParams();
+                    TextureHandle distortedDst = renderGraph.ImportTexture(bakedDistortionTexture, importParams);
+                    builder.UseTexture(sketchData.OutlinesTexture, AccessFlags.Read);
+                    blitPassData.mat = accentedMaterial;
+                    blitPassData.src = sketchData.OutlinesTexture;
+                    blitPassData.passID = 1;
+                    builder.SetRenderAttachment(distortedDst, 0);
+                    builder.SetRenderFunc((BlitPassData passData, RasterGraphContext context) => ExecuteBlitPass(passData, context));
+                }
+
                 if (shouldRebakeIfMultiple)
                 {
-                    TextureHandle distortedDst2 = renderGraph.ImportTexture(bakedDistortionTexture2);
-                    RenderGraphUtils.BlitMaterialParameters distortParams2 = new RenderGraphUtils.BlitMaterialParameters(sketchData.OutlinesTexture, distortedDst2, accentedMaterial, 1);
-                    renderGraph.AddBlitPass(distortParams2, PassName + "_BakeUVDistortion2");
+                    using (var builder = renderGraph.AddRasterRenderPass(PassName + "_BakeUVDistortion2", out BlitPassData blitPassData))
+                    {
+                        ImportResourceParams importParams = new ImportResourceParams();
+                        TextureHandle distortedDst2 = renderGraph.ImportTexture(bakedDistortionTexture2, importParams);
+                        builder.UseTexture(sketchData.OutlinesTexture, AccessFlags.Read);
+                        blitPassData.mat = accentedMaterial;
+                        blitPassData.src = sketchData.OutlinesTexture;
+                        blitPassData.passID = 1;
+                        builder.SetRenderAttachment(distortedDst2, 0);
+                        builder.SetRenderFunc((BlitPassData passData, RasterGraphContext context) => ExecuteBlitPass(passData, context));
+                    }
                 }
                 
                 sketchData.PrebakedDistortedUVs = shouldRebakeIfSingle;
@@ -188,11 +229,20 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 sketchData.PrebakedDistortedMultipleUVs = false;
             }
 
+
             TextureHandle dst = renderGraph.CreateTexture(dstDesc);
-            //This shader has a single pass that handles all behaviours (distortion, outline brightness and texture masking) by compile keywords
-            RenderGraphUtils.BlitMaterialParameters thickenParams =
-                new RenderGraphUtils.BlitMaterialParameters(sketchData.OutlinesTexture, dst, accentedMaterial, 0);
-            renderGraph.AddBlitPass(thickenParams, PassName);
+            using (var builder = renderGraph.AddRasterRenderPass(PassName, out BlitPassData blitPassData))
+            {
+                builder.UseTexture(sketchData.OutlinesTexture, AccessFlags.Read);
+                blitPassData.mat = accentedMaterial;
+                blitPassData.src = sketchData.OutlinesTexture;
+                blitPassData.passID = 0;
+                
+                //This shader has a single pass that handles all behaviours (distortion, outline brightness and texture masking) by compile keywords
+                builder.SetRenderAttachment(dst, 0);
+                builder.SetRenderFunc((BlitPassData passData, RasterGraphContext context) => ExecuteBlitPass(passData, context));
+            }
+
             sketchData.OutlinesTexture = dst;
         }
     }

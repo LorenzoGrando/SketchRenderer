@@ -56,16 +56,18 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     break;
             }
         }
+        
+        
 
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
             var resourceData = frameData.Get<UniversalResourceData>();
-            
+
             if (resourceData.isActiveTargetBackBuffer)
                 return;
 
-            var sketchData = frameData.GetOrCreate<SketchResourceData>();
-            
+            var sketchData = frameData.GetOrCreate<SketchFrameData>();
+
             var dstDesc = renderGraph.GetTextureDesc(resourceData.activeColorTexture);
             dstDesc.name = IsSecondary ? OUTLINE_SECONDARY_TEXTURE_NAME : OUTLINE_TEXTURE_NAME;
             dstDesc.format = GraphicsFormat.R8G8B8A8_UNorm;
@@ -75,18 +77,40 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
             TextureHandle dst = renderGraph.CreateTexture(dstDesc);
             TextureHandle ping = renderGraph.CreateTexture(dstDesc);
-
-            if (passData.Method == EdgeDetectionGlobalData.EdgeDetectionMethod.SOBEL_1X3 || passData.Method == EdgeDetectionGlobalData.EdgeDetectionMethod.SOBEL_3X3)
+            
+            //Pass 0 = Sobel Horizontal Pass
+            using (var builder = renderGraph.AddRasterRenderPass(PassName + "_Horizontal", out BlitPassData blitPassData))
             {
-                //Pass 0 = Sobel Horizontal Pass
-                RenderGraphUtils.BlitMaterialParameters horParams = new(dst, ping, edgeDetectionMaterial, 0);
-                renderGraph.AddBlitPass(horParams, passName: PassName + "_SobelHorizontal");
-                //Pass 1 = Sobel Vertical Pass
-                RenderGraphUtils.BlitMaterialParameters verParams = new(ping, dst, edgeDetectionMaterial, 1);
-                renderGraph.AddBlitPass(verParams, passName: PassName + "_SobelVertical");
+                if (passData.Method == EdgeDetectionGlobalData.EdgeDetectionMethod.SOBEL_1X3 ||
+                    passData.Method == EdgeDetectionGlobalData.EdgeDetectionMethod.SOBEL_3X3)
+                {
+                    blitPassData.mat = edgeDetectionMaterial;
+                    builder.UseTexture(resourceData.activeColorTexture, AccessFlags.Read);
+                    blitPassData.src = resourceData.activeColorTexture;
+                    blitPassData.passID = 0;
+                    
+                    builder.SetRenderAttachment(ping, 0, AccessFlags.ReadWrite);
+                    builder.SetRenderFunc((BlitPassData passData, RasterGraphContext context) => ExecuteSobelEdgePass(passData, context));
+                }
             }
             
-            if(!IsSecondary)
+            //Pass 1 = Sobel Vertical Pass
+            using (var builder = renderGraph.AddRasterRenderPass(PassName + "_Vertical", out BlitPassData blitPassData))
+            {
+                if (passData.Method == EdgeDetectionGlobalData.EdgeDetectionMethod.SOBEL_1X3 ||
+                    passData.Method == EdgeDetectionGlobalData.EdgeDetectionMethod.SOBEL_3X3)
+                {
+                    blitPassData.mat = edgeDetectionMaterial;
+                    builder.UseTexture(ping, AccessFlags.Read);
+                    blitPassData.src = ping;
+                    blitPassData.passID = 1;
+                    
+                    builder.SetRenderAttachment(dst, 0, AccessFlags.ReadWrite);
+                    builder.SetRenderFunc((BlitPassData passData, RasterGraphContext context) => ExecuteSobelEdgePass(passData, context));
+                }
+            }
+
+            if (!IsSecondary)
                 sketchData.OutlinesTexture = dst;
             else
                 sketchData.OutlinesSecondaryTexture = dst;

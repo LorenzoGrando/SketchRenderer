@@ -9,11 +9,9 @@ namespace SketchRenderer.Runtime.TextureTools.Strokes
     public class ZigzagStrokeAsset : StrokeAsset
     {
         public override StrokeSDFType PatternType => StrokeSDFType.ZIGZAG;
-
-        [Space(5)] [Header("Zigzag Specific")] 
         [Range(-1, 1f)]
-        public float SubStrokeDirectionOffset;
-        public float SubStrokeLengthMultiplier;
+        public float SubStrokeDirectionOffset = 0.25f;
+        public float SubStrokeLengthMultiplier = 1f;
         public bool OnlyMultiplyZigStroke;
         [Range(1, 5)]
         public int Repetitions = 1;
@@ -81,6 +79,20 @@ namespace SketchRenderer.Runtime.TextureTools.Strokes
             data.AdditionalPackedData = additonalData;
             data.Iterations = Repetitions;
             return data;
+        }
+        
+        public void CopyFrom(ZigzagStrokeAsset asset)
+        {
+            if(asset == null)
+                return;
+
+            StrokeData = asset.StrokeData;
+            SelectedFalloffFunction = asset.SelectedFalloffFunction;
+            VariationData = asset.VariationData;
+            SubStrokeDirectionOffset = asset.SubStrokeDirectionOffset;
+            SubStrokeLengthMultiplier = asset.SubStrokeLengthMultiplier;
+            OnlyMultiplyZigStroke = asset.OnlyMultiplyZigStroke;
+            Repetitions = asset.Repetitions;
         }
     }
 }

@@ -5,7 +5,7 @@ using SketchRenderer.Runtime.Rendering.RendererFeatures;
 using UnityEngine;
 
 
-namespace SketchRenderer.Runtime.Rendering
+namespace SketchRenderer.Runtime.Data
 {
     [CreateAssetMenu(fileName = "SketchRendererContext", menuName = SketchRendererData.PackageAssetItemPath + "SketchRendererContext")]
     public class SketchRendererContext : ScriptableObject
@@ -42,7 +42,8 @@ namespace SketchRenderer.Runtime.Rendering
                 SketchRendererFeatureType.OUTLINE_SKETCH => UseSketchyOutlineFeature,
                 SketchRendererFeatureType.LUMINANCE => UseLuminanceFeature,
                 SketchRendererFeatureType.MATERIAL => UseMaterialFeature,
-                SketchRendererFeatureType.COMPOSITOR => true
+                SketchRendererFeatureType.COMPOSITOR => true,
+                _ => throw new NotImplementedException(),
             };
         }
 
@@ -57,6 +58,7 @@ namespace SketchRenderer.Runtime.Rendering
             }
 
             CompositionFeatureData.FeaturesToCompose = featuresInContext;
+            AccentedOutlineFeatureData.ForceRebake = true;
         }
 
         public void OnValidate()

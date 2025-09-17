@@ -125,10 +125,10 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE
                     or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_REVERSED_CONSTANT_SCALE)
                 {
-                    builder.UseGlobalTexture(SketchResources.ScreenUV.GetUVTextureID, AccessFlags.Read);
+                    builder.UseGlobalTexture(SketchGlobalFrameData.ScreenUVTexture.GetUVTextureID, AccessFlags.Read);
                 }
 
-                var sketchData = frameData.GetOrCreate<SketchResourceData>();
+                var sketchData = frameData.GetOrCreate<SketchFrameData>();
                 
                 passData.mat = materialMat;
 
@@ -141,7 +141,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
                 TextureHandle dst = renderGraph.CreateTexture(dstDesc);
                 
-                builder.UseTexture(resourceData.activeColorTexture, AccessFlags.ReadWrite);
+                builder.UseTexture(resourceData.activeColorTexture, AccessFlags.Read);
                 passData.src = resourceData.activeColorTexture;
                 builder.SetRenderAttachment(dst, 0, AccessFlags.ReadWrite);
                 passData.dst = dst;
@@ -161,10 +161,10 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     is TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE
                     or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE)
                 {
-                    directionalBuilder.UseGlobalTexture(SketchResources.ScreenUV.GetUVTextureID, AccessFlags.Read);
+                    directionalBuilder.UseGlobalTexture(SketchGlobalFrameData.ScreenUVTexture.GetUVTextureID, AccessFlags.Read);
                 }
 
-                var sketchData = frameData.GetOrCreate<SketchResourceData>();
+                var sketchData = frameData.GetOrCreate<SketchFrameData>();
                 
                 directionalPassData.mat = materialMat;
                 
@@ -177,7 +177,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 
                 TextureHandle directionalDst = renderGraph.CreateTexture(dstDesc);
                 
-                directionalBuilder.UseTexture(resourceData.activeColorTexture, AccessFlags.ReadWrite);
+                directionalBuilder.UseTexture(resourceData.activeColorTexture, AccessFlags.Read);
                 directionalPassData.src = resourceData.activeColorTexture;
                 directionalBuilder.SetRenderAttachment(directionalDst, 0, AccessFlags.ReadWrite);
                 directionalPassData.dst = directionalDst;

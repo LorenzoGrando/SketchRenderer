@@ -5,14 +5,12 @@ namespace SketchRenderer.Runtime.TextureTools.Strokes
 {
     [CreateAssetMenu(fileName = "HatchingStrokeAsset",
         menuName = SketchRendererData.PackageAssetItemPath + "StrokeAssets/Hatching")]
-    public class HatchingTAMStrokeAsset : StrokeAsset
+    public class HatchingStrokeAsset : StrokeAsset
     {
         public override StrokeSDFType PatternType => StrokeSDFType.HATCHING;
-
-        [Space(5)] [Header("Hatching Specific")] [Range(0, 1)]
-        public float MinCrossHatchingThreshold;
-
-        [Range(0, 1)] public float MaxCrossHatchingThreshold;
+        [Range(0, 1)]
+        public float MinCrossHatchingThreshold = 0.5f;
+        [Range(0, 1)] public float MaxCrossHatchingThreshold = 0.75f;
 
         public override StrokeData UpdatedDataByFillRate(float fillRate)
         {
@@ -83,6 +81,18 @@ namespace SketchRenderer.Runtime.TextureTools.Strokes
         {
             Vector3 Perpendicular = Vector3.Cross(new Vector3(Direction.x, Direction.y, Direction.z), Vector3.forward);
             return new Vector4(Perpendicular.x, Perpendicular.y, 0, 0);
+        }
+        
+        public void CopyFrom(HatchingStrokeAsset asset)
+        {
+            if(asset == null)
+                return;
+
+            StrokeData = asset.StrokeData;
+            SelectedFalloffFunction = asset.SelectedFalloffFunction;
+            VariationData = asset.VariationData;
+            MinCrossHatchingThreshold = asset.MinCrossHatchingThreshold;
+            MaxCrossHatchingThreshold = asset.MaxCrossHatchingThreshold;
         }
     }
 }

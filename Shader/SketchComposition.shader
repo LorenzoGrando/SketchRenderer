@@ -73,29 +73,38 @@ Shader "SketchRenderer/SketchComposition"
 
                float isOutlineStroke = step(0.1, outline.a);
                #if defined(HAS_OUTLINES)
-               float4 outlineShade = outline.rrrr * _OutlineColor;
                float4 outlineDirection = (float4(outline.gb, 0, 0) - 0.5) * 2.0;
-               outline = lerp(white, outlineShade, isOutlineStroke * outline.a * _OutlineColor.a);
                float outlineAccumulation = 0;
                #if defined(HAS_MATERIAL)
                outlineAccumulation = 1.0 - dot(outlineDirection.rg, direction.rg);
                #endif
-               outline.rgb *= lerp(1.0, 1.0 - _MaterialAccumulationStrength, outlineAccumulation * isOutlineStroke);
+               outline = float4(outline.rgb, saturate((outline.a * _OutlineColor.a) + lerp(0, _MaterialAccumulationStrength, outlineAccumulation * isOutlineStroke)));
+               float maxOut = max(outline.r, max(outline.g, outline.g));
+               float4 outlineShade = float4(maxOut * _OutlineColor.rgb, outline.a);
+               outline = lerp(white, outlineShade, isOutlineStroke * outline.a);
+               
                #endif
                 
                float isLuminanceStroke = (1 - luminance.a);
                #if defined(HAS_LUMINANCE)
-               float4 lumShade = (1 - luminance) * _ShadingColor;
-               luminance = lerp(white, lumShade, isLuminanceStroke * _ShadingColor.a);
-               float luminanceAccumulation = 1.0 - dot(_LuminanceBasisDirection.rg, direction.rg) ;
-               luminance *= lerp(1.0, 1.0 - _MaterialAccumulationStrength, luminanceAccumulation * isLuminanceStroke);
+               float luminanceAccumulation = 0;
+               #if defined(HAS_MATERIAL)
+               luminanceAccumulation = 1.0 - dot(_LuminanceBasisDirection.rg, direction.rg) ;
+               #endif
+               luminance = float4(1.0 - luminance.rgb, saturate(((1.0 - luminance.a) * _ShadingColor.a) + lerp(0, _MaterialAccumulationStrength, luminanceAccumulation * isLuminanceStroke)));
+               float4 lumShade = float4(luminance.rgb * _ShadingColor.rgb, luminance.a);
+               luminance = lerp(white, lumShade, isLuminanceStroke * luminance.a);
                #endif
         
                float isAnyStroke = saturate(isOutlineStroke + isLuminanceStroke);
                //TODO: Make this an option
                //Outlines always on top
-               float3 blend = (outline * outline.a * isOutlineStroke) + luminance * (1.0 - outline.a * isOutlineStroke);
-               float3 materialBlend = BLENDING_OPERATION(material.rgba, blend.rgb).rgb;
+               //float3 blend = (outline * outline.a * isOutlineStroke) + luminance * (1.0 - outline.a * isOutlineStroke);
+               
+               float4 blendOutline = lerp(white, outline, outline.a);
+               float4 blend = BLEND_0P_MULTIPLY(luminance, blendOutline);
+               //return blend;
+               float3 materialBlend = BLENDING_OPERATION(material.rgba, blend).rgb;
                //First, apply an attenuation to the blend effect
                materialBlend = lerp(blend, materialBlend, _BlendStrength);
                //Then blend only if a stroke

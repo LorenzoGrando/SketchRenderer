@@ -60,7 +60,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
         public void ConfigureMaterial()
         {
-            luminanceMat.SetInt(numTonesShaderID, passData.ActiveTonalMap.ExpectedTones);
+            luminanceMat.SetInt(numTonesShaderID, passData.ActiveTonalMap.TotalTones);
             luminanceMat.SetFloat(luminanceOffsetShaderID, passData.LuminanceOffset);
             luminanceMat.SetVector(tamScalesShaderID, new Vector4(passData.ToneScales.x, passData.ToneScales.y, 0, 0));
 
@@ -170,10 +170,10 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     is TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE
                     or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE)
                 {
-                    builder.UseGlobalTexture(SketchResources.ScreenUV.GetUVTextureID, AccessFlags.Read);
+                    builder.UseGlobalTexture(SketchGlobalFrameData.ScreenUVTexture.GetUVTextureID, AccessFlags.Read);
                 }
 
-                var sketchData = frameData.GetOrCreate<SketchResourceData>();
+                var sketchData = frameData.GetOrCreate<SketchFrameData>();
                 sketchData.LuminanceBasisDirection = this.passData.ActiveTonalMap.TAMBasisDirection;
 
                 var dstDesc = renderGraph.GetTextureDesc(resourceData.activeColorTexture);
@@ -184,7 +184,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
                 TextureHandle dst = renderGraph.CreateTexture(dstDesc);
 
-                builder.UseTexture(resourceData.activeColorTexture, AccessFlags.ReadWrite);
+                builder.UseTexture(resourceData.activeColorTexture, AccessFlags.Read);
                 passData.src = resourceData.activeColorTexture;
                 builder.SetRenderAttachment(dst, 0, AccessFlags.ReadWrite);
                 passData.dst = dst;

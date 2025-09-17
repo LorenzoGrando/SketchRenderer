@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fa1296e37154fcc82a86034e6c3848a, type: 3}
+  m_Name: DefaultZigzagStroke
+  m_EditorClassIdentifier: 
+  StrokeData:
+    OriginPoint: {x: 0, y: 0, z: 0, w: 0}
+    Direction: {x: 1, y: 0, z: 0, w: 0}
+    AdditionalPackedData: {x: 0, y: 0, z: 0, w: 0}
+    Thickness: 0.1
+    ThicknessFalloffConstraint: 0.192
+    Length: 0.795
+    LengthThicknessFalloff: 0.405
+    Pressure: 0.807
+    PressureFalloff: 0.343
+    Iterations: 0
+  SelectedFalloffFunction: 0
+  VariationData:
+    DirectionVariationRange: 0.053
+    ThicknessVariationRange: 0.039
+    LengthVariationRange: 0.207
+    PressureVariationRange: 0.091
+  SubStrokeDirectionOffset: -0.729
+  SubStrokeLengthMultiplier: 0.5
+  OnlyMultiplyZigStroke: 0
+  Repetitions: 2
