@@ -158,9 +158,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             cmd.SetRenderTarget(passData.dest);
             Blitter.BlitTexture(cmd, passData.source, new Vector4(1f, 1f, 0f, 0f), 0f, false);
         }
-        static void ExecuteFindStrokesCompute(ComputePassData passData, UnsafeGraphContext context)
+        static void ExecuteFindStrokesCompute(ComputePassData passData, ComputeGraphContext context)
         {
-            context.cmd.SetRenderTarget(passData.outlineTex);
             context.cmd.SetComputeTextureParam(passData.computeShader, passData.kernelID, SOURCE_TEXTURE_ID, passData.outlineTex);
             context.cmd.SetComputeIntParam(passData.computeShader, DIMENSION_WIDTH_ID, passData.dimensions.x);
             context.cmd.SetComputeIntParam(passData.computeShader, DIMENSION_HEIGHT_ID, passData.dimensions.y);
@@ -172,9 +171,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             context.cmd.DispatchCompute(passData.computeShader, passData.kernelID, passData.threadGroupSize.x, passData.threadGroupSize.y, passData.threadGroupSize.z);
         }
 
-        static void ExecuteApplyStrokesCompute(StrokesPassData passData, UnsafeGraphContext context)
+        static void ExecuteApplyStrokesCompute(StrokesPassData passData, ComputeGraphContext context)
         {
-            context.cmd.SetRenderTarget(passData.outlineTex);
             context.cmd.SetComputeIntParam(passData.computeShader, GROUPS_X_ID, passData.threadGroupSize.x);
             context.cmd.SetComputeIntParam(passData.computeShader, GROUPS_Y_ID, passData.threadGroupSize.y);
             context.cmd.SetComputeIntParam(passData.computeShader, DOWNSCALE_FACTOR_ID, passData.downscaleFactor);
@@ -228,7 +226,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 }
             }
 
-            using (var builder = renderGraph.AddUnsafePass(PassName, out ComputePassData computePassData))
+            using (var builder = renderGraph.AddComputePass(PassName, out ComputePassData computePassData))
             {
                 //since this dosent assign back to the texture, if it exists, make sure the pass cant be culled
                 builder.AllowPassCulling(false);
@@ -261,7 +259,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 computePassData.computeShader = sketchComputeShader;
                 computePassData.kernelID = computeStrokeKernelID;
                 
-                builder.SetRenderFunc((ComputePassData computePassData, UnsafeGraphContext context) => ExecuteFindStrokesCompute(computePassData, context));
+                builder.SetRenderFunc((ComputePassData computePassData, ComputeGraphContext context) => ExecuteFindStrokesCompute(computePassData, context));
             }
             
             if (isDoingDownscale)
@@ -277,7 +275,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 }
             }
 
-            using (var applyBuilder = renderGraph.AddUnsafePass(PassName + "_ApplyStrokes", out StrokesPassData computePassData))
+            using (var applyBuilder = renderGraph.AddComputePass(PassName + "_ApplyStrokes", out StrokesPassData computePassData))
             {
                 applyBuilder.AllowPassCulling(false);
                 applyBuilder.UseTexture(sketchData.OutlinesTexture);
@@ -313,7 +311,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 strokeVariationDataBuffer.SetData(new [] {passData.OutlineStrokeData.VariationData});
                 computePassData.strokeVariationDataBuffer = strokeVariationDataBuffer;
                 
-                applyBuilder.SetRenderFunc((StrokesPassData data, UnsafeGraphContext context) => ExecuteApplyStrokesCompute(data, context));
+                applyBuilder.SetRenderFunc((StrokesPassData data, ComputeGraphContext context) => ExecuteApplyStrokesCompute(data, context));
             }
         }
     }

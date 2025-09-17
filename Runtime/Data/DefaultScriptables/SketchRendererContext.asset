@@ -48,31 +48,31 @@ MonoBehaviour:
     ToneScales: {x: 8, y: 8}
     LuminanceScalar: -0.323
   EdgeDetectionFeatureData:
-    Method: 0
-    Source: 3
+    Method: 1
+    Source: 2
     OutlineThreshold: 0.048
     OutlineOffset: 0
     OutlineDistanceFalloff: 0.452
     OutlineAngleSensitivity: 1
     OutlineAngleConstraint: 0.36
     OutlineNormalSensitivity: 0.683
-    OutputType: 0
-  UseSmoothOutlineFeature: 0
+    OutputType: 2
+  UseSmoothOutlineFeature: 1
   AccentedOutlineFeatureData:
     UseAccentedOutlines: 1
     BakeDistortionDuringRuntime: 1
     Rate: 20
-    Strength: 0.368
+    Strength: 0.551
     AdditionalLines: 3
-    AdditionalLineTintPersistence: 0.968
-    AdditionalLineDistortionJitter: 0.102
+    AdditionalLineTintPersistence: 0.61
+    AdditionalLineDistortionJitter: 0.283
     PencilOutlineMask: {fileID: 0}
     MaskScale: {x: 1, y: 1}
     ForceRebake: 1
   ThicknessDilationFeatureData:
     ThicknessRange: 0
-    ThicknessStrength: 1
-  UseSketchyOutlineFeature: 1
+    ThicknessStrength: 0
+  UseSketchyOutlineFeature: 0
   SketchyOutlineFeatureData:
     OutlineStrokeData: {fileID: 11400000, guid: 9a8345853514edd4897fc3587cf35f53, type: 2}
     SampleArea: 1
@@ -84,9 +84,9 @@ MonoBehaviour:
     UsePerpendicularDirection: 0
   CompositionFeatureData:
     debugMode: 0
-    OutlineStrokeColor: {r: 0, g: 0, b: 0, a: 1}
-    ShadingStrokeColor: {r: 0, g: 0, b: 0, a: 1}
-    MaterialAccumulationStrength: 0.246
+    OutlineStrokeColor: {r: 0, g: 0, b: 0, a: 0.8509804}
+    ShadingStrokeColor: {r: 0, g: 0, b: 0, a: 0.92156863}
+    MaterialAccumulationStrength: 0.13
     StrokeBlendMode: 0
-    BlendStrength: 0.982
-    featuresToCompose: 0000000002000000030000000400000005000000
+    BlendStrength: 0.963
+    featuresToCompose: 0000000001000000030000000400000005000000

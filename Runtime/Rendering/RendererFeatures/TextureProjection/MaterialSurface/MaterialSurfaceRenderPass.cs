@@ -141,7 +141,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
                 TextureHandle dst = renderGraph.CreateTexture(dstDesc);
                 
-                builder.UseTexture(resourceData.activeColorTexture, AccessFlags.ReadWrite);
+                builder.UseTexture(resourceData.activeColorTexture, AccessFlags.Read);
                 passData.src = resourceData.activeColorTexture;
                 builder.SetRenderAttachment(dst, 0, AccessFlags.ReadWrite);
                 passData.dst = dst;
@@ -177,7 +177,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 
                 TextureHandle directionalDst = renderGraph.CreateTexture(dstDesc);
                 
-                directionalBuilder.UseTexture(resourceData.activeColorTexture, AccessFlags.ReadWrite);
+                directionalBuilder.UseTexture(resourceData.activeColorTexture, AccessFlags.Read);
                 directionalPassData.src = resourceData.activeColorTexture;
                 directionalBuilder.SetRenderAttachment(directionalDst, 0, AccessFlags.ReadWrite);
                 directionalPassData.dst = directionalDst;

@@ -11,6 +11,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public bool UseAccentedOutlines;
         [Header("Distortion Settings")] 
         public bool BakeDistortionDuringRuntime;
+        public float BakedTextureScaleFactor = 1f;
         public float Rate = 20f;
         [Range(0f, 1f)]
         public float Strength = 0.3f;
