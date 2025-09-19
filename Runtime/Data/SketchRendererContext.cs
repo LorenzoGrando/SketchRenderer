@@ -10,7 +10,7 @@ namespace SketchRenderer.Runtime.Data
     [CreateAssetMenu(fileName = "SketchRendererContext", menuName = SketchRendererData.PackageAssetItemPath + "SketchRendererContext")]
     public class SketchRendererContext : ScriptableObject
     {
-        [HideInInspector] public bool UseUVsFeature => (UseMaterialFeature &&MaterialFeatureData.RequiresTextureCoordinateFeature())
+        [HideInInspector] public bool UseUVsFeature => (UseMaterialFeature && MaterialFeatureData.RequiresTextureCoordinateFeature())
                                                        || (UseLuminanceFeature && LuminanceFeatureData.RequiresTextureCoordinateFeature());
         
         public RenderUVsPassData UVSFeatureData;

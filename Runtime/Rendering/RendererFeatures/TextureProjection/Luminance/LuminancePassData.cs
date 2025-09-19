@@ -55,7 +55,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             overrideData.ProjectionMethod = volumeComponent.ProjectionMethod.overrideState ? volumeComponent.ProjectionMethod.value : ProjectionMethod;
             overrideData.SmoothTransitions = volumeComponent.SmoothTransitions.overrideState
                 ? volumeComponent.SmoothTransitions.value : SmoothTransitions;
-            overrideData.ConstantScaleFalloffFactor = volumeComponent.ConstantScaleFalloffFactor.overrideState ? volumeComponent.ConstantScaleFalloffFactor.value : 2f;
+            overrideData.ConstantScaleFalloffFactor = volumeComponent.ConstantScaleFalloffFactor.overrideState ? volumeComponent.ConstantScaleFalloffFactor.value : ConstantScaleFalloffFactor;
             overrideData.ToneScales = volumeComponent.ToneScales.overrideState ? volumeComponent.ToneScales.value : ToneScales;
             overrideData.LuminanceOffset = volumeComponent.LuminanceOffset.overrideState ? volumeComponent.LuminanceOffset.value : LuminanceScalar;
             

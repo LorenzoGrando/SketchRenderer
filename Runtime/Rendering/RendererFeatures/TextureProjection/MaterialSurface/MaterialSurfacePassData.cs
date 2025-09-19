@@ -39,6 +39,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             MaterialSurfacePassData overrideData = new MaterialSurfacePassData();
         
             overrideData.ProjectionMethod = ProjectionMethod;
+            overrideData.ConstantScaleFalloffFactor = ConstantScaleFalloffFactor;
             overrideData.AlbedoTexture = AlbedoTexture;
             overrideData.NormalTexture = NormalTexture;
             overrideData.Scale = Scale;

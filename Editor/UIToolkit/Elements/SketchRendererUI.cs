@@ -12,7 +12,7 @@ namespace SketchRenderer.Editor.UIToolkit
 {
     public static class SketchRendererUI
     {
-        internal static VisualElement SketchMajorArea(string name, bool applyMargins = true)
+        internal static VisualElement SketchMajorArea(string name, bool applyMargins = true, float fontSize = -1f)
         {
             VisualElement container = new VisualElement();
             container.style.borderTopColor = SketchRendererUIData.BorderColor;
@@ -24,6 +24,12 @@ namespace SketchRenderer.Editor.UIToolkit
             var label = new Label(name);
             label.style.unityTextAlign = TextAnchor.MiddleLeft;
             label.style.unityFontStyleAndWeight = FontStyle.Bold;
+            if (fontSize >= 0)
+            {
+                label.style.height = fontSize;
+                label.style.fontSize = fontSize;
+            }
+
             SketchRendererUIUtils.AddWithMargins(container, label, SketchRendererUIData.TitleIndent);
             return container;
         }
@@ -40,15 +46,15 @@ namespace SketchRenderer.Editor.UIToolkit
             return button;
         }
         
-        internal static Foldout SketchFoldout(string name, bool applyMargins = true, bool hasActivationToggle = false)
+        internal static Foldout SketchFoldout(string name, bool applyMargins = true, bool applyPadding = true)
         {
             Foldout foldout = new Foldout();
             foldout.text = name;
             foldout.userData = applyMargins;
             
-            foldout.RegisterCallbackOnce<GeometryChangedEvent>(ApplyFoldoutStyle);
+            foldout.RegisterCallbackOnce<GeometryChangedEvent>(evt => ApplyFoldoutStyle(evt, applyPadding));
             
-            static void ApplyFoldoutStyle(GeometryChangedEvent evt)
+            static void ApplyFoldoutStyle(GeometryChangedEvent evt, bool applyPadding)
             {
                 Foldout foldout = (Foldout)evt.target;
                 bool applyMargins = (bool)foldout.userData;
@@ -59,7 +65,10 @@ namespace SketchRenderer.Editor.UIToolkit
                 foldoutToggle.style.backgroundColor = SketchRendererUIData.ExpandableHeaderBackgroundColor;
                 
                 foldoutToggle.style.minHeight = foldoutToggle.resolvedStyle.height * SketchRendererUIData.ExpandableHeaderHeightModifier;
-                SketchRendererUIUtils.ApplyToPadding(foldoutToggle, SketchRendererUIData.MajorIndentCorners);
+                if(applyPadding)
+                    SketchRendererUIUtils.ApplyToPadding(foldoutToggle, SketchRendererUIData.MajorIndentCorners);
+                else
+                    SketchRendererUIUtils.ApplyToPadding(foldoutToggle, CornerData.Empty);
 
                 if (!applyMargins)
                     SketchRendererUIUtils.ApplyToMargins(foldoutToggle, CornerData.Empty);
@@ -74,16 +83,20 @@ namespace SketchRenderer.Editor.UIToolkit
             
             return foldout;
         }
-        
-        internal static Foldout SketchFoldoutWithToggle(string name, SerializedProperty toggleableFeature, bool applyMargins = true)
+
+        internal static Foldout SketchFoldoutWithToggle(string name, SerializedProperty toggleableFeature, bool applyMargins = true, bool applyPadding = true, EventCallback<ChangeEvent<bool>> changeCallback = null)
         {
             Foldout foldout = new Foldout();
             foldout.text = name;
             foldout.userData = applyMargins;
             
-            foldout.RegisterCallbackOnce<GeometryChangedEvent>(evt => ApplyFoldoutStyle(evt, toggleableFeature));
+            Toggle featureToggle = new Toggle();
+            featureToggle.BindProperty(toggleableFeature);
+            featureToggle.TrackPropertyValue(toggleableFeature);
             
-            static void ApplyFoldoutStyle(GeometryChangedEvent evt, SerializedProperty toggleableFeature)
+            foldout.RegisterCallbackOnce<GeometryChangedEvent>(evt => ApplyFoldoutStyle(evt, featureToggle, applyPadding, changeCallback));
+            
+            static void ApplyFoldoutStyle(GeometryChangedEvent evt, Toggle featureToggle, bool applyPadding, EventCallback<ChangeEvent<bool>> changeCallback = null)
             {
                 Foldout foldout = (Foldout)evt.target;
                 bool applyMargins = (bool)foldout.userData;
@@ -94,7 +107,10 @@ namespace SketchRenderer.Editor.UIToolkit
                 foldoutToggle.style.backgroundColor = SketchRendererUIData.ExpandableHeaderBackgroundColor;
                 
                 foldoutToggle.style.minHeight = foldoutToggle.resolvedStyle.height * SketchRendererUIData.ExpandableHeaderHeightModifier;
-                SketchRendererUIUtils.ApplyToPadding(foldoutToggle, SketchRendererUIData.MajorIndentCorners);
+                if(applyPadding)
+                    SketchRendererUIUtils.ApplyToPadding(foldoutToggle, SketchRendererUIData.MajorIndentCorners);
+                else
+                    SketchRendererUIUtils.ApplyToPadding(foldoutToggle, CornerData.Empty);
 
                 if (!applyMargins)
                     SketchRendererUIUtils.ApplyToMargins(foldoutToggle, CornerData.Empty);
@@ -104,20 +120,19 @@ namespace SketchRenderer.Editor.UIToolkit
                 foldoutLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
                 SketchRendererUIUtils.ApplyToMargins(foldoutLabel, CornerData.Empty);
                 
-                Toggle featureToggle = new Toggle();
-                featureToggle.BindProperty(toggleableFeature);
-                featureToggle.TrackPropertyValue(toggleableFeature);
                 foldoutLabel.hierarchy.parent.Add(featureToggle);
                 foldoutLabel.hierarchy.parent.style.justifyContent = Justify.SpaceBetween;
                 
                 var contentElement = foldout.Q<VisualElement>(className: Foldout.contentUssClassName);
 
-                featureToggle.RegisterValueChangedCallback(evt => ToggleFoldoutFeatures(evt, contentElement));
+                featureToggle.RegisterValueChangedCallback(evt => ToggleFoldoutFeatures(evt, contentElement, changeCallback));
 
-                static void ToggleFoldoutFeatures(ChangeEvent<bool> evt, VisualElement content)
+                static void ToggleFoldoutFeatures(ChangeEvent<bool> evt, VisualElement content, EventCallback<ChangeEvent<bool>> callback = null)
                 {
                     foreach(var child in content.Children())
                         child.SetEnabled(evt.newValue);
+                    if(callback != null)
+                        callback(evt);
                 }
                 
                 foldout.style.unityTextAlign = TextAnchor.MiddleLeft;

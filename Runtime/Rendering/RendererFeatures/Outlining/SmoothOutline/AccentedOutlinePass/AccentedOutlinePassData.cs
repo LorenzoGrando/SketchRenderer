@@ -1,4 +1,3 @@
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
 using SketchRenderer.Runtime.Rendering.Volume;
@@ -11,6 +10,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public bool UseAccentedOutlines;
         [Header("Distortion Settings")] 
         public bool BakeDistortionDuringRuntime;
+        [Range(0.25f, 1f)]
         public float BakedTextureScaleFactor = 1f;
         public float Rate = 20f;
         [Range(0f, 1f)]

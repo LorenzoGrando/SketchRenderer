@@ -22,7 +22,11 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         
         public override void Create()
         {
-            renderUVsMaterial = new Material(renderUVsShader);
+            if (renderUVsShader != null)
+            {
+                renderUVsMaterial = new Material(renderUVsShader);
+            }
+
             renderUVsRenderPass = new RenderUVsRenderPass();
         }
         

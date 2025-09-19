@@ -10,23 +10,44 @@ namespace SketchRenderer.Editor.Rendering
 {
     internal static class SketchRendererManager
     {
-        private static SketchRendererContext currentRendererContext;
-        internal static SketchRendererContext CurrentRendererContext
+        private static SketchRendererManagerSettings settings;
+        private static SketchRendererManagerSettings ManagerSettings
         {
             get
             {
-                if (currentRendererContext == null)
+                if (settings == null)
                 {
-                    currentRendererContext = AssetDatabase.LoadAssetAtPath<SketchRendererContext>(SketchRendererData.DefaultSketchRendererContextPackagePath);
-                    ResourceReloader.ReloadAllNullIn(currentRendererContext, SketchRendererData.PackagePath);
-                }
+                    if (!AssetDatabase.AssetPathExists(SketchRendererData.DefaultSketchManagerSettingsPackagePath))
+                    {
+                        var set = ScriptableObject.CreateInstance<SketchRendererManagerSettings>();
+                        AssetDatabase.CreateAsset(set, SketchRendererData.DefaultSketchManagerSettingsPackagePath);
+                        AssetDatabase.SaveAssets();
+                        AssetDatabase.Refresh();
+                    }
 
-                return currentRendererContext;
+                    settings = AssetDatabase.LoadAssetAtPath<SketchRendererManagerSettings>(SketchRendererData.DefaultSketchManagerSettingsPackagePath);
+                    if (settings.CurrentRendererContext == null)
+                    {
+                        SketchRendererContext defaultContext = AssetDatabase.LoadAssetAtPath<SketchRendererContext>(SketchRendererData.DefaultSketchRendererContextPackagePath);
+                        ResourceReloader.ReloadAllNullIn(defaultContext, SketchRendererData.PackagePath);
+                        settings.CurrentRendererContext = defaultContext;
+                    }
+                }
+                return settings;
             }
         }
-        
-        private static SketchResourceAsset resourceAsset;
 
+        internal static SketchRendererContext CurrentRendererContext
+        {
+            get => ManagerSettings.CurrentRendererContext;
+            set
+            {
+                ManagerSettings.CurrentRendererContext = value;
+                AssetDatabase.SaveAssetIfDirty(ManagerSettings);
+            }
+        }
+
+        private static SketchResourceAsset resourceAsset;
         internal static SketchResourceAsset ResourceAsset
         {
             get
@@ -69,6 +90,12 @@ namespace SketchRenderer.Editor.Rendering
                 else
                     SketchRendererFeatureWrapper.RemoveRendererFeature(features[i].Feature);
             }
+        }
+
+        internal static void ClearRenderer()
+        {
+            for(int i = totalFeatureTypes - 1; i > 0; i--)
+                SketchRendererFeatureWrapper.RemoveRendererFeature(featureTypesInPackage[i]);
         }
 
         internal static void UpdateFeatureByCurrentContext(SketchRendererFeatureType featureType)

@@ -13,6 +13,7 @@ namespace SketchRenderer.Runtime.Rendering.Volume
         public BoolParameter UseAccentedOutlines = new(true);
         [Space(2.5f)]
         [Header("Accented Outlines - Thickness")]
+        public BoolParameter UseThickness = new BoolParameter(true);
         public ClampedIntParameter ThicknessRange = new ClampedIntParameter(0, 0, 5);
         public ClampedFloatParameter ThicknessStrength = new ClampedFloatParameter(0, 0, 1);
 
