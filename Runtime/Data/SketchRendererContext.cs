@@ -16,22 +16,23 @@ namespace SketchRenderer.Runtime.Data
         public RenderUVsPassData UVSFeatureData;
 
         public bool UseMaterialFeature;
-        public MaterialSurfacePassData MaterialFeatureData;
+        public MaterialSurfacePassData MaterialFeatureData = new ();
 
         public bool UseLuminanceFeature;
-        public LuminancePassData LuminanceFeatureData;
+        public LuminancePassData LuminanceFeatureData = new();
 
         [HideInInspector] public bool UseEdgeDetectionFeature => UseSmoothOutlineFeature || UseSketchyOutlineFeature;
         public EdgeDetectionPassData EdgeDetectionFeatureData;
 
         public bool UseSmoothOutlineFeature;
-        public AccentedOutlinePassData AccentedOutlineFeatureData;
-        public ThicknessDilationPassData ThicknessDilationFeatureData;
+        public AccentedOutlinePassData AccentedOutlineFeatureData = new ();
+        public ThicknessDilationPassData ThicknessDilationFeatureData = new ();
 
         public bool UseSketchyOutlineFeature;
-        public SketchStrokesPassData SketchyOutlineFeatureData;
+        public SketchStrokesPassData SketchyOutlineFeatureData = new ();
 
-        public SketchCompositionPassData CompositionFeatureData;
+        public bool UseCompositorFeature => UseUVsFeature || UseMaterialFeature || UseLuminanceFeature || UseSmoothOutlineFeature || UseSketchyOutlineFeature;
+        public SketchCompositionPassData CompositionFeatureData = new ();
 
         public bool IsFeaturePresent(SketchRendererFeatureType featureType)
         {
@@ -42,7 +43,7 @@ namespace SketchRenderer.Runtime.Data
                 SketchRendererFeatureType.OUTLINE_SKETCH => UseSketchyOutlineFeature,
                 SketchRendererFeatureType.LUMINANCE => UseLuminanceFeature,
                 SketchRendererFeatureType.MATERIAL => UseMaterialFeature,
-                SketchRendererFeatureType.COMPOSITOR => true,
+                SketchRendererFeatureType.COMPOSITOR => UseCompositorFeature,
                 _ => throw new NotImplementedException(),
             };
         }
@@ -57,8 +58,10 @@ namespace SketchRenderer.Runtime.Data
                     featuresInContext.Add(features[i]);
             }
 
-            CompositionFeatureData.FeaturesToCompose = featuresInContext;
-            AccentedOutlineFeatureData.ForceRebake = true;
+            if(CompositionFeatureData != null)
+                CompositionFeatureData.FeaturesToCompose = featuresInContext;
+            if(AccentedOutlineFeatureData != null)
+                AccentedOutlineFeatureData.ForceRebake = true;
         }
 
         public void OnValidate()

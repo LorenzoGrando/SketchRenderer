@@ -37,56 +37,58 @@ MonoBehaviour:
     ConstantScaleFalloffFactor: 2
     AlbedoTexture: {fileID: 2800000, guid: 878c8bc558700bd408be460c4a02ce46, type: 3}
     NormalTexture: {fileID: 2800000, guid: 246db1f1e87541a4eae5d2560f1bacda, type: 3}
-    Scale: {x: 8, y: 8}
+    Scale: {x: 2, y: 2}
     BaseColorBlendFactor: 0
   UseLuminanceFeature: 1
   LuminanceFeatureData:
-    ActiveTonalMap: {fileID: 11400000, guid: 098b8c90317d7d049bc747bc5de9c731, type: 2}
+    ActiveTonalMap: {fileID: 0}
     ProjectionMethod: 2
-    ConstantScaleFalloffFactor: 2.43
+    ConstantScaleFalloffFactor: 2
     SmoothTransitions: 1
     ToneScales: {x: 8, y: 8}
-    LuminanceScalar: -0.323
+    LuminanceScalar: 0
   EdgeDetectionFeatureData:
     Method: 1
     Source: 2
-    OutlineThreshold: 0.048
+    OutlineThreshold: 0.098
     OutlineOffset: 0
-    OutlineDistanceFalloff: 0.452
+    OutlineDistanceFalloff: 0.589
     OutlineAngleSensitivity: 1
-    OutlineAngleConstraint: 0.36
-    OutlineNormalSensitivity: 0.683
-    OutputType: 2
+    OutlineAngleConstraint: 0.449
+    OutlineNormalSensitivity: 0.364
+    OutputType: 0
   UseSmoothOutlineFeature: 1
   AccentedOutlineFeatureData:
-    UseAccentedOutlines: 1
-    BakeDistortionDuringRuntime: 1
+    UseAccentedOutlines: 0
+    BakeDistortionDuringRuntime: 0
+    BakedTextureScaleFactor: 1
     Rate: 20
-    Strength: 0.551
-    AdditionalLines: 3
-    AdditionalLineTintPersistence: 0.61
-    AdditionalLineDistortionJitter: 0.283
+    Strength: 1
+    AdditionalLines: 0
+    AdditionalLineTintPersistence: 0
+    AdditionalLineDistortionJitter: 0
     PencilOutlineMask: {fileID: 0}
-    MaskScale: {x: 1, y: 1}
+    MaskScale: {x: 0, y: 0}
     ForceRebake: 1
   ThicknessDilationFeatureData:
-    ThicknessRange: 0
-    ThicknessStrength: 0
+    UseThicknessDilation: 0
+    ThicknessRange: 1
+    ThicknessStrength: 1
   UseSketchyOutlineFeature: 0
   SketchyOutlineFeatureData:
-    OutlineStrokeData: {fileID: 11400000, guid: 9a8345853514edd4897fc3587cf35f53, type: 2}
-    SampleArea: 1
-    StrokeSampleScale: 4
+    OutlineStrokeData: {fileID: 0}
+    SampleArea: 0
+    StrokeSampleScale: 0
     DoDownscale: 0
-    DownscaleFactor: 2
-    StrokeThreshold: 0.05
+    DownscaleFactor: 0
+    StrokeThreshold: 0
     FrameSmoothingFactor: 0
     UsePerpendicularDirection: 0
   CompositionFeatureData:
     debugMode: 0
-    OutlineStrokeColor: {r: 0, g: 0, b: 0, a: 0.8509804}
-    ShadingStrokeColor: {r: 0, g: 0, b: 0, a: 0.92156863}
-    MaterialAccumulationStrength: 0.13
+    OutlineStrokeColor: {r: 0, g: 0, b: 0, a: 1}
+    ShadingStrokeColor: {r: 0, g: 0, b: 0, a: 1}
+    MaterialAccumulationStrength: 0
     StrokeBlendMode: 0
-    BlendStrength: 0.963
+    BlendStrength: 1
     featuresToCompose: 0000000001000000030000000400000005000000

@@ -8,16 +8,15 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 {
     public class SmoothOutlineRendererFeature : ScriptableRendererFeature, ISketchRendererFeature
     {
-        [Header("Base Parameters")]
-        [Space(5)]
+        [HideInInspector]
         public EdgeDetectionPassData EdgeDetectionPassData = new EdgeDetectionPassData();
         private EdgeDetectionPassData CurrentEdgeDetectionPassData { get { return EdgeDetectionPassData.GetPassDataByVolume(); } }
         
+        [HideInInspector]
         public ThicknessDilationPassData ThicknessPassData = new ThicknessDilationPassData();
         private ThicknessDilationPassData CurrentThicknessPassData { get { return ThicknessPassData.GetPassDataByVolume(); } }
-
-        [Header("Accented Effects")] 
-        [Space(5)]
+        
+        [HideInInspector]
         public AccentedOutlinePassData AccentedOutlinePassData = new AccentedOutlinePassData();
         public AccentedOutlinePassData CurrentAccentOutlinePassData { get { return AccentedOutlinePassData.GetPassDataByVolume(); } }
         

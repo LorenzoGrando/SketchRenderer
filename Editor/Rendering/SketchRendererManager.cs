@@ -8,8 +8,14 @@ using UnityEngine;
 
 namespace SketchRenderer.Editor.Rendering
 {
+    [InitializeOnLoad]
     internal static class SketchRendererManager
     {
+        static SketchRendererManager()
+        {
+            SketchRendererFeatureWrapper.OnFeatureValidated += feature => UpdateFeatureByContext(feature, CurrentRendererContext);
+        }
+        
         private static SketchRendererManagerSettings settings;
         private static SketchRendererManagerSettings ManagerSettings
         {
@@ -27,13 +33,23 @@ namespace SketchRenderer.Editor.Rendering
 
                     settings = AssetDatabase.LoadAssetAtPath<SketchRendererManagerSettings>(SketchRendererData.DefaultSketchManagerSettingsPackagePath);
                     if (settings.CurrentRendererContext == null)
-                    {
-                        SketchRendererContext defaultContext = AssetDatabase.LoadAssetAtPath<SketchRendererContext>(SketchRendererData.DefaultSketchRendererContextPackagePath);
-                        ResourceReloader.ReloadAllNullIn(defaultContext, SketchRendererData.PackagePath);
-                        settings.CurrentRendererContext = defaultContext;
-                    }
+                        settings.CurrentRendererContext = DefaultRendererContext;
                 }
                 return settings;
+            }
+        }
+        
+        private static SketchRendererContext defaultRendererContext;
+        internal static SketchRendererContext DefaultRendererContext
+        {
+            get
+            {
+                if (defaultRendererContext == null)
+                {
+                    defaultRendererContext = AssetDatabase.LoadAssetAtPath<SketchRendererContext>(SketchRendererData.DefaultSketchRendererContextPackagePath);
+                    ResourceReloader.ReloadAllNullIn(defaultRendererContext, SketchRendererData.PackagePath);
+                }
+                return defaultRendererContext;
             }
         }
 
@@ -63,6 +79,12 @@ namespace SketchRenderer.Editor.Rendering
         }
         private static readonly SketchRendererFeatureType[] featureTypesInPackage = Enum.GetValues(typeof(SketchRendererFeatureType)) as SketchRendererFeatureType[];
         private static readonly int totalFeatureTypes = featureTypesInPackage.Length;
+
+        internal static void UpdateRendererToDefaultContext()
+        {
+            CurrentRendererContext = DefaultRendererContext;
+            UpdateRendererToCurrentContext();
+        }
 
         internal static void UpdateRendererToCurrentContext()
         {
@@ -94,7 +116,7 @@ namespace SketchRenderer.Editor.Rendering
 
         internal static void ClearRenderer()
         {
-            for(int i = totalFeatureTypes - 1; i > 0; i--)
+            for(int i = totalFeatureTypes - 1; i >= 0; i--)
                 SketchRendererFeatureWrapper.RemoveRendererFeature(featureTypesInPackage[i]);
         }
 

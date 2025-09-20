@@ -6,7 +6,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 {
     public class LuminanceRendererFeature : ScriptableRendererFeature, ISketchRendererFeature
     {
-        [Header("Parameters")] [Space(5)] [SerializeField]
+        [SerializeField] [HideInInspector]
         public LuminancePassData LuminanceData = new LuminancePassData();
         
         private Material luminanceMaterial;

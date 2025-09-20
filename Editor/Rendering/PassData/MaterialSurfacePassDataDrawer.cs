@@ -50,6 +50,9 @@ namespace SketchRenderer.Editor.Rendering
             var scalesField = SketchRendererUI.SketchVector2IntProperty(property.FindPropertyRelative("Scale"));
             SketchRendererUIUtils.AddWithMargins(texturingRegion, scalesField.Container, SketchRendererUIData.MajorIndentCorners);
             
+            var colorBlendField = SketchRendererUI.SketchFloatSliderPropertyWithInput(property.FindPropertyRelative("BaseColorBlendFactor"), nameOverride:"Base Color Blend");
+            SketchRendererUIUtils.AddWithMargins(texturingRegion, colorBlendField.Container, SketchRendererUIData.MajorIndentCorners);
+            
             SketchRendererUIUtils.AddWithMargins(passDataField, texturingRegion, CornerData.Empty);
 
             return passDataField;

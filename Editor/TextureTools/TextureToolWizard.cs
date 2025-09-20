@@ -35,7 +35,7 @@ namespace SketchRenderer.Editor.TextureTools
         
         #region Tonal Art Map Generator
         
-        [MenuItem(SketchRendererData.PackageMenuItemPath + SketchRendererData.PackageMenuTextureToolSubPath + "Tonal Art Map Generator", false)]
+        [MenuItem(SketchRendererData.PackageMenuItemPath + SketchRendererData.PackageMenuTextureToolSubPath + "Tonal Art Map Generator", false, priority:(int)SketchRendererData.MenuPriority.Default)]
         internal static void CreateTonalArtMapWindow()
         {
             if (TonalArtMapGeneratorWindow.window != null)
@@ -82,7 +82,7 @@ namespace SketchRenderer.Editor.TextureTools
         
         #region Material Generator
         
-        [MenuItem(SketchRendererData.PackageMenuItemPath + SketchRendererData.PackageMenuTextureToolSubPath + "Material Generator", false)]
+        [MenuItem(SketchRendererData.PackageMenuItemPath + SketchRendererData.PackageMenuTextureToolSubPath + "Material Generator", false, priority:(int)SketchRendererData.MenuPriority.Default)]
         internal static void CreateMaterialWindow()
         {
             if (MaterialGeneratorWindow.window != null)

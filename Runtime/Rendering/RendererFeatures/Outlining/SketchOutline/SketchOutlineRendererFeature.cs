@@ -7,10 +7,11 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 {
     public class SketchOutlineRendererFeature : ScriptableRendererFeature, ISketchRendererFeature
     {
-        [Header("Base Parameters")]
-        [Space(5)]
+        [HideInInspector]
         public EdgeDetectionPassData EdgeDetectionPassData = new EdgeDetectionPassData();
         private EdgeDetectionPassData CurrentEdgeDetectionPassData { get { return EdgeDetectionPassData.GetPassDataByVolume(); } }
+        
+        [HideInInspector]
         public SketchStrokesPassData SketchStrokesPassData = new SketchStrokesPassData();
         private SketchStrokesPassData CurrentSketchStrokesPassData { get { return SketchStrokesPassData.GetPassDataByVolume(); } }
         

@@ -20,7 +20,13 @@ namespace SketchRenderer.Runtime.Data
         
         public static readonly string DefaultSketchManagerSettingsPackagePath = PackagePath + "/Editor/Data/DefaultScriptables/SketchManagerSettings.asset";
         
-
         public static readonly string DefaultPackageAssetDirectoryPath = "Assets/" + PackageDisplayName;
+
+        public enum MenuPriority
+        {
+            Major,
+            Default,
+            Minor,
+        }
     }
 }

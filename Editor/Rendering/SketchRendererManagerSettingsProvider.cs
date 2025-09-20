@@ -30,7 +30,7 @@ namespace SketchRenderer.Editor.Rendering
         {
             var labelArea = SketchRendererUI.SketchMajorArea("Sketch Renderer Settings", applyMargins: false, fontSize: SketchRendererUIData.MajorTitleHeight);
             SketchRendererUIUtils.AddWithMargins(root, labelArea, SketchRendererUIData.BaseFieldMargins);
-            var contextField = SketchRendererUI.SketchObjectField("Renderer Context", typeof(SketchRendererContext),
+            var contextField = SketchRendererUI.SketchObjectField("Active Renderer Context", typeof(SketchRendererContext),
                 SketchRendererManager.CurrentRendererContext, changeCallback:RendererContext_Changed);
             SketchRendererUIUtils.AddWithMargins(root, contextField.Container, SketchRendererUIData.MajorIndentCorners);
             
