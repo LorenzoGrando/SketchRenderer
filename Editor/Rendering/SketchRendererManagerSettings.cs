@@ -14,5 +14,10 @@ namespace SketchRenderer.Editor.Rendering
             get => currentRendererContext;
             set => currentRendererContext = value;
         }
+        
+        [SerializeField] [HideInInspector]
+        internal bool AlwaysUpdateRendererData = false;
+
+        internal readonly int delayedValidateEditorFrameCount = 500;
     }
 }

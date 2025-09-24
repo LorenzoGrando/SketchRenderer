@@ -10,6 +10,9 @@ namespace SketchRenderer.Runtime.Data
     [CreateAssetMenu(fileName = "SketchRendererContext", menuName = SketchRendererData.PackageAssetItemPath + "SketchRendererContext")]
     public class SketchRendererContext : ScriptableObject
     {
+        public event Action OnValidated;
+        public bool IsDirty { get; set; }
+        
         [HideInInspector] public bool UseUVsFeature => (UseMaterialFeature && MaterialFeatureData.RequiresTextureCoordinateFeature())
                                                        || (UseLuminanceFeature && LuminanceFeatureData.RequiresTextureCoordinateFeature());
         
@@ -20,8 +23,7 @@ namespace SketchRenderer.Runtime.Data
 
         public bool UseLuminanceFeature;
         public LuminancePassData LuminanceFeatureData = new();
-
-        [HideInInspector] public bool UseEdgeDetectionFeature => UseSmoothOutlineFeature || UseSketchyOutlineFeature;
+        
         public EdgeDetectionPassData EdgeDetectionFeatureData;
 
         public bool UseSmoothOutlineFeature;
@@ -66,7 +68,15 @@ namespace SketchRenderer.Runtime.Data
 
         public void OnValidate()
         {
+            IsDirty = true;
             ConfigureSettings();
+            OnValidated?.Invoke();
+        }
+
+        public void OnEnable()
+        {
+            if(IsDirty)
+                ConfigureSettings();
         }
     }
 }

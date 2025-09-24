@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: SketchManagerSettings
   m_EditorClassIdentifier: 
   currentRendererContext: {fileID: 11400000, guid: 3ea449d5eda53024eb8f3d5530595b85, type: 2}
+  AlwaysUpdateRendererData: 0

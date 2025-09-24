@@ -43,16 +43,16 @@ MonoBehaviour:
   LuminanceFeatureData:
     ActiveTonalMap: {fileID: 0}
     ProjectionMethod: 2
-    ConstantScaleFalloffFactor: 2
+    ConstantScaleFalloffFactor: 3.2
     SmoothTransitions: 1
     ToneScales: {x: 8, y: 8}
-    LuminanceScalar: 0
+    LuminanceScalar: 0.54
   EdgeDetectionFeatureData:
     Method: 1
     Source: 2
     OutlineThreshold: 0.098
     OutlineOffset: 0
-    OutlineDistanceFalloff: 0.589
+    OutlineDistanceFalloff: 0.38
     OutlineAngleSensitivity: 1
     OutlineAngleConstraint: 0.449
     OutlineNormalSensitivity: 0.364

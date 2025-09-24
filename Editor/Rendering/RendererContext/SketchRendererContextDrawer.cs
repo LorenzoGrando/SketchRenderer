@@ -119,7 +119,7 @@ namespace SketchRenderer.Editor.Rendering
 
         internal Foldout ConstructSmoothOutlineFeature(SerializedProperty UseSmoothOutlineProp)
         {
-            var smoothFoldout = SketchRendererUI.SketchFoldoutWithToggle("Smooth Outline Feature", UseSmoothOutlineProp, false, false, DynamicToggleCallback);
+            var smoothFoldout = SketchRendererUI.SketchFoldoutWithToggle("Smooth Outline Feature", UseSmoothOutlineProp, false, true, DynamicToggleCallback);
             
             var edgeField = ConstructEdgeDetectionElement();
             edgeField.RegisterCallback<ExecuteCommandEvent>(TriggerRepaint);
@@ -137,7 +137,7 @@ namespace SketchRenderer.Editor.Rendering
             
             SerializedProperty thicknessDataProp = serializedObject.FindProperty("ThicknessDilationFeatureData");
             SerializedProperty useThicknessProp = thicknessDataProp.FindPropertyRelative("UseThicknessDilation");
-            var thicknessFoldout = SketchRendererUI.SketchFoldoutWithToggle("Thickness Control", useThicknessProp, applyMargins:false, applyPadding:false);
+            var thicknessFoldout = SketchRendererUI.SketchFoldoutWithToggle("Thickness Control", useThicknessProp, applyMargins:false, applyPadding:true);
             
             var thicknessDataField = new PropertyField(thicknessDataProp);
             thicknessDataField.BindProperty(thicknessDataProp);
@@ -149,7 +149,7 @@ namespace SketchRenderer.Editor.Rendering
         
         internal Foldout ConstructSketchyOutlineFeature(SerializedProperty UseSketchyOutlineProp)
         {
-            var sketchFoldout = SketchRendererUI.SketchFoldoutWithToggle("Sketchy Outline Feature", UseSketchyOutlineProp, false, false, DynamicToggleCallback);
+            var sketchFoldout = SketchRendererUI.SketchFoldoutWithToggle("Sketchy Outline Feature", UseSketchyOutlineProp, false, true, DynamicToggleCallback);
             
             var edgeField = ConstructEdgeDetectionElement();
             edgeField.RegisterCallback<ExecuteCommandEvent>(TriggerRepaint);

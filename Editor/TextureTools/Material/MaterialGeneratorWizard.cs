@@ -18,31 +18,7 @@ namespace SketchRenderer.Editor.TextureTools
         
         internal static MaterialDataAsset CreateMaterialDataAsset(string path)
         {
-            try
-            {
-                string validatedPath = SketchAssetCreationWrapper.ConvertToAssetsPath(path);
-                SketchAssetCreationWrapper.TryValidateOrCreateAssetPath(validatedPath);
-
-                MaterialDataAsset materialDataAsset = ScriptableObject.CreateInstance<MaterialDataAsset>();
-                materialDataAsset.CopyFrom(SketchRendererManager.ResourceAsset.Scriptables.MaterialData);
-                string assetName = nameof(MaterialDataAsset) + ".asset";
-                int copiesCount = 0;
-                while (AssetDatabase.AssetPathExists(validatedPath + "/" +  assetName))
-                {
-                    copiesCount++;
-                    assetName = $"{nameof(MaterialDataAsset)}_{copiesCount}.asset";
-                }
-                string assetPath = validatedPath + "/" +  assetName;
-                AssetDatabase.CreateAsset(materialDataAsset, assetPath);
-                AssetDatabase.SaveAssets();
-                AssetDatabase.Refresh();
-                return AssetDatabase.LoadAssetAtPath<MaterialDataAsset>(assetPath);
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-                return null;
-            }
+            return SketchAssetCreationWrapper.CreateScriptableInstance<MaterialDataAsset>(path);
         }
         
         internal static void SetAsActiveAlbedo(Texture albedoTexture)

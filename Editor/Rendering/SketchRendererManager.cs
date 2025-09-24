@@ -17,7 +17,7 @@ namespace SketchRenderer.Editor.Rendering
         }
         
         private static SketchRendererManagerSettings settings;
-        private static SketchRendererManagerSettings ManagerSettings
+        internal static SketchRendererManagerSettings ManagerSettings
         {
             get
             {
@@ -32,8 +32,6 @@ namespace SketchRenderer.Editor.Rendering
                     }
 
                     settings = AssetDatabase.LoadAssetAtPath<SketchRendererManagerSettings>(SketchRendererData.DefaultSketchManagerSettingsPackagePath);
-                    if (settings.CurrentRendererContext == null)
-                        settings.CurrentRendererContext = DefaultRendererContext;
                 }
                 return settings;
             }
@@ -59,6 +57,7 @@ namespace SketchRenderer.Editor.Rendering
             set
             {
                 ManagerSettings.CurrentRendererContext = value;
+                EditorUtility.SetDirty(ManagerSettings);
                 AssetDatabase.SaveAssetIfDirty(ManagerSettings);
             }
         }
