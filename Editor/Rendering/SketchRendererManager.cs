@@ -112,13 +112,12 @@ namespace SketchRenderer.Editor.Rendering
                     SketchRendererFeatureWrapper.RemoveRendererFeature(features[i].Feature);
             }
         }
-
+      
         internal static void ClearRenderer()
         {
             for(int i = totalFeatureTypes - 1; i >= 0; i--)
                 SketchRendererFeatureWrapper.RemoveRendererFeature(featureTypesInPackage[i]);
         }
-
         internal static void UpdateFeatureByCurrentContext(SketchRendererFeatureType featureType)
         {
             UpdateFeatureByContext(featureType, CurrentRendererContext);

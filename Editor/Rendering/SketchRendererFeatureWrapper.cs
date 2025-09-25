@@ -18,7 +18,7 @@ namespace SketchRenderer.Editor.Rendering
         //https://discussions.unity.com/t/urp-adding-a-renderfeature-from-script/842637/4
         
         internal static event Action<SketchRendererFeatureType> OnFeatureValidated;
-        
+
         private static Dictionary<SketchRendererFeatureType, Type> rendererFeatureTypes = new Dictionary<SketchRendererFeatureType, Type>
         {
             {SketchRendererFeatureType.UVS, typeof(RenderUVsRendererFeature)},
@@ -307,6 +307,7 @@ namespace SketchRenderer.Editor.Rendering
         }
         
         internal static UniversalRendererData lastAcquiredRendererData;
+
         private static UniversalRendererData GetCurrentRendererData()
         {
             try
@@ -326,8 +327,9 @@ namespace SketchRenderer.Editor.Rendering
                     
                     if(rendererData == null)
                         throw new NullReferenceException("[SketchRendererDataWrapper] There is no UniversalRendererData in current RendererAsset");
-                    
+                  
                     lastAcquiredRendererData = rendererData;
+
                     return rendererData;
                 }
 
@@ -350,7 +352,7 @@ namespace SketchRenderer.Editor.Rendering
             ScriptableRendererFeature feature = GetRendererFeature(rendererFeatureTypes[featureType]);
             return feature != null;
         }
-
+      
         private static void GetFeatureTypesInRenderer(ref Span<(SketchRendererFeatureType featureType, bool present, int index)> presentFeatures, UniversalRendererData rendererData = null)
         {
             if(rendererData == null)
@@ -378,7 +380,7 @@ namespace SketchRenderer.Editor.Rendering
                 }
             }
         }
-
+      
         private static ScriptableRendererFeature GetRendererFeature(Type featureType)
         {
             UniversalRendererData rendererData = GetCurrentRendererData();
@@ -414,6 +416,7 @@ namespace SketchRenderer.Editor.Rendering
                 ScriptableRendererFeature rendererFeature = GetNewRendererFeatureAsset(featureType);
                 int preferredHierarchySlot = featureType == SketchRendererFeatureType.COMPOSITOR ? GetIndexOfPreviousHierarchyFeature(featureType) : GetIndexOfNextHierarchyFeature(featureType);
                 if(rendererFeature != null) 
+
                     AddFeatureToData(rendererData, rendererFeature, preferredHierarchySlot);
             }
         }
@@ -514,7 +517,7 @@ namespace SketchRenderer.Editor.Rendering
 
             return 0;
         }
-        
+      
         internal static void ConfigureRendererFeature(SketchRendererFeatureType featureType, SketchRendererContext rendererContext, SketchResourceAsset resourceAsset)
         {
             if(!CheckHasActiveFeature(featureType))

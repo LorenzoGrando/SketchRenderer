@@ -24,12 +24,13 @@ namespace SketchRenderer.Editor.UIToolkit
             var label = new Label(name);
             label.style.unityTextAlign = TextAnchor.MiddleLeft;
             label.style.unityFontStyleAndWeight = FontStyle.Bold;
+          
             if (fontSize >= 0)
             {
                 label.style.height = fontSize;
                 label.style.fontSize = fontSize;
             }
-
+          
             SketchRendererUIUtils.AddWithMargins(container, label, SketchRendererUIData.TitleIndent);
             return container;
         }
@@ -65,6 +66,7 @@ namespace SketchRenderer.Editor.UIToolkit
                 foldoutToggle.style.backgroundColor = SketchRendererUIData.ExpandableHeaderBackgroundColor;
                 
                 foldoutToggle.style.minHeight = foldoutToggle.resolvedStyle.height * SketchRendererUIData.ExpandableHeaderHeightModifier;
+              
                 if(applyPadding)
                     SketchRendererUIUtils.ApplyToPadding(foldoutToggle, SketchRendererUIData.MajorIndentCorners);
                 else
@@ -107,6 +109,7 @@ namespace SketchRenderer.Editor.UIToolkit
                 foldoutToggle.style.backgroundColor = SketchRendererUIData.ExpandableHeaderBackgroundColor;
                 
                 foldoutToggle.style.minHeight = foldoutToggle.resolvedStyle.height * SketchRendererUIData.ExpandableHeaderHeightModifier;
+              
                 if(applyPadding)
                     SketchRendererUIUtils.ApplyToPadding(foldoutToggle, SketchRendererUIData.MajorIndentCorners);
                 else

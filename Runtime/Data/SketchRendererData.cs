@@ -11,7 +11,7 @@ namespace SketchRenderer.Runtime.Data
         
         public const string PackageAssetItemPath = "Sketch Renderer/Scriptable Objects/";
         public const string PackageInspectorVolumePath = "Sketch Renderer/";
-        
+
         public const string PackageProjectSettingsPath = "Project/Sketch Renderer";
         
         //Default data holders
