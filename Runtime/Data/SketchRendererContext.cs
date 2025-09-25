@@ -8,30 +8,32 @@ using UnityEngine;
 namespace SketchRenderer.Runtime.Data
 {
     [CreateAssetMenu(fileName = "SketchRendererContext", menuName = SketchRendererData.PackageAssetItemPath + "SketchRendererContext")]
-    public class SketchRendererContext : ScriptableObject
-    {
-        [HideInInspector] public bool UseUVsFeature => (UseMaterialFeature &&MaterialFeatureData.RequiresTextureCoordinateFeature())
+    public class SketchRendererContext : ScriptableObject {
+        public event Action OnValidated;
+        public bool IsDirty { get; set; }
+        
+        [HideInInspector] public bool UseUVsFeature => (UseMaterialFeature && MaterialFeatureData.RequiresTextureCoordinateFeature())
                                                        || (UseLuminanceFeature && LuminanceFeatureData.RequiresTextureCoordinateFeature());
         
         public RenderUVsPassData UVSFeatureData;
 
         public bool UseMaterialFeature;
-        public MaterialSurfacePassData MaterialFeatureData;
+        public MaterialSurfacePassData MaterialFeatureData = new ();
 
         public bool UseLuminanceFeature;
-        public LuminancePassData LuminanceFeatureData;
-
-        [HideInInspector] public bool UseEdgeDetectionFeature => UseSmoothOutlineFeature || UseSketchyOutlineFeature;
+        public LuminancePassData LuminanceFeatureData = new();
+        
         public EdgeDetectionPassData EdgeDetectionFeatureData;
 
         public bool UseSmoothOutlineFeature;
-        public AccentedOutlinePassData AccentedOutlineFeatureData;
-        public ThicknessDilationPassData ThicknessDilationFeatureData;
+        public AccentedOutlinePassData AccentedOutlineFeatureData = new ();
+        public ThicknessDilationPassData ThicknessDilationFeatureData = new ();
 
         public bool UseSketchyOutlineFeature;
-        public SketchStrokesPassData SketchyOutlineFeatureData;
+        public SketchStrokesPassData SketchyOutlineFeatureData = new ();
 
-        public SketchCompositionPassData CompositionFeatureData;
+        public bool UseCompositorFeature => UseUVsFeature || UseMaterialFeature || UseLuminanceFeature || UseSmoothOutlineFeature || UseSketchyOutlineFeature;
+        public SketchCompositionPassData CompositionFeatureData = new ();
 
         public bool IsFeaturePresent(SketchRendererFeatureType featureType)
         {
@@ -42,7 +44,7 @@ namespace SketchRenderer.Runtime.Data
                 SketchRendererFeatureType.OUTLINE_SKETCH => UseSketchyOutlineFeature,
                 SketchRendererFeatureType.LUMINANCE => UseLuminanceFeature,
                 SketchRendererFeatureType.MATERIAL => UseMaterialFeature,
-                SketchRendererFeatureType.COMPOSITOR => true,
+                SketchRendererFeatureType.COMPOSITOR => UseCompositorFeature,
                 _ => throw new NotImplementedException(),
             };
         }
@@ -57,13 +59,23 @@ namespace SketchRenderer.Runtime.Data
                     featuresInContext.Add(features[i]);
             }
 
-            CompositionFeatureData.FeaturesToCompose = featuresInContext;
-            AccentedOutlineFeatureData.ForceRebake = true;
+            if(CompositionFeatureData != null)
+                CompositionFeatureData.FeaturesToCompose = featuresInContext;
+            if(AccentedOutlineFeatureData != null)
+                AccentedOutlineFeatureData.ForceRebake = true;
         }
 
         public void OnValidate()
         {
+            IsDirty = true;
             ConfigureSettings();
+            OnValidated?.Invoke();
+        }
+
+        public void OnEnable()
+        {
+            if(IsDirty)
+                ConfigureSettings();
         }
     }
 }

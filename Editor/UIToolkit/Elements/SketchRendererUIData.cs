@@ -39,6 +39,9 @@ namespace SketchRenderer.Editor.UIToolkit
     
     internal static class SketchRendererUIData
     {
+        //Command Events
+        public static readonly string RepaintEditorCommand = "RepaintSketchEditor";
+        
         //- Generic
         internal static readonly float MajorIndentValue = 15f;
         internal static readonly float RegularIndentValue = 10f;
@@ -57,6 +60,9 @@ namespace SketchRenderer.Editor.UIToolkit
         internal static readonly float BorderWidth = 0.5f;
         internal static readonly float MajorBorderWidth = 2f;
         
+        // Generic Labels
+        internal static readonly float MajorTitleHeight = 20f;
+
         // -- Button
         internal static readonly float MajorButtonHeight = 30f;
         

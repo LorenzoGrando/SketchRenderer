@@ -8,25 +8,61 @@ using UnityEngine;
 
 namespace SketchRenderer.Editor.Rendering
 {
+    [InitializeOnLoad]
     internal static class SketchRendererManager
     {
-        private static SketchRendererContext currentRendererContext;
-        internal static SketchRendererContext CurrentRendererContext
+        static SketchRendererManager()
+        {
+            SketchRendererFeatureWrapper.OnFeatureValidated += feature => UpdateFeatureByContext(feature, CurrentRendererContext);
+        }
+        
+        private static SketchRendererManagerSettings settings;
+        internal static SketchRendererManagerSettings ManagerSettings
         {
             get
             {
-                if (currentRendererContext == null)
+                if (settings == null)
                 {
-                    currentRendererContext = AssetDatabase.LoadAssetAtPath<SketchRendererContext>(SketchRendererData.DefaultSketchRendererContextPackagePath);
-                    ResourceReloader.ReloadAllNullIn(currentRendererContext, SketchRendererData.PackagePath);
-                }
+                    if (!AssetDatabase.AssetPathExists(SketchRendererData.DefaultSketchManagerSettingsPackagePath))
+                    {
+                        var set = ScriptableObject.CreateInstance<SketchRendererManagerSettings>();
+                        AssetDatabase.CreateAsset(set, SketchRendererData.DefaultSketchManagerSettingsPackagePath);
+                        AssetDatabase.SaveAssets();
+                        AssetDatabase.Refresh();
+                    }
 
-                return currentRendererContext;
+                    settings = AssetDatabase.LoadAssetAtPath<SketchRendererManagerSettings>(SketchRendererData.DefaultSketchManagerSettingsPackagePath);
+                }
+                return settings;
             }
         }
         
-        private static SketchResourceAsset resourceAsset;
+        private static SketchRendererContext defaultRendererContext;
+        internal static SketchRendererContext DefaultRendererContext
+        {
+            get
+            {
+                if (defaultRendererContext == null)
+                {
+                    defaultRendererContext = AssetDatabase.LoadAssetAtPath<SketchRendererContext>(SketchRendererData.DefaultSketchRendererContextPackagePath);
+                    ResourceReloader.ReloadAllNullIn(defaultRendererContext, SketchRendererData.PackagePath);
+                }
+                return defaultRendererContext;
+            }
+        }
 
+        internal static SketchRendererContext CurrentRendererContext
+        {
+            get => ManagerSettings.CurrentRendererContext;
+            set
+            {
+                ManagerSettings.CurrentRendererContext = value;
+                EditorUtility.SetDirty(ManagerSettings);
+                AssetDatabase.SaveAssetIfDirty(ManagerSettings);
+            }
+        }
+
+        private static SketchResourceAsset resourceAsset;
         internal static SketchResourceAsset ResourceAsset
         {
             get
@@ -42,6 +78,12 @@ namespace SketchRenderer.Editor.Rendering
         }
         private static readonly SketchRendererFeatureType[] featureTypesInPackage = Enum.GetValues(typeof(SketchRendererFeatureType)) as SketchRendererFeatureType[];
         private static readonly int totalFeatureTypes = featureTypesInPackage.Length;
+
+        internal static void UpdateRendererToDefaultContext()
+        {
+            CurrentRendererContext = DefaultRendererContext;
+            UpdateRendererToCurrentContext();
+        }
 
         internal static void UpdateRendererToCurrentContext()
         {
@@ -70,7 +112,12 @@ namespace SketchRenderer.Editor.Rendering
                     SketchRendererFeatureWrapper.RemoveRendererFeature(features[i].Feature);
             }
         }
-
+      
+        internal static void ClearRenderer()
+        {
+            for(int i = totalFeatureTypes - 1; i >= 0; i--)
+                SketchRendererFeatureWrapper.RemoveRendererFeature(featureTypesInPackage[i]);
+        }
         internal static void UpdateFeatureByCurrentContext(SketchRendererFeatureType featureType)
         {
             UpdateFeatureByContext(featureType, CurrentRendererContext);

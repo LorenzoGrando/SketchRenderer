@@ -125,7 +125,15 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE
                     or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_REVERSED_CONSTANT_SCALE)
                 {
-                    builder.UseGlobalTexture(SketchGlobalFrameData.ScreenUVTexture.GetUVTextureID, AccessFlags.Read);
+                    //Preemptive check to avoid exception from breaking blitter
+                    try
+                    {
+                        builder.UseGlobalTexture(SketchGlobalFrameData.ScreenUVTexture.GetUVTextureID, AccessFlags.Read);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        return;
+                    }
                 }
 
                 var sketchData = frameData.GetOrCreate<SketchFrameData>();
@@ -161,7 +169,15 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     is TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE
                     or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE)
                 {
-                    directionalBuilder.UseGlobalTexture(SketchGlobalFrameData.ScreenUVTexture.GetUVTextureID, AccessFlags.Read);
+                    //Preemptive check to avoid exception from breaking blitter
+                    try
+                    {
+                        directionalBuilder.UseGlobalTexture(SketchGlobalFrameData.ScreenUVTexture.GetUVTextureID, AccessFlags.Read);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        return;
+                    }
                 }
 
                 var sketchData = frameData.GetOrCreate<SketchFrameData>();

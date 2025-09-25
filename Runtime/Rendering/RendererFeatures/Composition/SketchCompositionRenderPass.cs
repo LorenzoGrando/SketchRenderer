@@ -164,10 +164,10 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             
             if (resourceData.isActiveTargetBackBuffer)
                 return;
-            
-            var sketchData = frameData.Get<SketchFrameData>();
-            if(sketchData == null)
+
+            if(!frameData.Contains<SketchFrameData>())
                 return;
+            var sketchData = frameData.Get<SketchFrameData>();
             
             var dstDesc = renderGraph.GetTextureDesc(resourceData.activeColorTexture);
             dstDesc.name = "FinalSketchColor";

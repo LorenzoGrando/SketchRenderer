@@ -34,30 +34,7 @@ namespace SketchRenderer.Editor.TextureTools
 
         internal static TonalArtMapAsset CreateTonalArtMap(string path)
         {
-            try
-            {
-                string validatedPath = SketchAssetCreationWrapper.ConvertToAssetsPath(path);
-                SketchAssetCreationWrapper.TryValidateOrCreateAssetPath(validatedPath);
-
-                TonalArtMapAsset tonalArtMapAsset = ScriptableObject.CreateInstance<TonalArtMapAsset>();
-                string assetName = nameof(TonalArtMapAsset) + ".asset";
-                int copiesCount = 0;
-                while (AssetDatabase.AssetPathExists(validatedPath + "/" +  assetName))
-                {
-                    copiesCount++;
-                    assetName = $"{nameof(TonalArtMapAsset)}_{copiesCount}.asset";
-                }
-                string assetPath = validatedPath + "/" +  assetName;
-                AssetDatabase.CreateAsset(tonalArtMapAsset, assetPath);
-                AssetDatabase.SaveAssets();
-                AssetDatabase.Refresh();
-                return AssetDatabase.LoadAssetAtPath<TonalArtMapAsset>(assetPath);
-            }
-            catch (Exception e)
-            {
-                Debug.LogException(e);
-                return null;
-            }
+            return SketchAssetCreationWrapper.CreateScriptableInstance<TonalArtMapAsset>(path);
         }
 
         internal static void SetAsCurrentTonalArtMap(TonalArtMapAsset asset)
