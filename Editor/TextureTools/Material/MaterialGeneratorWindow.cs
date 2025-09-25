@@ -135,6 +135,11 @@ namespace SketchRenderer.Editor.TextureTools
 
             SketchRendererUIUtils.AddWithMargins(materialDataRegion, resolutionField.Container, SketchRendererUIData.MinorFieldMargins);
             
+            materialDataRegion.ToggleElementInteractions(MaterialGenerator.HasNonDefaultMaterialDataAsset);
+            materialAssetField.Container.SetEnabled(true);
+            if(!MaterialGenerator.HasNonDefaultMaterialDataAsset)
+                SketchRendererUIUtils.AddWithMargins(materialDataRegion, SketchRendererUI.SketchInmutableAssetHelpBox(), SketchRendererUIData.BaseFieldMargins);
+            
             return materialDataRegion;
         }
         

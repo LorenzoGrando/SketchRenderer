@@ -133,6 +133,12 @@ namespace SketchRenderer.Editor.TextureTools
                 var strokeEditorElement = strokeAssetEditor.CreateInspectorGUI();
                 strokeEditorElement.RegisterCallback<SerializedPropertyChangeEvent>(StrokeData_Changed);
                 SketchRendererUIUtils.AddWithMargins(strokeDataRegion, strokeEditorElement, SketchRendererUIData.BaseFieldMargins);
+                
+                //Only allow editing if data asset is mutable or field is always necessary
+                strokeDataRegion.ToggleElementInteractions(TonalArtMapGenerator.HasNonDefaultStrokeDataAsset);
+                strokeAssetField.Container.SetEnabled(true);
+                if(!TonalArtMapGenerator.HasNonDefaultStrokeDataAsset)
+                    SketchRendererUIUtils.AddWithMargins(strokeDataRegion, SketchRendererUI.SketchInmutableAssetHelpBox(), SketchRendererUIData.BaseFieldMargins);
             }
             else
             {
@@ -163,9 +169,10 @@ namespace SketchRenderer.Editor.TextureTools
             
             if (fieldAsset != null)
             {
+                Button setActiveButton = null;
                 if (!TonalArtMapWizard.IsCurrentTonalArtMap(fieldAsset))
                 {
-                    var setActiveButton = new Button(SetActiveTonalArtMap_Clicked) { text = "Assign to Renderer Context" };
+                    setActiveButton = new Button(SetActiveTonalArtMap_Clicked) { text = "Assign to Renderer Context" };
                     SketchRendererUIUtils.AddWithMargins(outputSettingsRegion, setActiveButton, SketchRendererUIData.BaseFieldMargins);
                 }
 
@@ -211,6 +218,16 @@ namespace SketchRenderer.Editor.TextureTools
                 SketchRendererUIUtils.AddWithMargins(tonalArtMapRegion, iterationsField.Container, SketchRendererUIData.MinorFieldMargins);
                 
                 SketchRendererUIUtils.AddWithMargins(outputSettingsRegion, tonalArtMapRegion, SketchRendererUIData.BaseFieldMargins);
+                
+                
+                //Only allow editing if data asset is mutable
+                outputSettingsRegion.ToggleElementInteractions(TonalArtMapGenerator.HasNonDefaultTonalArtMapAsset);
+                //Ensure required options are always enabled
+                tonalArtMapAssetField.Container.SetEnabled(true);
+                if(setActiveButton != null)
+                    setActiveButton.SetEnabled(true);
+                if(!TonalArtMapGenerator.HasNonDefaultTonalArtMapAsset)
+                    SketchRendererUIUtils.AddWithMargins(outputSettingsRegion, SketchRendererUI.SketchInmutableAssetHelpBox(), SketchRendererUIData.BaseFieldMargins);
             }
             else
             {
@@ -236,6 +253,7 @@ namespace SketchRenderer.Editor.TextureTools
 
             var generateTamButton = SketchRendererUI.SketchMajorButton("Generate Tonal Art Map", GenerateTonalArtMap_Clicked);
             SketchRendererUIUtils.AddWithMargins(settingsContainer, generateTamButton, SketchRendererUIData.MinorFieldMargins);
+            generateTamButton.SetEnabled(TonalArtMapGenerator.HasNonDefaultTonalArtMapAsset);
             
             SketchRendererUIUtils.AddWithMargins(exportRegion, settingsContainer, SketchRendererUIData.BaseFieldMargins);
             return exportRegion;

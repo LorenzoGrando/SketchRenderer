@@ -18,9 +18,10 @@ namespace SketchRenderer.Runtime.Data
         public static readonly string DefaultSketchRendererContextPackagePath = PackagePath + "/Runtime/Data/DefaultScriptables/SketchRendererContext.asset"; 
         public static readonly string DefaultSketchResourceAssetPackagePath = PackagePath + "/Runtime/Data/DefaultScriptables/SketchResourceAsset.asset";
         
-        public static readonly string DefaultSketchManagerSettingsPackagePath = PackagePath + "/Editor/Data/DefaultScriptables/SketchManagerSettings.asset";
         
+        //Mutable Data Holders
         public static readonly string DefaultPackageAssetDirectoryPath = "Assets/" + PackageDisplayName;
+        public static readonly string DefaultSketchManagerSettingsPackagePath = DefaultPackageAssetDirectoryPath + "/SketchManagerSettings.asset";
 
         public enum MenuPriority
         {
