@@ -8,13 +8,12 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 {
     public class SketchCompositionRendererFeature : ScriptableRendererFeature, ISketchRendererFeature
     {
-        [Header("Parameters")] [Space(5)] [SerializeField]
+        [SerializeField] [HideInInspector]
         public SketchCompositionPassData CompositionPassData = new SketchCompositionPassData();
         
         [SerializeField] [HideInInspector]
         private Shader sketchCompositionShader;
         
-        [HideInInspector]
         private Material sketchMaterial;
         private SketchCompositionRenderPass sketchRenderPass;
 

@@ -8,9 +8,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 {
     public class RenderUVsRendererFeature : ScriptableRendererFeature, ISketchRendererFeature
     {
-        [Header("Base Parameters")] 
-        [Space(5)] 
-        [SerializeField] public RenderUVsPassData UvsPassData = new RenderUVsPassData();
+        [SerializeField] [HideInInspector]
+        public RenderUVsPassData UvsPassData = new RenderUVsPassData();
         private RenderUVsPassData CurrentUVsPassData { get { return UvsPassData.GetPassDataByVolume(); } }
 
         [SerializeField] [HideInInspector]
@@ -22,7 +21,11 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         
         public override void Create()
         {
-            renderUVsMaterial = new Material(renderUVsShader);
+            if (renderUVsShader != null)
+            {
+                renderUVsMaterial = new Material(renderUVsShader);
+            }
+
             renderUVsRenderPass = new RenderUVsRenderPass();
         }
         

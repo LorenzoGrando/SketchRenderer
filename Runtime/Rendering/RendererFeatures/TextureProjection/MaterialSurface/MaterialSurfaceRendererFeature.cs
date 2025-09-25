@@ -7,7 +7,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 {
     public class MaterialSurfaceRendererFeature : ScriptableRendererFeature, ISketchRendererFeature
     {
-        [Header("Parameters")] [Space(5)] [SerializeField]
+        [SerializeField] [HideInInspector]
         public MaterialSurfacePassData MaterialData = new MaterialSurfacePassData();
         
         private Material materialMat;

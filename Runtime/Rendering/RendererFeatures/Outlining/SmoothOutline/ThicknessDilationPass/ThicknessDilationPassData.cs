@@ -1,4 +1,3 @@
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
 using SketchRenderer.Runtime.Rendering.Volume;
@@ -8,6 +7,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
     [System.Serializable]
     public class ThicknessDilationPassData : ISketchRenderPassData<ThicknessDilationPassData>
     {
+        public bool UseThicknessDilation;
         [Range(0, 5)]
         public int ThicknessRange;
         [Range(0f, 1f)]
@@ -21,13 +21,14 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
         public void CopyFrom(ThicknessDilationPassData passData)
         {
+            UseThicknessDilation = passData.UseThicknessDilation;
             ThicknessRange = passData.ThicknessRange;
             ThicknessStrength = passData.ThicknessStrength;
         }
     
         public bool IsAllPassDataValid()
         {
-            return ThicknessRange > 0;
+            return UseThicknessDilation && ThicknessRange > 0;
         }
 
         public ThicknessDilationPassData GetPassDataByVolume()
@@ -38,7 +39,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             if (volumeComponent == null)
                 return this;
             ThicknessDilationPassData overrideData = new ThicknessDilationPassData();
-        
+            overrideData.UseThicknessDilation = volumeComponent.UseThickness.overrideState ? volumeComponent.UseThickness.value : UseThicknessDilation;
             overrideData.ThicknessRange = volumeComponent.ThicknessRange.overrideState ? volumeComponent.ThicknessRange.value : ThicknessRange;
             overrideData.ThicknessStrength = volumeComponent.ThicknessStrength.overrideState ? volumeComponent.ThicknessStrength.value : ThicknessStrength;
         

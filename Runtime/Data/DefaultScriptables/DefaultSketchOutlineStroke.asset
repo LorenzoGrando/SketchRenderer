@@ -16,10 +16,10 @@ MonoBehaviour:
     OriginPoint: {x: 0, y: 0, z: 0, w: 0}
     Direction: {x: 1, y: 0, z: 0, w: 0}
     AdditionalPackedData: {x: 0, y: 0, z: 0, w: 0}
-    Thickness: 0.35
+    Thickness: 0.902
     ThicknessFalloffConstraint: 0
     Length: 0.994
-    LengthThicknessFalloff: 1
+    LengthThicknessFalloff: 0.19
     Pressure: 1
     PressureFalloff: 1
     Iterations: 0

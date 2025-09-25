@@ -97,5 +97,44 @@ namespace SketchRenderer.Editor.Utils
             
             return finalPath;
         }
+
+        internal static T CreateScriptableInstance<T>(string path, bool forceFocus = true) where T : ScriptableObject
+        {
+            try
+            {
+                string validatedPath = ConvertToAssetsPath(path);
+                TryValidateOrCreateAssetPath(validatedPath);
+
+                T asset = ScriptableObject.CreateInstance<T>();
+                
+                string typeName = typeof(T).Name;
+                
+                string assetName = typeName + ".asset";
+                int copiesCount = 0;
+                while (AssetDatabase.AssetPathExists(validatedPath + "/" +  assetName))
+                {
+                    copiesCount++;
+                    assetName = $"{typeName}_{copiesCount}.asset";
+                }
+                string assetPath = validatedPath + "/" +  assetName;
+                AssetDatabase.CreateAsset(asset, assetPath);
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+                
+                T assetInProject = AssetDatabase.LoadAssetAtPath<T>(assetPath);
+                if (forceFocus)
+                {
+                    Selection.activeObject = assetInProject;
+                    EditorGUIUtility.PingObject(assetInProject);
+                    EditorUtility.FocusProjectWindow();
+                }
+                return assetInProject;
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                return null;
+            }
+        }
     }
 }

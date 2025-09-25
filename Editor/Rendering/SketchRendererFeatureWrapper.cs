@@ -7,13 +7,17 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using Object = UnityEngine.Object;
 
 namespace SketchRenderer.Editor.Rendering
 {
-    internal class SketchRendererFeatureWrapper
+    [InitializeOnLoad]
+    internal static class SketchRendererFeatureWrapper
     {
         //Many behaviours here are directly inspired from the following thread on handling the URP Renderer:
         //https://discussions.unity.com/t/urp-adding-a-renderfeature-from-script/842637/4
+        
+        internal static event Action<SketchRendererFeatureType> OnFeatureValidated;
         
         private static Dictionary<SketchRendererFeatureType, Type> rendererFeatureTypes = new Dictionary<SketchRendererFeatureType, Type>
         {
@@ -30,6 +34,279 @@ namespace SketchRenderer.Editor.Rendering
             SketchRendererFeatureType.UVS, SketchRendererFeatureType.OUTLINE_SMOOTH, SketchRendererFeatureType.OUTLINE_SKETCH, SketchRendererFeatureType.LUMINANCE, SketchRendererFeatureType.MATERIAL, SketchRendererFeatureType.COMPOSITOR
         };
 
+        internal static SketchRendererContext internalRendererContext;
+        
+        #region Renderer Data Feature Validation
+        static SketchRendererFeatureWrapper()
+        {
+            AssemblyReloadEvents.beforeAssemblyReload += DisposeInternalState;
+            AssemblyReloadEvents.afterAssemblyReload += PrepareInternalState;
+            
+            Selection.selectionChanged += ShouldTrackRendererFeatures;
+            ShouldTrackRendererFeatures();
+        }
+
+        private static void PrepareInternalState()
+        {
+            if (lastAcquiredRendererData == null)
+                GetCurrentRendererData();
+
+            if (lastAcquiredRendererData != null)
+            {
+                if (internalRendererContext == null)
+                {
+                    internalRendererContext = ScriptableObject.CreateInstance<SketchRendererContext>();
+                    internalRendererContext.hideFlags = HideFlags.HideAndDontSave;
+                    internalRendererContext.CompositionFeatureData = new SketchCompositionPassData();
+                }
+                UpdateInternalContext();
+            }
+        }
+
+        private static void DisposeInternalState()
+        {
+            if(internalRendererContext != null)
+                Object.DestroyImmediate(internalRendererContext);
+        }
+        
+        private static bool trackingRendererFeatures = false;
+        private static void ShouldTrackRendererFeatures()
+        {
+            if (lastAcquiredRendererData == null)
+                GetCurrentRendererData();
+            if (Selection.activeObject != lastAcquiredRendererData)
+            {
+                if(trackingRendererFeatures)
+                    EditorApplication.update -= TrackRendererFeatures;
+                trackingRendererFeatures = false;
+                return;
+            }
+            
+            if (!trackingRendererFeatures)
+            {
+                trackingRendererFeatures = true;
+                EditorApplication.update += TrackRendererFeatures;
+            }
+        }
+
+        private static void TrackRendererFeatures()
+        {
+            Span<(SketchRendererFeatureType feature, bool present, int index)> presentFeatures = stackalloc (SketchRendererFeatureType, bool, int)[rendererFeatureHierarchyTarget.Length];
+            for (int i = 0; i < rendererFeatureHierarchyTarget.Length; i++)
+                presentFeatures[i] = new (rendererFeatureHierarchyTarget[i], false, -1);
+            GetFeatureTypesInRenderer(ref presentFeatures, lastAcquiredRendererData);
+            bool isDifferent = false;
+            for (int i = 0; i < presentFeatures.Length; i++)
+            {
+                if (internalRendererContext.IsFeaturePresent(presentFeatures[i].feature) != presentFeatures[i].present)
+                {
+                    isDifferent = true;
+                    break;
+                }
+            }
+
+            if (isDifferent)
+            {
+                int compositorIndex = -1;
+                for (int i = 0; i < presentFeatures.Length; i++)
+                {
+                    if(!presentFeatures[i].present)
+                        continue;
+                    
+                    if (presentFeatures[i].feature == SketchRendererFeatureType.COMPOSITOR)
+                    {
+                        compositorIndex = presentFeatures[i].index;
+                        break;
+                    }
+                }
+
+                Span<(SketchRendererFeatureType feature, bool add)> overshootFeatures = stackalloc (SketchRendererFeatureType, bool)[rendererFeatureHierarchyTarget.Length];
+                int overshotCount = 0;
+                if (compositorIndex > -1)
+                {
+                    for (int i = 0; i < presentFeatures.Length; i++)
+                    {
+                        if(!presentFeatures[i].present)
+                            continue;
+
+                        if (presentFeatures[i].feature != SketchRendererFeatureType.COMPOSITOR && presentFeatures[i].index > compositorIndex)
+                        {
+                            overshootFeatures[overshotCount] = new (presentFeatures[i].feature, true);
+                            RemoveRendererFeature(presentFeatures[i].feature);
+                        }
+                    }
+                }
+                
+                UpdateInternalContext();
+                ValidateOvershoots(ref overshootFeatures);
+                ValidateDependencies(internalRendererContext);
+                ActiveEditorTracker.sharedTracker.ForceRebuild();
+                overshootFeatures.Clear();
+            }
+            ValidateHierarchy(internalRendererContext, lastAcquiredRendererData);
+            presentFeatures.Clear();
+        }
+
+        private static void UpdateInternalContext()
+        {
+            if(internalRendererContext == null)
+                return;
+
+            for (int i = 0; i < rendererFeatureHierarchyTarget.Length; i++)
+            {
+                SketchRendererFeatureType featureType = rendererFeatureHierarchyTarget[i];
+                ScriptableRendererFeature feature = GetRendererFeature(rendererFeatureTypes[featureType]);
+                ApplyToInternalContextByFeature(featureType, feature);
+            }
+            internalRendererContext.ConfigureSettings();
+        }
+
+        private static void ApplyToInternalContextByFeature(SketchRendererFeatureType featureType, ScriptableRendererFeature feature)
+        {
+            if(internalRendererContext == null)
+                return;
+            
+            bool hasFeature = feature != null;
+            switch (featureType)
+            {
+                case SketchRendererFeatureType.UVS:
+                    if (hasFeature)
+                        internalRendererContext.UVSFeatureData = ((RenderUVsRendererFeature)feature).UvsPassData;
+                    break;
+                case SketchRendererFeatureType.OUTLINE_SMOOTH:
+                    if (hasFeature)
+                    {
+                        internalRendererContext.UseSmoothOutlineFeature = true;
+                        SmoothOutlineRendererFeature smoothOutlineFeature = (SmoothOutlineRendererFeature)feature;
+                        internalRendererContext.EdgeDetectionFeatureData = smoothOutlineFeature.EdgeDetectionPassData;
+                        internalRendererContext.AccentedOutlineFeatureData =
+                            smoothOutlineFeature.AccentedOutlinePassData;
+                        internalRendererContext.ThicknessDilationFeatureData = smoothOutlineFeature.ThicknessPassData;
+                    }
+                    else
+                        internalRendererContext.UseSmoothOutlineFeature = false;
+                    break;
+                case SketchRendererFeatureType.OUTLINE_SKETCH:
+                    if (hasFeature)
+                    {
+                        internalRendererContext.UseSketchyOutlineFeature = true;
+                        SketchOutlineRendererFeature sketchOutlineRendererFeature = (SketchOutlineRendererFeature)feature;
+                        internalRendererContext.EdgeDetectionFeatureData = sketchOutlineRendererFeature.EdgeDetectionPassData;
+                        internalRendererContext.SketchyOutlineFeatureData = sketchOutlineRendererFeature.SketchStrokesPassData;
+                    }
+                    else
+                        internalRendererContext.UseSketchyOutlineFeature = false;
+                    break;
+                case SketchRendererFeatureType.LUMINANCE:
+                    if (hasFeature)
+                    {
+                        internalRendererContext.UseLuminanceFeature = true;
+                        internalRendererContext.LuminanceFeatureData = ((LuminanceRendererFeature)feature).LuminanceData;
+                    }
+                    else
+                        internalRendererContext.UseLuminanceFeature = false;
+                    break;
+                case SketchRendererFeatureType.MATERIAL:
+                    if (hasFeature)
+                    {
+                        internalRendererContext.UseMaterialFeature = true;
+                        internalRendererContext.MaterialFeatureData = ((MaterialSurfaceRendererFeature)feature).MaterialData;
+                    }
+                    else
+                        internalRendererContext.UseMaterialFeature = false;
+                    break;
+                case SketchRendererFeatureType.COMPOSITOR:
+                    if (hasFeature)
+                        internalRendererContext.CompositionFeatureData = ((SketchCompositionRendererFeature)feature).CompositionPassData;
+                    else
+                        internalRendererContext.CompositionFeatureData = null;
+                    break;
+            }
+        }
+
+        private static void ValidateDependencies(SketchRendererContext context)
+        {
+            //Enforce some dependencies to always be present in hierarchy order
+            if (context.UseUVsFeature)
+            {
+                if (!CheckHasActiveFeature(SketchRendererFeatureType.UVS))
+                {
+                    AddRendererFeature(SketchRendererFeatureType.UVS);
+                    ScriptableRendererFeature feature = GetRendererFeature(rendererFeatureTypes[SketchRendererFeatureType.UVS]);
+                    ApplyToInternalContextByFeature(SketchRendererFeatureType.UVS, feature);
+                    OnFeatureValidated?.Invoke(SketchRendererFeatureType.UVS);
+                    Debug.LogError("[SketchRenderer] Attempting to manually remove UVs feature when at least one active other sketch feature uses object space texture projection, which requires an output for this feature.");
+                }
+            }
+            
+            //Never allow two outline features
+            if (context.UseSmoothOutlineFeature && context.UseSketchyOutlineFeature)
+            {
+                if (CheckHasActiveFeature(SketchRendererFeatureType.OUTLINE_SMOOTH) && CheckHasActiveFeature(SketchRendererFeatureType.OUTLINE_SKETCH))
+                {
+                    RemoveRendererFeature(SketchRendererFeatureType.OUTLINE_SMOOTH);
+                    RemoveRendererFeature(SketchRendererFeatureType.OUTLINE_SKETCH);
+                    ApplyToInternalContextByFeature(SketchRendererFeatureType.OUTLINE_SMOOTH, null);
+                    ApplyToInternalContextByFeature(SketchRendererFeatureType.OUTLINE_SKETCH, null);
+                    Debug.LogWarning("[SketchRenderer] Attempted to manually add two different sketch outline features. Currently only one active outline style can be present in the renderer.");
+                }
+            }
+
+            if (context.UseCompositorFeature)
+            {
+                if (!CheckHasActiveFeature(SketchRendererFeatureType.COMPOSITOR))
+                {
+                    AddRendererFeature(SketchRendererFeatureType.COMPOSITOR);
+                    ScriptableRendererFeature feature = GetRendererFeature(rendererFeatureTypes[SketchRendererFeatureType.COMPOSITOR]);
+                    ApplyToInternalContextByFeature(SketchRendererFeatureType.COMPOSITOR, feature);
+                    OnFeatureValidated?.Invoke(SketchRendererFeatureType.COMPOSITOR);
+                    Debug.LogError("[SketchRenderer] Attempting to manually remove or move compositor feature. It is required after all sketch features if any sketch feature is present in the renderer data.");
+                }
+            }
+            
+            context.ConfigureSettings();
+        }
+
+        private static void ValidateOvershoots(ref Span<(SketchRendererFeatureType, bool)> overshotFeatures)
+        {
+            for (int i = 0; i < overshotFeatures.Length; i++)
+            {
+                if(!overshotFeatures[i].Item2)
+                    return;
+
+                if (!CheckHasActiveFeature(overshotFeatures[i].Item1))
+                {
+                    AddRendererFeature(overshotFeatures[i].Item1);
+                    ScriptableRendererFeature feature = GetRendererFeature(rendererFeatureTypes[overshotFeatures[i].Item1]);
+                    ApplyToInternalContextByFeature(overshotFeatures[i].Item1, feature);
+                    OnFeatureValidated?.Invoke(overshotFeatures[i].Item1);
+                }
+            }
+        }
+
+        private static void ValidateHierarchy(SketchRendererContext context, UniversalRendererData rendererData)
+        {
+            if (rendererData == null)
+                rendererData = GetCurrentRendererData();
+            if (rendererData == null)
+                return;
+            //While there is an ideal hierarchy when adding passes, the only real reliance is on the compositor being the last in regard to all other sketch passes.
+            if (context.UseCompositorFeature)
+            {
+                int targetIndex = GetIndexOfPreviousHierarchyFeature(SketchRendererFeatureType.COMPOSITOR);
+                Type targetType = rendererFeatureTypes[SketchRendererFeatureType.COMPOSITOR];
+                for(int i = 0; i < rendererData.rendererFeatures.Count; i++)
+                {
+                    if (rendererData.rendererFeatures[i].GetType() == targetType && i < targetIndex)
+                    {
+                        //Remove it here, and have the check detect this the next frame.
+                        RemoveRendererFeature(SketchRendererFeatureType.COMPOSITOR);
+                    } 
+                }
+            }
+        }
+        
+        internal static UniversalRendererData lastAcquiredRendererData;
         private static UniversalRendererData GetCurrentRendererData()
         {
             try
@@ -49,7 +326,8 @@ namespace SketchRenderer.Editor.Rendering
                     
                     if(rendererData == null)
                         throw new NullReferenceException("[SketchRendererDataWrapper] There is no UniversalRendererData in current RendererAsset");
-
+                    
+                    lastAcquiredRendererData = rendererData;
                     return rendererData;
                 }
 
@@ -63,10 +341,42 @@ namespace SketchRenderer.Editor.Rendering
             return null;
         }
         
+        #endregion
+        
+        #region Renderer Feature Management
+        
         internal static bool CheckHasActiveFeature(SketchRendererFeatureType featureType)
         {
             ScriptableRendererFeature feature = GetRendererFeature(rendererFeatureTypes[featureType]);
             return feature != null;
+        }
+
+        private static void GetFeatureTypesInRenderer(ref Span<(SketchRendererFeatureType featureType, bool present, int index)> presentFeatures, UniversalRendererData rendererData = null)
+        {
+            if(rendererData == null)
+                rendererData = GetCurrentRendererData();
+            if (rendererData != null)
+            {
+                int found = 0;
+                foreach (KeyValuePair<SketchRendererFeatureType, Type> kvp in rendererFeatureTypes)
+                {
+                    (SketchRendererFeatureType featureType, bool present, int index) feature = new (kvp.Key, false, -1);
+                    for (int i = 0; i < rendererData.rendererFeatures.Count; i++)
+                    {
+                        if(rendererData.rendererFeatures[i] == null)
+                            continue;
+                        
+                        if (rendererData.rendererFeatures[i].GetType() == kvp.Value)
+                        {
+                            feature.present = true;
+                            feature.index = i;
+                            break;
+                        }
+                    }
+                    presentFeatures[found] = feature;
+                    found++;
+                }
+            }
         }
 
         private static ScriptableRendererFeature GetRendererFeature(Type featureType)
@@ -102,8 +412,8 @@ namespace SketchRenderer.Editor.Rendering
             if (rendererData != null)
             {
                 ScriptableRendererFeature rendererFeature = GetNewRendererFeatureAsset(featureType);
-                int preferredHierarchySlot = GetIndexOfNextHierarchyFeature(featureType);
-                if(rendererFeature != null)
+                int preferredHierarchySlot = featureType == SketchRendererFeatureType.COMPOSITOR ? GetIndexOfPreviousHierarchyFeature(featureType) : GetIndexOfNextHierarchyFeature(featureType);
+                if(rendererFeature != null) 
                     AddFeatureToData(rendererData, rendererFeature, preferredHierarchySlot);
             }
         }
@@ -171,6 +481,35 @@ namespace SketchRenderer.Editor.Rendering
                 
                 //If process fails to find any succeeding feature, return the index one bigger than current data length.
                 return data.rendererFeatures.Count;
+            }
+
+            return 0;
+        }
+        
+        private static int GetIndexOfPreviousHierarchyFeature(SketchRendererFeatureType featureType)
+        {
+            for (int i = 0; i < rendererFeatureHierarchyTarget.Length; i++)
+            {
+                if (rendererFeatureHierarchyTarget[i] != featureType)
+                    continue;
+                
+                UniversalRendererData data = GetCurrentRendererData();
+                
+                
+                for (int hierarchyIndex = i - 1; hierarchyIndex > 0; hierarchyIndex--)
+                {
+                    SketchRendererFeatureType targetFeatureType = rendererFeatureHierarchyTarget[hierarchyIndex];
+                    ScriptableRendererFeature feature = GetRendererFeature(rendererFeatureTypes[targetFeatureType]);
+
+                    if (feature != null)
+                    {
+                        for (int rendererListIndex = 0; rendererListIndex < data.rendererFeatures.Count; rendererListIndex++)
+                        {
+                            if(data.rendererFeatures[rendererListIndex] == feature)
+                                return rendererListIndex + 1;
+                        }
+                    }
+                }
             }
 
             return 0;
@@ -288,5 +627,7 @@ namespace SketchRenderer.Editor.Rendering
             
             return feature;
         }
+        
+        #endregion
     }
 }
