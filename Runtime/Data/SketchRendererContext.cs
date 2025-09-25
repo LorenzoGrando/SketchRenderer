@@ -8,7 +8,7 @@ using UnityEngine;
 namespace SketchRenderer.Runtime.Data
 {
     [CreateAssetMenu(fileName = "SketchRendererContext", menuName = SketchRendererData.PackageAssetItemPath + "SketchRendererContext")]
-    public class SketchRendererContext : ScriptableObject
+    public class SketchRendererContext : ScriptableObject {
         public event Action OnValidated;
         public bool IsDirty { get; set; }
         
