@@ -20,7 +20,7 @@ namespace SketchRenderer.Runtime.Data
         
         
         //Mutable Data Holders
-        public static readonly string DefaultPackageAssetDirectoryPath = "Assets/" + PackageDisplayName;
+        public static readonly string DefaultPackageAssetDirectoryPath = "Assets/Plugins/" + PackageDisplayName;
         public static readonly string DefaultSketchManagerSettingsPackagePath = DefaultPackageAssetDirectoryPath + "/SketchManagerSettings.asset";
 
         public enum MenuPriority

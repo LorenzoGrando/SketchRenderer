@@ -1,4 +1,5 @@
 using System;
+using SketchRenderer.Editor.Utils;
 using SketchRenderer.Runtime.Data;
 using SketchRenderer.Runtime.Rendering;
 using SketchRenderer.Runtime.Rendering.RendererFeatures;
@@ -25,10 +26,12 @@ namespace SketchRenderer.Editor.Rendering
                 {
                     if (!AssetDatabase.AssetPathExists(SketchRendererData.DefaultSketchManagerSettingsPackagePath))
                     {
-                        var set = ScriptableObject.CreateInstance<SketchRendererManagerSettings>();
-                        AssetDatabase.CreateAsset(set, SketchRendererData.DefaultSketchManagerSettingsPackagePath);
-                        AssetDatabase.SaveAssets();
-                        AssetDatabase.Refresh();
+                        if(SketchAssetCreationWrapper.TryValidateOrCreateAssetPath(SketchRendererData.DefaultPackageAssetDirectoryPath)) {
+                            var set = ScriptableObject.CreateInstance<SketchRendererManagerSettings>();
+                            AssetDatabase.CreateAsset(set, SketchRendererData.DefaultSketchManagerSettingsPackagePath);
+                            AssetDatabase.SaveAssets();
+                            AssetDatabase.Refresh();
+                        }
                     }
 
                     settings = AssetDatabase.LoadAssetAtPath<SketchRendererManagerSettings>(SketchRendererData.DefaultSketchManagerSettingsPackagePath);
