@@ -116,6 +116,7 @@ namespace SketchRenderer.Editor.TextureTools
             CornerData assetMargins = (materialAsset != null ? SketchRendererUIData.BaseFieldMargins : SketchRendererUIData.BaseFieldNoVerticalMargins);
             SketchRendererUIUtils.AddWithMargins(materialDataRegion, materialAssetField.Container, assetMargins);
 
+            Button createCustomMaterialAsset = null;
             if (materialAsset != null)
             {
                 if (materialAssetEditor == null)
@@ -126,7 +127,7 @@ namespace SketchRenderer.Editor.TextureTools
             }
             else
             {
-                var createCustomMaterialAsset = new Button(CreateMaterialData_Clicked) { text = "Create New And Assign"};
+                createCustomMaterialAsset = new Button(CreateMaterialData_Clicked) { text = "Create New And Assign"};
                 SketchRendererUIUtils.AddWithMargins(materialDataRegion, createCustomMaterialAsset, SketchRendererUIData.BaseFieldMargins);
             }
             
@@ -137,7 +138,9 @@ namespace SketchRenderer.Editor.TextureTools
             
             materialDataRegion.ToggleElementInteractions(MaterialGenerator.HasNonDefaultMaterialDataAsset);
             materialAssetField.Container.SetEnabled(true);
-            if(!MaterialGenerator.HasNonDefaultMaterialDataAsset)
+            if(createCustomMaterialAsset != null)
+                createCustomMaterialAsset.SetEnabled(true);
+            if(!MaterialGenerator.HasNonDefaultMaterialDataAsset && materialAsset != null)
                 SketchRendererUIUtils.AddWithMargins(materialDataRegion, SketchRendererUI.SketchInmutableAssetHelpBox(), SketchRendererUIData.BaseFieldMargins);
             
             return materialDataRegion;
