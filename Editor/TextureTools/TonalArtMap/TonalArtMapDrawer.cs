@@ -36,7 +36,6 @@ namespace SketchRenderer.Editor.TextureTools
             serializedObject.Update();
             TonalArtMapAsset asset = (TonalArtMapAsset)target;
             asset.ExpectedTones = evt.newValue;
-            Debug.Log("Asset tones: " + asset.ExpectedTones);
             serializedObject.ApplyModifiedProperties();
         }
     }

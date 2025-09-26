@@ -46,6 +46,15 @@ namespace SketchRenderer.Editor.UIToolkit
             
             return button;
         }
+
+        internal static HelpBox SketchInmutableAssetHelpBox()
+        {
+            HelpBox helpBox = new HelpBox();
+            helpBox.text = $"The assigned asset is inmutable.\nCreate and assign a new asset instance to change settings.";
+            helpBox.style.justifyContent = Justify.Center;
+            helpBox.style.unityTextAlign = TextAnchor.MiddleCenter;
+            return helpBox;
+        }
         
         internal static Foldout SketchFoldout(string name, bool applyMargins = true, bool applyPadding = true)
         {
@@ -126,14 +135,11 @@ namespace SketchRenderer.Editor.UIToolkit
                 foldoutLabel.hierarchy.parent.Add(featureToggle);
                 foldoutLabel.hierarchy.parent.style.justifyContent = Justify.SpaceBetween;
                 
-                var contentElement = foldout.Q<VisualElement>(className: Foldout.contentUssClassName);
+                featureToggle.RegisterValueChangedCallback(evt => ToggleFoldoutFeatures(evt, foldout, changeCallback));
 
-                featureToggle.RegisterValueChangedCallback(evt => ToggleFoldoutFeatures(evt, contentElement, changeCallback));
-
-                static void ToggleFoldoutFeatures(ChangeEvent<bool> evt, VisualElement content, EventCallback<ChangeEvent<bool>> callback = null)
+                static void ToggleFoldoutFeatures(ChangeEvent<bool> evt, Foldout foldout, EventCallback<ChangeEvent<bool>> callback = null)
                 {
-                    foreach(var child in content.Children())
-                        child.SetEnabled(evt.newValue);
+                    foldout.ToggleElementInteractions(evt.newValue);
                     if(callback != null)
                         callback(evt);
                 }
