@@ -27,7 +27,7 @@ namespace SketchRenderer.Editor.TextureTools
                 if(!string.IsNullOrEmpty(OverrideOutputPath))
                     return OverrideOutputPath;
                 
-                if (TonalArtMapAsset != null && hasNonDefaultTonalArtMapAsset)
+                if (TonalArtMapAsset != null && HasNonDefaultTonalArtMapAsset)
                 {
                     return Path.Combine(SketchAssetCreationWrapper.GetAssetPath(TonalArtMapAsset).Split('.')[0],
                         "ToneTextures");
@@ -59,14 +59,16 @@ namespace SketchRenderer.Editor.TextureTools
                     for (int i = 0; i < defaultStrokeDataAssets.Length; i++)
                     {
                         if (strokeDataAsset == defaultStrokeDataAssets[i])
-                            return;
+                        {
+                            hasNonDefault = false;
+                            break;
+                        }
                     }
-
-                    hasNonDefaultStrokeAsset = false;
                 }
+                HasNonDefaultStrokeDataAsset = hasNonDefault;
             }
         }
-        private static bool hasNonDefaultStrokeAsset = false;
+        internal static bool HasNonDefaultStrokeDataAsset { get; private set; }
     
         private static TonalArtMapAsset tonalArtMapAsset;
         private static TonalArtMapAsset defaultTonalArtMapAsset;
@@ -76,10 +78,10 @@ namespace SketchRenderer.Editor.TextureTools
             set
             {
                 tonalArtMapAsset = value;
-                hasNonDefaultTonalArtMapAsset = tonalArtMapAsset != null && tonalArtMapAsset != defaultTonalArtMapAsset;
+                HasNonDefaultTonalArtMapAsset = tonalArtMapAsset != null && tonalArtMapAsset != defaultTonalArtMapAsset;
             }
         }
-        private static bool hasNonDefaultTonalArtMapAsset = false;
+        internal static bool HasNonDefaultTonalArtMapAsset { get; private set; }
         internal static bool PackTAMTextures = true;
         
         //Compute Data

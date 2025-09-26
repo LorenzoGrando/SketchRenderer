@@ -42,10 +42,10 @@ namespace SketchRenderer.Editor.TextureTools
             set
             {
                 materialDataAsset = value;
-                hasNonDefaultMaterialDataAsset = materialDataAsset != null && materialDataAsset == defaultMaterialDataAsset;
+                HasNonDefaultMaterialDataAsset = materialDataAsset != null && materialDataAsset != defaultMaterialDataAsset;
             }
         }
-        private static bool hasNonDefaultMaterialDataAsset;
+        public static bool HasNonDefaultMaterialDataAsset { get; private set; }
         internal static TextureResolution TargetResolution = TextureResolution.SIZE_512;
         private static TextureImporterType textureOutputType = TextureImporterType.Default;
         internal static TextureImporterType TextureOutputType
