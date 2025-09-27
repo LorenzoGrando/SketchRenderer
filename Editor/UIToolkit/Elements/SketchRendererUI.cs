@@ -437,6 +437,27 @@ namespace SketchRenderer.Editor.UIToolkit
             ConfigureSketchElementField(element, objectField, name);
             return element;
         }
+        
+        internal static SketchElement<ObjectField> SketchObjectProperty(SerializedProperty property, Type objectType, ISketchManipulator<ObjectField> manipulator = null, EventCallback<ChangeEvent<Object>> changeCallback = null, string nameOverride = null)
+        {
+            SketchElement<ObjectField> element = new SketchElement<ObjectField>();
+            ObjectField objectField = new ObjectField();
+            element.Field = objectField;
+            if (manipulator != null)
+            {
+                manipulator.Initialize(objectField);
+                objectField.AddManipulator(manipulator.GetBaseManipulator());
+            }
+            objectField.objectType = objectType;
+            if(changeCallback != null)
+                objectField.RegisterValueChangedCallback(changeCallback);
+
+            objectField.BindProperty(property);
+            objectField.TrackPropertyValue(property);
+
+            ConfigureSketchElementProperty(element, property, objectField, nameOverride);
+            return element;
+        }
 
         internal static SketchElement<Slider> SketchSlider(string name, float start, float end, 
             EventCallback<ChangeEvent<float>> changeCallback = null, SerializedProperty prop = null, Action<Slider, SerializedProperty> propCallback = null)

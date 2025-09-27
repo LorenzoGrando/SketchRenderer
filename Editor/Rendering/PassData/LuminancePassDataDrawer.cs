@@ -10,15 +10,13 @@ namespace SketchRenderer.Editor.Rendering
     public class LuminancePassDataDrawer : PropertyDrawer
     {
         private VisualElement passDataField;
-        private SerializedProperty AlbedoTextureProp;
-        private SerializedProperty DirectionalTextureProp;
         
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             passDataField = new VisualElement();
             
             SerializedProperty tamProp = property.FindPropertyRelative("ActiveTonalMap");
-            var tonalArtMapField = SketchRendererUI.SketchObjectField("Tonal Art Map Asset", typeof(TonalArtMapAsset), tamProp.objectReferenceValue);
+            var tonalArtMapField = SketchRendererUI.SketchObjectProperty(tamProp, typeof(TonalArtMapAsset), nameOverride:"Tonal Art Map Asset");
             SketchRendererUIUtils.AddWithMargins(passDataField, tonalArtMapField.Container, CornerData.Empty);
             
             

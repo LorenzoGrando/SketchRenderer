@@ -3,6 +3,7 @@ using SketchRenderer.Runtime.Rendering;
 using SketchRenderer.Runtime.Rendering.RendererFeatures;
 using SketchRenderer.Runtime.TextureTools.Strokes;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace SketchRenderer.Editor.Rendering
@@ -19,7 +20,7 @@ namespace SketchRenderer.Editor.Rendering
             passDataField.Add(passDataLabel);
             
             SerializedProperty strokeProp = property.FindPropertyRelative("OutlineStrokeData");
-            var strokeAssetField = SketchRendererUI.SketchObjectField("Stroke Asset", typeof(StrokeAsset), strokeProp.objectReferenceValue);
+            var strokeAssetField = SketchRendererUI.SketchObjectProperty(strokeProp, typeof(StrokeAsset), nameOverride:"Stroke Asset");
             SketchRendererUIUtils.AddWithMargins(passDataField, strokeAssetField.Container, SketchRendererUIData.MajorIndentCorners);
             
             SerializedProperty kernelSizeProp = property.FindPropertyRelative("SampleArea");
@@ -47,7 +48,7 @@ namespace SketchRenderer.Editor.Rendering
             if (doDownscaleProp.boolValue)
             {
                 SerializedProperty downscaleFactorProp = property.FindPropertyRelative("DownscaleFactor");
-                var downscaleFactorField = SketchRendererUI.SketchIntSliderPropertyWithInput(downscaleFactorProp, nameOverride: "DownscaleFactor");
+                var downscaleFactorField = SketchRendererUI.SketchIntSliderPropertyWithInput(downscaleFactorProp, nameOverride: "Downscale Amount");
                 SketchRendererUIUtils.AddWithMargins(passDataField, downscaleFactorField.Container, SketchRendererUIData.MajorIndentCorners);
             }
             

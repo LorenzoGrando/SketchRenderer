@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using SketchRenderer.Editor.Rendering;
 using SketchRenderer.Editor.UIToolkit;
 using SketchRenderer.Editor.Utils;
 using SketchRenderer.Runtime.Data;
@@ -26,14 +27,19 @@ namespace SketchRenderer.Editor.TextureTools
         internal SketchElement<TextField> pathField;
         internal TextureToolGenerationStatusArgs toolStatusDisplay;
         
-        internal override void InitializeTool(SketchResourceAsset resources)
+        private SketchRendererManagerSettings settings;
+        
+        internal override void InitializeTool(SketchResourceAsset resources, SketchRendererManagerSettings settings)
         {
+            this.settings = settings;
+            
             MaterialGenerator.OnTextureUpdated += UpdatePreviewTargetTexture;
             TextureGenerator.OnRecreateTargetTexture += UpdatePreviewTargetTexture;
             
             MaterialGenerator.OnTextureUpdated += FinalizeProgressBar;
-            
-            MaterialGenerator.Init(resources);
+
+            MaterialDataAsset asset = settings.PersistentMaterialDataAsset != null ? settings.PersistentMaterialDataAsset : resources.Scriptables.MaterialData;
+            MaterialGenerator.Init(resources, asset);
             ApplyToMatchGeneratorSettings();
         }
 
@@ -244,6 +250,7 @@ namespace SketchRenderer.Editor.TextureTools
         {
             MaterialDataAsset materialAsset = (MaterialDataAsset)bind.newValue;
             MaterialGenerator.MaterialDataAsset = materialAsset;
+            settings.PersistentMaterialDataAsset = materialAsset;
             ForceRebuildGUI();
         }
 

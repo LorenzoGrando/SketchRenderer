@@ -1,4 +1,5 @@
 using System;
+using SketchRenderer.Editor.Rendering;
 using SketchRenderer.Runtime.Data;
 using UnityEditor;
 using UnityEngine;
@@ -35,7 +36,7 @@ namespace SketchRenderer.Editor
             maxSize = ExpectedMaxWindowSize;
         }
 
-        internal abstract void InitializeTool(SketchResourceAsset resources);
+        internal abstract void InitializeTool(SketchResourceAsset resources, SketchRendererManagerSettings settings);
         
         internal abstract void FinalizeTool();
 

@@ -157,7 +157,7 @@ namespace SketchRenderer.Editor.TextureTools
 
         internal static bool CanRequest { get { return !Generating; } }
 
-        internal static void Init(SketchResourceAsset resources)
+        internal static void Init(SketchResourceAsset resources, StrokeAsset initialStrokeAsset, TonalArtMapAsset initialTonalArtMapAsset)
         {
             if (TAMGeneratorShader == null)
                 TAMGeneratorShader = resources.ComputeShaders.TonalArtMapGenerator;
@@ -165,7 +165,7 @@ namespace SketchRenderer.Editor.TextureTools
             defaultTonalArtMapAsset = resources.Scriptables.TonalArtMap;
             if (TonalArtMapAsset == null)
             {
-                TonalArtMapAsset = resources.Scriptables.TonalArtMap;
+                TonalArtMapAsset = initialTonalArtMapAsset;
             }
 
             defaultStrokeDataAssets = new StrokeAsset[]
@@ -175,7 +175,7 @@ namespace SketchRenderer.Editor.TextureTools
             };
             if (StrokeDataAsset == null)
             {
-                StrokeDataAsset = resources.Scriptables.Strokes.DefaultSimpleStroke;
+                StrokeDataAsset = initialStrokeAsset;
             }
 
             ConfigureGeneratorData();

@@ -1,7 +1,6 @@
 using System;
+using SketchRenderer.Editor.Rendering;
 using SketchRenderer.Runtime.Data;
-using SketchRenderer.Runtime.TextureTools.Strokes;
-using SketchRenderer.Runtime.TextureTools.TonalArtMap;
 using TextureTools.Material;
 using UnityEditor;
 using UnityEngine;
@@ -109,7 +108,7 @@ namespace SketchRenderer.Editor.TextureTools
         internal static Texture LastGeneratedAlbedoTexture {get; private set;}
         internal static Texture LastGeneratedDirectionalTexture { get; private set; }
         
-        internal static void Init(SketchResourceAsset resources)
+        internal static void Init(SketchResourceAsset resources, MaterialDataAsset initialAsset)
         {
             if (MaterialGeneratorShader == null)
                 MaterialGeneratorShader = resources.Shaders.MaterialGenerator;
@@ -119,7 +118,7 @@ namespace SketchRenderer.Editor.TextureTools
             defaultMaterialDataAsset = resources.Scriptables.MaterialData;
             if (MaterialDataAsset == null)
             {
-                MaterialDataAsset = resources.Scriptables.MaterialData;
+                MaterialDataAsset = initialAsset;
             }
 
             ConfigureGeneratorData();

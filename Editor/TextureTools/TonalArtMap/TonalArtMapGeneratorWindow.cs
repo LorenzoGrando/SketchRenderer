@@ -1,4 +1,5 @@
 using System;
+using SketchRenderer.Editor.Rendering;
 using SketchRenderer.Editor.TextureTools.Strokes;
 using SketchRenderer.Editor.UIToolkit;
 using SketchRenderer.Runtime.Data;
@@ -34,15 +35,21 @@ namespace SketchRenderer.Editor.TextureTools
         
         internal SketchElement<TextField> pathField;
         internal TextureToolGenerationStatusArgs toolStatusDisplay;
+
+        private SketchRendererManagerSettings settings;
         
-        internal override void InitializeTool(SketchResourceAsset resources)
+        internal override void InitializeTool(SketchResourceAsset resources, SketchRendererManagerSettings settings)
         {
+            this.settings = settings;
+            
             TonalArtMapGenerator.OnTextureUpdated += UpdatePreviewTargetTexture;
             TextureGenerator.OnRecreateTargetTexture += UpdatePreviewTargetTexture;
             
             TonalArtMapGenerator.OnTextureUpdated += FinalizeProgressBar;
-            
-            TonalArtMapGenerator.Init(resources);
+
+            StrokeAsset strokeAsset = settings.PersistentStrokeAsset != null ? settings.PersistentStrokeAsset : resources.Scriptables.Strokes.DefaultSimpleStroke;
+            TonalArtMapAsset tamAsset = settings.PersistentTonalArtMapAsset != null ? settings.PersistentTonalArtMapAsset : resources.Scriptables.TonalArtMap;
+            TonalArtMapGenerator.Init(resources, strokeAsset, tamAsset);
             ApplyToMatchGeneratorSettings();
         }
 
@@ -340,6 +347,7 @@ namespace SketchRenderer.Editor.TextureTools
         {
             StrokeAsset strokeAsset = (StrokeAsset)bind.newValue;
             TonalArtMapGenerator.StrokeDataAsset = strokeAsset;
+            settings.PersistentStrokeAsset = strokeAsset;
             ForceRebuildGUI();
         }
         
@@ -357,6 +365,7 @@ namespace SketchRenderer.Editor.TextureTools
         {
             TonalArtMapAsset tonalArtMapAsset = (TonalArtMapAsset)bind.newValue;
             TonalArtMapGenerator.TonalArtMapAsset = tonalArtMapAsset;
+            settings.PersistentTonalArtMapAsset = tonalArtMapAsset;
             ForceRebuildGUI();
         }
 
