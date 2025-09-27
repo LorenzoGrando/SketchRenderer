@@ -49,8 +49,13 @@ namespace SketchRenderer.Editor.UIToolkit
 
         internal static HelpBox SketchInmutableAssetHelpBox()
         {
+            return SketchHelpBox($"The assigned asset is inmutable.\nCreate and assign a new asset instance to change settings.");
+        }
+
+        internal static HelpBox SketchHelpBox(string text)
+        {
             HelpBox helpBox = new HelpBox();
-            helpBox.text = $"The assigned asset is inmutable.\nCreate and assign a new asset instance to change settings.";
+            helpBox.text = text;
             helpBox.style.justifyContent = Justify.Center;
             helpBox.style.unityTextAlign = TextAnchor.MiddleCenter;
             return helpBox;

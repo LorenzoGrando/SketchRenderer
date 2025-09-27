@@ -176,6 +176,7 @@ namespace SketchRenderer.Editor.TextureTools
             
             if (fieldAsset != null)
             {
+                fieldAsset.OnTonesPacked += ForceRebuildGUI;
                 Button setActiveButton = null;
                 if (!TonalArtMapWizard.IsCurrentTonalArtMap(fieldAsset))
                 {
@@ -363,7 +364,11 @@ namespace SketchRenderer.Editor.TextureTools
 
         internal void TonalArtMap_Changed(ChangeEvent<UnityEngine.Object> bind)
         {
+            if (TonalArtMapGenerator.TonalArtMapAsset != null)
+                TonalArtMapGenerator.TonalArtMapAsset.OnTonesPacked -= ForceRebuildGUI;
+            
             TonalArtMapAsset tonalArtMapAsset = (TonalArtMapAsset)bind.newValue;
+            tonalArtMapAsset.OnTonesPacked += ForceRebuildGUI;
             TonalArtMapGenerator.TonalArtMapAsset = tonalArtMapAsset;
             settings.PersistentTonalArtMapAsset = tonalArtMapAsset;
             ForceRebuildGUI();

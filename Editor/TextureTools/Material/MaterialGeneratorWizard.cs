@@ -34,6 +34,7 @@ namespace SketchRenderer.Editor.TextureTools
                 EditorUtility.SetDirty(SketchRendererManager.CurrentRendererContext);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
+                SketchRendererManager.CurrentRendererContext.Redraw();
                 
                 SketchRendererManager.UpdateFeatureByCurrentContext(SketchRendererFeatureType.MATERIAL);
             }

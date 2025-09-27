@@ -7,6 +7,8 @@ namespace SketchRenderer.Runtime.TextureTools.TonalArtMap
     [CreateAssetMenu(fileName = "TonalArtMapAsset", menuName = SketchRendererData.PackageAssetItemPath + "TonalArtMapAsset")]
     public class TonalArtMapAsset : ScriptableObject
     {
+        public event Action OnTonesPacked;
+        
         [Range(1, 9)] 
         public int ExpectedTones = 6;
         [SerializeField] [HideInInspector]
@@ -25,7 +27,7 @@ namespace SketchRenderer.Runtime.TextureTools.TonalArtMap
         [SerializeField] [HideInInspector]
         private bool isFinalToneFullBlack = false;
     
-        [SerializeField] [HideInInspector] public bool isPrePacked = false;
+        [SerializeField] [HideInInspector] private bool isPrePacked = false;
         [SerializeField] [HideInInspector] public Vector4 TAMBasisDirection;
     
         public bool IsPacked {get {return isPrePacked;}}
@@ -54,6 +56,7 @@ namespace SketchRenderer.Runtime.TextureTools.TonalArtMap
             isFirstToneFullWhite = ForceFirstToneFullWhite;
             isFinalToneFullBlack = ForceFinalToneFullBlack;
             isPrePacked = true;
+            OnTonesPacked?.Invoke();
         }
 
         public bool HasDirtyProperties()

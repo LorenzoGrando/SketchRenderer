@@ -16,6 +16,14 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         [Range(0f, 1f)]
         public float BaseColorBlendFactor;
 
+        public MaterialSurfacePassData()
+        {
+            ProjectionMethod = TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE;
+            ConstantScaleFalloffFactor = 2f;
+            Scale = Vector2Int.one;
+            BaseColorBlendFactor = 0f;
+        }
+
         public void CopyFrom(MaterialSurfacePassData passData)
         {
             ProjectionMethod = passData.ProjectionMethod;

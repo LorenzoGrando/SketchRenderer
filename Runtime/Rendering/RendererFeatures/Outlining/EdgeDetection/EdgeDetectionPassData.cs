@@ -25,6 +25,18 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         
         [HideInInspector]
         public EdgeDetectionGlobalData.EdgeDetectionOutputType OutputType;
+
+        public EdgeDetectionPassData()
+        {
+            Method = EdgeDetectionGlobalData.EdgeDetectionMethod.SOBEL_3X3;
+            Source = EdgeDetectionGlobalData.EdgeDetectionSource.DEPTH_NORMALS;
+            OutlineThreshold = 0.075f;
+            OutlineOffset = 0;
+            OutlineDistanceFalloff = 0.5f;
+            OutlineAngleSensitivity = 1f;
+            OutlineAngleConstraint = 0.45f;
+            OutlineNormalSensitivity = 0.5f;
+        }
         public void CopyFrom(EdgeDetectionPassData passData)
         {
             Method = passData.Method;

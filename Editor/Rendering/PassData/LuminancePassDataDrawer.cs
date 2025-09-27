@@ -16,7 +16,7 @@ namespace SketchRenderer.Editor.Rendering
             passDataField = new VisualElement();
             
             SerializedProperty tamProp = property.FindPropertyRelative("ActiveTonalMap");
-            var tonalArtMapField = SketchRendererUI.SketchObjectProperty(tamProp, typeof(TonalArtMapAsset), nameOverride:"Tonal Art Map Asset");
+            var tonalArtMapField = SketchRendererUI.SketchObjectProperty(tamProp, typeof(TonalArtMapAsset), changeCallback:evt => ForceRepaint(), nameOverride:"Tonal Art Map Asset");
             SketchRendererUIUtils.AddWithMargins(passDataField, tonalArtMapField.Container, CornerData.Empty);
             
             

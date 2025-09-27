@@ -28,6 +28,14 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             set => LuminanceScalar = Mathf.Clamp(value, -1f, 1f);
         }
 
+        public LuminancePassData()
+        {
+            ProjectionMethod = TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE;
+            ConstantScaleFalloffFactor = 2f;
+            ToneScales = Vector2.one;
+            LuminanceScalar = 0f;
+        }
+
         public void CopyFrom(LuminancePassData passData)
         {
             ActiveTonalMap = passData.ActiveTonalMap;

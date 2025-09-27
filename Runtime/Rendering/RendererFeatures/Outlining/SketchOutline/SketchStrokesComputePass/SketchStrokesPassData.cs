@@ -24,6 +24,16 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         [HideInInspector] 
         public bool UsePerpendicularDirection;
 
+        public SketchStrokesPassData()
+        {
+            SampleArea = ComputeData.KernelSize2D.SIZE_8X8;
+            StrokeSampleScale = 2;
+            DoDownscale = false;
+            DownscaleFactor = 2;
+            StrokeThreshold = 0.05f;
+            FrameSmoothingFactor = 0;
+        }
+
         public void CopyFrom(SketchStrokesPassData passData)
         {
             OutlineStrokeData = passData.OutlineStrokeData;
