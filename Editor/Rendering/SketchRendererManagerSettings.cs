@@ -1,4 +1,6 @@
+using System;
 using SketchRenderer.Runtime.Data;
+using SketchRenderer.Runtime.Rendering;
 using SketchRenderer.Runtime.TextureTools.Strokes;
 using SketchRenderer.Runtime.TextureTools.TonalArtMap;
 using TextureTools.Material;
@@ -20,9 +22,20 @@ namespace SketchRenderer.Editor.Rendering
         
         [SerializeField] [HideInInspector]
         internal bool AlwaysUpdateRendererData = false;
+        
+        [SerializeField] [HideInInspector]
+        internal bool DisplayInSceneView = false;
 
         internal readonly int delayedValidateEditorFrameCount = 500;
-        
+
+        private void OnEnable() => ApplyGlobalSettings();
+        private void OnValidate() => ApplyGlobalSettings();
+
+        public void ApplyGlobalSettings()
+        {
+            SketchGlobalFrameData.AllowSceneRendering = DisplayInSceneView;
+        }
+
         #region Texture Tool Persistent Asset References
 
         private void OnPersistentAssetChanged()

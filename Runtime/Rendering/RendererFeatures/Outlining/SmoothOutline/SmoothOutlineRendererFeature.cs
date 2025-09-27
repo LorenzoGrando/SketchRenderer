@@ -102,7 +102,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
-            if(renderingData.cameraData.cameraType == CameraType.SceneView)
+            if (renderingData.cameraData.cameraType == CameraType.SceneView && !SketchGlobalFrameData.AllowSceneRendering)
                 return;
             
             if(!renderingData.postProcessingEnabled)

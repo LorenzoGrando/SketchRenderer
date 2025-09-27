@@ -84,6 +84,13 @@ namespace SketchRenderer.Editor.Rendering
             SerializedProperty alwaysApplyProp = settingsObject.FindProperty("AlwaysUpdateRendererData");
             var alwaysApplyField = SketchRendererUI.SketchBoolProperty(alwaysApplyProp, nameOverride: "Update on Settings Change");
             SketchRendererUIUtils.AddWithMargins(root, alwaysApplyField.Container, SketchRendererUIData.BaseFieldMargins);
+            alwaysApplyField.Field.RegisterValueChangedCallback(evt => ValidateSettings());
+            
+            SerializedProperty sceneViewProp = settingsObject.FindProperty("DisplayInSceneView");
+            var sceneViewField = SketchRendererUI.SketchBoolProperty(sceneViewProp);
+            SketchRendererUIUtils.AddWithMargins(root, sceneViewField.Container, SketchRendererUIData.BaseFieldMargins);
+            sceneViewField.Field.RegisterValueChangedCallback(evt => ValidateSettings());
+            
             this.root = root;
         }
 
@@ -157,6 +164,11 @@ namespace SketchRenderer.Editor.Rendering
         {
             SketchRendererContext context = SketchRendererContextWizard.CreateSketchRendererContext();
             UpdateActiveRendererContext(context);
+        }
+
+        private void ValidateSettings()
+        {
+            SketchRendererManager.ManagerSettings.ApplyGlobalSettings();
         }
     }
 }
