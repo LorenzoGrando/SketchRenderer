@@ -29,7 +29,7 @@ namespace SketchRenderer.Editor.Rendering
             var projectionField = SketchRendererUI.SketchEnumProperty(projectionProp, method); 
             projectionField.Field.RegisterValueChangedCallback(_ => ForceRepaint());
             SketchRendererUIUtils.AddWithMargins(projectionRegion, projectionField.Container, SketchRendererUIData.MajorIndentCorners);
-            if (method is TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_REVERSED_CONSTANT_SCALE)
+            if (method is TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE) //or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_REVERSED_CONSTANT_SCALE)
             {
                 var falloffField = SketchRendererUI.SketchFloatSliderPropertyWithInput(property.FindPropertyRelative("ConstantScaleFalloffFactor"), nameOverride:"Falloff Factor");
                 SketchRendererUIUtils.AddWithMargins(projectionRegion, falloffField.Container, SketchRendererUIData.MajorIndentCorners);

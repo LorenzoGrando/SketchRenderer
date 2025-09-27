@@ -31,7 +31,8 @@ Shader "SketchRenderer/Luminance"
                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                float2 screenSpaceUV = input.texcoord;
                #if defined UVS_OBJECT_SPACE || defined UVS_OBJECT_SPACE_CONSTANT || defined UVS_OBJECT_SPACE_REVERSED_CONSTANT
-               float2 objectUVs = SAMPLE_TEXTURE2D_X_LOD(_CameraUVsTexture, sampler_PointClamp, screenSpaceUV, _BlitMipLevel).xy;
+               float3 objectUVsMip = SAMPLE_TEXTURE2D_X_LOD(_CameraUVsTexture, sampler_PointClamp, screenSpaceUV, _BlitMipLevel).xyz;
+               objectUVsMip.z = GetMipLevel(objectUVsMip.z, max(_Tam0_2_TexelSize.z, _Tam0_2_TexelSize.w));
                #endif
 
                //get pixel luminance: https://stackoverflow.com/questions/596216/formula-to-determine-perceived-brightness-of-rgb-color
@@ -45,9 +46,9 @@ Shader "SketchRenderer/Luminance"
                #endif
 
                #if defined UVS_OBJECT_SPACE || defined UVS_OBJECT_SPACE_CONSTANT || defined UVS_OBJECT_SPACE_REVERSED_CONSTANT
-               float stroke = SampleTAM(lum, _NumTones, objectUVs);
+               float stroke = SampleTAM(lum, _NumTones, objectUVsMip.xy, objectUVsMip.z);
                #else
-               float stroke = SampleTAM(lum, _NumTones, screenSpaceUV);
+               float stroke = SampleTAM(lum, _NumTones, screenSpaceUV, _BlitMipLevel);
                #endif
                
                return float4(stroke.rrrr);

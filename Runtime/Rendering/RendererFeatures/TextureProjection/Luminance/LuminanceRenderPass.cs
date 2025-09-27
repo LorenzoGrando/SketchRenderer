@@ -128,12 +128,14 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     luminanceMat.SetKeyword(UVsObjectSpaceConstantKeyword, true);
                     luminanceMat.SetKeyword(UVsObjectSpaceReversedConstantKeyword, false);
                     break;
+                /*
                 case TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_REVERSED_CONSTANT_SCALE:
                     luminanceMat.SetKeyword(UVsScreenSpaceKeyword, false);
                     luminanceMat.SetKeyword(UVsObjectSpaceKeyword, false);
                     luminanceMat.SetKeyword(UVsObjectSpaceConstantKeyword, false);
                     luminanceMat.SetKeyword(UVsObjectSpaceReversedConstantKeyword, true);
                     break;
+                    */
             }
 
             luminanceMat.SetKeyword(QuantizeKeyword, !passData.SmoothTransitions);
