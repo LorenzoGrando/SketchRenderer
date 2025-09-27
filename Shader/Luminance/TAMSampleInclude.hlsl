@@ -27,7 +27,7 @@ float3 GetWeightsFromQuantizedLuminance(float luminance, int tones, int offset)
     return saturate(luminance3 - weights);
 }
 
-float SingleTAMSample(float luminance, int tones, float2 uv)
+float SingleTAMSample(float luminance, int tones, float2 uv, float mip)
 {
     float4 tam0_2 = SAMPLE_TEX(_Tam0_2, sampler_PointRepeat, _Tam0_2_TexelSize.z, _BlitMipLevel, uv, _TamScales);
     float3 toneWeights = GetWeightsFromQuantizedLuminance(luminance, tones, 0);
@@ -36,7 +36,7 @@ float SingleTAMSample(float luminance, int tones, float2 uv)
     return 1 - (col.r + col.g + col.b);
 }
 
-float DoubleTAMSample(float luminance, int tones, float2 uv)
+float DoubleTAMSample(float luminance, int tones, float2 uv, float mip)
 {
     float4 tam0_2 = SAMPLE_TEX(_Tam0_2, sampler_PointRepeat, _Tam0_2_TexelSize.z, _BlitMipLevel, uv, _TamScales);
     float4 tam3_5 = SAMPLE_TEX(_Tam3_5, sampler_PointRepeat, _Tam3_5_TexelSize.z, _BlitMipLevel, uv, _TamScales);
@@ -50,7 +50,7 @@ float DoubleTAMSample(float luminance, int tones, float2 uv)
     return 1 - (col1.r + col1.g + col1.b + col2.r + col2.g + col2.b);
 }
 
-float TripleTAMSample(float luminance, int tones, float2 uv)
+float TripleTAMSample(float luminance, int tones, float2 uv, float mip)
 {
     float4 tam0_2 = SAMPLE_TEX(_Tam0_2, sampler_PointRepeat, _Tam0_2_TexelSize.z, _BlitMipLevel, uv, _TamScales);
     float4 tam3_5 = SAMPLE_TEX(_Tam3_5, sampler_PointRepeat, _Tam3_5_TexelSize.z, _BlitMipLevel, uv, _TamScales);
@@ -69,15 +69,15 @@ float TripleTAMSample(float luminance, int tones, float2 uv)
     return 1 - (col1.r + col1.g + col1.b + col2.r + col2.g + col2.b + col3.r + col3.g + col3.b);
 }
 
-float SampleTAM(float luminance, int tones, float2 uv)
+float SampleTAM(float luminance, int tones, float2 uv, float mip)
 {
     #if defined TAM_DOUBLE
-    return DoubleTAMSample(luminance, tones, uv);
+    return DoubleTAMSample(luminance, tones, uv, mip);
     #elif defined TAM_TRIPLE
-    return TripleTAMSample(luminance, tones, uv);
+    return TripleTAMSample(luminance, tones, uv, mip);
     #endif
 
-    return SingleTAMSample(luminance, tones, uv);
+    return SingleTAMSample(luminance, tones, uv, mip);
 }
 
 #endif

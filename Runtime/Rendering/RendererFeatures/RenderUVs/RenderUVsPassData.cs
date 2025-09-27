@@ -7,9 +7,12 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
     [System.Serializable]
     public class RenderUVsPassData : ISketchRenderPassData<RenderUVsPassData>
     {
-        [Header("Base Parameters")] 
+        [Range(0, 3)]
+        public int SkyboxRotationStep = 0;
         [Range(0, 360)]
-        public float SkyboxRotation;
+        private float SkyboxRotation => (float)SkyboxRotationStep * 120f;
+
+        public int SkyboxScale;
         private float ExpectedRotation { get {return Mathf.Floor(SkyboxRotation/90) * 90;}}
         [HideInInspector] 
         public Matrix4x4 SkyboxRotationMatrix;
@@ -22,9 +25,16 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             }
         }
 
+        public RenderUVsPassData()
+        {
+            SkyboxRotationStep = 0;
+            SkyboxScale = 10;
+        }
+
         public void CopyFrom(RenderUVsPassData passData)
         {
-            SkyboxRotation = passData.SkyboxRotation;
+            SkyboxRotationStep = passData.SkyboxRotationStep;
+            SkyboxScale = passData.SkyboxScale;
             SkyboxRotationMatrix = ConstructRotationMatrix(ExpectedRotation);
         }
     
@@ -37,13 +47,9 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         {
             if(VolumeManager.instance == null || VolumeManager.instance.stack == null)
                 return this;
-            LuminanceVolumeComponent volumeComponent = VolumeManager.instance.stack.GetComponent<LuminanceVolumeComponent>();
-            if (volumeComponent != null)
-                SkyboxRotation = volumeComponent.SkyboxRotation.overrideState ? Mathf.Lerp(0, 360,volumeComponent.SkyboxRotation.value) : SkyboxRotation;
+
             if (ShouldRotate)
-            {
                 SkyboxRotationMatrix = ConstructRotationMatrix(ExpectedRotation);
-            }
 
             return this;
         }

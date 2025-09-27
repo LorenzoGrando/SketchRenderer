@@ -58,3 +58,16 @@ float4 ConstantScaleTexture2DSample(Texture2D tex, SamplerState samp, float texe
     float4 sample = lerp(s1, s2, scales.z);
     return sample;
 }
+
+float GetMipFactor(float2 uv)
+{
+    float2 uvdx = ddx(uv);
+    float2 uvdy = ddy(uv);
+    float factor = max(length(uvdx), length(uvdy));
+    return factor;
+}
+
+float GetMipLevel(float factor, float maxTextureDimension)
+{
+    return log2(factor * maxTextureDimension);
+}

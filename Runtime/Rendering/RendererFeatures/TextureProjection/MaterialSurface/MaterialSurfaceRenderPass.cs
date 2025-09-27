@@ -75,12 +75,14 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     materialMat.SetKeyword(UVsObjectSpaceConstantKeyword, true);
                     materialMat.SetKeyword(UVsObjectSpaceReversedConstantKeyword, false);
                     break;
+                /*
                 case TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_REVERSED_CONSTANT_SCALE:
                     materialMat.SetKeyword(UVsScreenSpaceKeyword, false);
                     materialMat.SetKeyword(UVsObjectSpaceKeyword, false);
                     materialMat.SetKeyword(UVsObjectSpaceConstantKeyword, false);
                     materialMat.SetKeyword(UVsObjectSpaceReversedConstantKeyword, true);
                     break;
+                    */
             }
             
             materialMat.SetFloat(TextureProjectionGlobalData.CONSTANT_SCALE_FALLOFF_SHADER_ID, passData.ConstantScaleFalloffFactor);
@@ -122,8 +124,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
                 if (this.passData.ProjectionMethod 
                     is TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE
-                    or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE
-                    or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_REVERSED_CONSTANT_SCALE)
+                    or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE)
+                    //or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_REVERSED_CONSTANT_SCALE)
                 {
                     //Preemptive check to avoid exception from breaking blitter
                     try
