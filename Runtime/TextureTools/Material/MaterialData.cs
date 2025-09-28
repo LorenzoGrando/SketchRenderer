@@ -76,4 +76,20 @@ namespace TextureTools.Material
         public float VerticalLineThickness;
         public Color VerticalLineTint;
     }
+    
+    [System.Serializable]
+    public struct WrinkleData
+    {
+        public Vector2Int WrinkleScale;
+        [Range(0, 1)]
+        public float WrinkleJitter;
+        [Range(0, 1)]
+        public float WrinkleStrength;
+        [Range(1, 10)]
+        public int WrinkleDetailLevel;
+        [Range(0, 50)]
+        public int WrinkleDetailFrequency;
+        [Range(0, 1)]
+        public float WrinkleDetailPersistence;
+    }
 }

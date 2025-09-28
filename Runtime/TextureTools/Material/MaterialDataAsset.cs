@@ -9,6 +9,9 @@ namespace TextureTools.Material
     {
         public bool UseGranularity;
         public GranularityData Granularity;
+        
+        public bool UseWrinkles;
+        public WrinkleData Wrinkles;
 
         [Space(10)] 
         public bool UseLaidLines;
@@ -29,6 +32,9 @@ namespace TextureTools.Material
             
             UseGranularity = materialDataAsset.UseGranularity;
             Granularity = materialDataAsset.Granularity;
+            
+            UseWrinkles = materialDataAsset.UseWrinkles;
+            Wrinkles = materialDataAsset.Wrinkles;
             
             UseLaidLines = materialDataAsset.UseLaidLines;
             LaidLines = materialDataAsset.LaidLines;

@@ -17,6 +17,7 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
             #pragma multi_compile_local_fragment _ USE_LAID_LINES
             #pragma multi_compile_local_fragment _ USE_CRUMPLES
             #pragma multi_compile_local_fragment _ USE_NOTEBOOK_LINES
+            #pragma multi_compile_local_fragment _ USE_WRINKLES
 
             struct Attributes
             {
@@ -68,8 +69,15 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
             float _NotebookLineGranularitySensitivity;
             float4 _NotebookLineHorizontalTint;
             float4 _NotebookLineVerticalTint;
-            
 
+            //Wrinkles
+            float2 _WrinklesScale;
+            float _WrinklesJitter;
+            int _WrinklesOctaves;
+            float _WrinklesLacunarity;
+            float _WrinklesPersistence;
+            float _WrinklesStrength;
+            
             Varyings Vert(Attributes i)
             {
                 Varyings o;
@@ -85,7 +93,7 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
                 float2 unmutableUV = i.texcoord;
                 float2 uv = unmutableUV;
 
-                //Create polygonal-esque bumps in the paper, to simulate being crumpled and flattened
+                //Create polygonal-esque dirstortions in the paper, to simulate being crumpled and flattened
                 float crumpleTint = 0;
                 #if defined (USE_CRUMPLES)
                 float crumpleFrequency = 1.0;
@@ -103,14 +111,29 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
                 crumpleTint = pow(crumpleT.x, _CrumplesTintSharpness) * _CrumplesTintStrength;
                 uv.x += crushDir.x;
                 #endif
+
+                //Create wrinkles in the paper by applying dents to the base granularity before it is summed, or by serving as the base for the paper
+                float wrinkle = 1;
+                #if defined (USE_WRINKLES)
+                float wrinkleFrequency = 1.0;
+                float wrinkleAmplitude = 1.0;
+                float wrinkleT = 0;
+                for (int j = 0; j < _WrinklesOctaves; j++)
+                {
+                    wrinkleT += cellularNoiseDirTileable(uv, _WrinklesScale * wrinkleFrequency, _WrinklesJitter, 100).x * wrinkleAmplitude;
+                    wrinkleFrequency *= _WrinklesLacunarity;
+                    wrinkleAmplitude *= -_WrinklesPersistence;
+                }
+                wrinkle = 1.0 - (smoothstep(0.25, 0.75, wrinkleT * _WrinklesStrength));
+                #endif
                 
                 // Base Granularity of paper, defining a heightmap
-                float granularity = 1;
+                float granularity = 1; 
                 #if defined (USE_GRANULARITY)
                 float frequency = 1.0;
                 float amplitude = 1.0;
                 float3 t = 0;
-                for (int i = 0; i < _GranularityOctaves; i++)
+                for (int k = 0; k < _GranularityOctaves; k++)
                 {
                     t += perlinNoiseDirTileable(uv, _GranularityScale * frequency, 0) * amplitude;
                     frequency *= _GranularityLacunarity;
@@ -120,6 +143,8 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
                 float2 granularityDir = t.yz;
                 granularity = granularity * 0.5 + 0.5;
                 granularity = lerp(_GranularityValueRange.x, _GranularityValueRange.y, granularity);
+                granularity = granularity * wrinkle;
+                granularityDir *= wrinkle;
                 #endif
 
                 //Waves emulate laid lines on paper
@@ -178,6 +203,7 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
 
             #pragma multi_compile_local_fragment _ USE_GRANULARITY
             #pragma multi_compile_local_fragment _ USE_CRUMPLES
+            #pragma multi_compile_local_fragment _ USE_WRINKLES
 
             struct Attributes
             {
@@ -210,6 +236,14 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
             float _CrumplesLacunarity;
             float _CrumplesPersistence;
 
+            //Wrinkles
+            float2 _WrinklesScale;
+            float _WrinklesJitter;
+            int _WrinklesOctaves;
+            float _WrinklesLacunarity;
+            float _WrinklesPersistence;
+            float _WrinklesStrength;
+
             Varyings Vert(Attributes i)
             {
                 Varyings o;
@@ -240,6 +274,21 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
                 crumpleDir = (crumpleSum.y * (1.0 - crumpleT.x));
                 uv.x += crumpleDir.x;
                 #endif
+
+                //Create wrinkles in the paper by applying dents to the base granularity before it is summed, or by serving as the base for the paper
+                float wrinkle = 1;
+                #if defined (USE_WRINKLES)
+                float wrinkleFrequency = 1.0;
+                float wrinkleAmplitude = 1.0;
+                float wrinkleT = 0;
+                for (int j = 0; j < _WrinklesOctaves; j++)
+                {
+                    wrinkleT += cellularNoiseDirTileable(uv, _WrinklesScale * wrinkleFrequency, _WrinklesJitter, 100).x * wrinkleAmplitude;
+                    wrinkleFrequency *= _WrinklesLacunarity;
+                    wrinkleAmplitude *= -_WrinklesPersistence;
+                }
+                wrinkle = 1.0 - (smoothstep(0.25, 0.75, wrinkleT * _WrinklesStrength));
+                #endif
                 
                 // Base Granularity of paper, defining a heightmap
                 float2 granularityDir = float2(0, 0);
@@ -253,7 +302,7 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
                     frequency *= _GranularityLacunarity;
                     amplitude *= _GranularityPersistence;
                 }
-                granularityDir = t.yz ;
+                granularityDir = t.yz * wrinkle;
                 #endif
                 
                 //Combine all elements
