@@ -5,7 +5,7 @@ namespace TextureTools.Material
     [System.Serializable]
     public struct GranularityData
     {
-        [Range(1, 20)]
+        [Range(2, 20)]
         public Vector2Int Scale;
         [Range(1, 10)]
         public int DetailLevel;

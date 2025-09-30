@@ -106,10 +106,9 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
                     crumpleAmplitude *= _CrumplesPersistence;
                 }
                 float3 crumpleSum = crumpleT * _CrumplesStrength;
-                float crushDir = (crumpleSum.y * (1.0 - crumpleT.x) * 1.0/_CrumplesScale.x);
-                //return float4(abs(crushDir), 0, 0, 1.0);
+                float2 crushDir = (crumpleSum.yz * (1.0 - crumpleT.x) * 1.0/_CrumplesScale.x);
                 crumpleTint = pow(crumpleT.x, _CrumplesTintSharpness) * _CrumplesTintStrength;
-                uv.x += crushDir.x;
+                uv.xy += crushDir.xy;
                 #endif
 
                 //Create wrinkles in the paper by applying dents to the base granularity before it is summed, or by serving as the base for the paper
@@ -143,10 +142,10 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
                 float2 granularityDir = t.yz;
                 granularity = granularity * 0.5 + 0.5;
                 granularity = lerp(_GranularityValueRange.x, _GranularityValueRange.y, granularity);
-                granularity = granularity * wrinkle;
                 granularityDir *= wrinkle;
                 #endif
-
+                granularity *= wrinkle;
+                
                 //Waves emulate laid lines on paper
                 float laidLines = 0;
                 #if defined USE_LAID_LINES
@@ -167,7 +166,7 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
                 float2 notebookLines = 0;
                 #if defined(USE_NOTEBOOK_LINES)
                 notebookLines = unmutableUV.yx;
-                notebookLines = abs(sin((notebookLines + (_NotebookLinePhase/2.0)) * _NotebookLineFrequency * PI));
+                notebookLines = abs(sin((notebookLines + (_NotebookLinePhase)) * _NotebookLineFrequency * PI));
                 notebookLines = step(1.0 - (_NotebookLineSize), notebookLines);
                 float notebookSensitivity = 1.0;
                 #if defined(USE_GRANULARITY)
@@ -177,7 +176,10 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
                 #endif
                 
                 //Combine all elements
-                float4 paperColor = lerp(_GranularityTint * _GranularityValueRange.x, _GranularityTint * _GranularityValueRange.y, granularity);
+                float4 paperColor = 1.0;
+                #if USE_GRANULARITY
+                paperColor = lerp(_GranularityTint * _GranularityValueRange.x, _GranularityTint * _GranularityValueRange.y, granularity);
+                #endif
                 float4 laidLineColor = _LaidLineTint * laidLines;
                 float4 crumpleColor = _CrumplesTint * crumpleTint;
                 float4 horizontalNotebookColor = notebookLines.x * _NotebookLineHorizontalTint;
@@ -259,7 +261,7 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
                 float2 uv = i.texcoord;
 
                 //Create polygonal-esque bumps in the paper, to simulate being crumpled and flattened
-                float crumpleDir = 0;
+                float2 crumpleDir = 0;
                 #if defined (USE_CRUMPLES)
                 float crumpleFrequency = 1.0;
                 float crumpleAmplitude = 1.0;
@@ -271,8 +273,8 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
                     crumpleAmplitude *= _CrumplesPersistence;
                 }
                 float3 crumpleSum = crumpleT * _CrumplesStrength;
-                crumpleDir = (crumpleSum.y * (1.0 - crumpleT.x));
-                uv.x += crumpleDir.x;
+                crumpleDir = (crumpleSum.yz * (1.0 - crumpleT.x) * 1.0/_CrumplesScale.x);
+                uv.xy += crumpleDir.xy;
                 #endif
 
                 //Create wrinkles in the paper by applying dents to the base granularity before it is summed, or by serving as the base for the paper
@@ -306,7 +308,7 @@ Shader "MaterialGenerator/MaterialGeneratorShader"
                 #endif
                 
                 //Combine all elements
-                float2 dir = ((granularityDir.xy * 0.25) + float2(crumpleDir * 0.75, 0));
+                float2 dir = ((granularityDir.xy * 0.25) + crumpleDir * 0.75);//float2(crumpleDir * 0.75, 0));
                 dir = float2((dir + 1) * 0.5);
                 return float4(dir.xy, 1.0, 1.0);
             }
