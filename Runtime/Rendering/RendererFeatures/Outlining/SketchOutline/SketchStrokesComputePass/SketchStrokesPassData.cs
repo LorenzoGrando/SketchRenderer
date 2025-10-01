@@ -13,6 +13,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public ComputeData.KernelSize2D SampleArea;
         [Range(1f, 4f)] 
         public int StrokeSampleScale;
+        [Range(0f, 1f)] 
+        public float StrokeSampleOffsetRate;
         public bool DoDownscale;
         [Range(2, 4)]
         public int DownscaleFactor;
@@ -28,6 +30,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         {
             SampleArea = ComputeData.KernelSize2D.SIZE_8X8;
             StrokeSampleScale = 2;
+            StrokeSampleOffsetRate = 1f;
             DoDownscale = false;
             DownscaleFactor = 2;
             StrokeThreshold = 0.05f;
@@ -39,6 +42,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             OutlineStrokeData = passData.OutlineStrokeData;
             SampleArea = passData.SampleArea;
             StrokeSampleScale = passData.StrokeSampleScale;
+            StrokeSampleOffsetRate = passData.StrokeSampleOffsetRate;
             DoDownscale = passData.DoDownscale;
             DownscaleFactor = passData.DownscaleFactor;
             StrokeThreshold = passData.StrokeThreshold;
@@ -76,6 +80,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             overrideData.OutlineStrokeData = OutlineStrokeData;
             overrideData.SampleArea = volumeComponent.StrokeArea.overrideState ? volumeComponent.StrokeArea.value : SampleArea;
             overrideData.StrokeSampleScale = volumeComponent.StrokeScale.overrideState ? volumeComponent.StrokeScale.value : StrokeSampleScale;
+            overrideData.StrokeSampleOffsetRate = volumeComponent.StrokeScaleOffset.overrideState ? volumeComponent.StrokeScaleOffset.value : StrokeSampleOffsetRate;
             overrideData.DoDownscale = volumeComponent.DoDownscale.overrideState ? volumeComponent.DoDownscale.value : DoDownscale;
             if(overrideData.DoDownscale)
                 overrideData.DownscaleFactor = volumeComponent.DownscaleFactor.overrideState ? volumeComponent.DownscaleFactor.value : DownscaleFactor;

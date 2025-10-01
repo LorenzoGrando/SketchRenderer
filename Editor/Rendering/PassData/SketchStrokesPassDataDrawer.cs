@@ -29,8 +29,15 @@ namespace SketchRenderer.Editor.Rendering
             SketchRendererUIUtils.AddWithMargins(passDataField, kernelSizeField.Container, SketchRendererUIData.MajorIndentCorners);
             
             SerializedProperty strokeScaleProp = property.FindPropertyRelative("StrokeSampleScale");
-            var strokeScaleField = SketchRendererUI.SketchIntSliderPropertyWithInput(strokeScaleProp, nameOverride: "Stroke Scaling Area");
+            var strokeScaleField = SketchRendererUI.SketchIntSliderPropertyWithInput(strokeScaleProp, changeCallback:StrokeScale_Changed, nameOverride: "Stroke Scaling Area");
             SketchRendererUIUtils.AddWithMargins(passDataField, strokeScaleField.Container, SketchRendererUIData.MajorIndentCorners);
+
+            if (strokeScaleProp.intValue > 1)
+            {
+                SerializedProperty strokeScaleOffsetProp = property.FindPropertyRelative("StrokeSampleOffsetRate");
+                var strokeScaleOffsetField = SketchRendererUI.SketchFloatSliderPropertyWithInput(strokeScaleOffsetProp, nameOverride: "Stroke Origin Offset");
+                SketchRendererUIUtils.AddWithMargins(passDataField, strokeScaleOffsetField.Container, SketchRendererUIData.MajorIndentCorners);
+            }
             
             SerializedProperty thresholdProp = property.FindPropertyRelative("StrokeThreshold");
             var thresholdField = SketchRendererUI.SketchFloatSliderPropertyWithInput(thresholdProp, nameOverride: "Detection Threshold");
@@ -57,7 +64,16 @@ namespace SketchRenderer.Editor.Rendering
         
         internal void ForceRepaint()
         {
+            Debug.Log("Hi");
             passDataField.SendEvent(ExecuteCommandEvent.GetPooled(SketchRendererUIData.RepaintEditorCommand));
+        }
+
+        internal void StrokeScale_Changed(ChangeEvent<int> evt)
+        {
+            if (evt.previousValue > 1 && evt.newValue == 1)
+                ForceRepaint();
+            else if(evt.previousValue == 1 && evt.newValue > 1)
+                ForceRepaint();
         }
     }
 }

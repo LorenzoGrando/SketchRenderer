@@ -33,6 +33,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         private static readonly int THRESHOLD_ID = Shader.PropertyToID("_ThresholdForStroke");
         private static readonly int SMOOTHING_THRESHOLD_ID = Shader.PropertyToID("_SmoothingThreshold");
         private static readonly int STROKE_SCALE_ID = Shader.PropertyToID("_StrokeSampleScale");
+        private static readonly int STROKE_SCALE_OFFSET_RATE_OD = Shader.PropertyToID("_StrokeScaleOffsetRate");
         private static readonly int STROKE_DATA_ID = Shader.PropertyToID("_OutlineStrokeData");
         private static readonly int STROKE_VARIATION_DATA_ID = Shader.PropertyToID("_OutlineStrokeVariationData");
         
@@ -150,6 +151,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             public ComputeBuffer strokeVariationDataBuffer;
             public int downscaleFactor;
             public int strokeSampleScale;
+            public float strokeSampleScaleOffset;
         }
 
         static void ExecuteDownscale(DownscalePassData passData, UnsafeGraphContext context)
@@ -177,6 +179,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             context.cmd.SetComputeIntParam(passData.computeShader, GROUPS_Y_ID, passData.threadGroupSize.y);
             context.cmd.SetComputeIntParam(passData.computeShader, DOWNSCALE_FACTOR_ID, passData.downscaleFactor);
             context.cmd.SetComputeIntParam(passData.computeShader, STROKE_SCALE_ID, passData.strokeSampleScale);
+            context.cmd.SetComputeFloatParam(passData.computeShader, STROKE_SCALE_OFFSET_RATE_OD, passData.strokeSampleScaleOffset);
             context.cmd.SetComputeIntParam(passData.computeShader, DIMENSION_WIDTH_ID, passData.dimensions.x);
             context.cmd.SetComputeIntParam(passData.computeShader, DIMENSION_HEIGHT_ID, passData.dimensions.y);
             context.cmd.SetComputeTextureParam(passData.computeShader, passData.kernelID, SOURCE_TEXTURE_ID, passData.outlineTex);
@@ -283,6 +286,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 computePassData.inputBuffer = gradientBuffer;
                 computePassData.downscaleFactor = passData.DownscaleFactor;
                 computePassData.strokeSampleScale = passData.StrokeSampleScale;
+                computePassData.strokeSampleScaleOffset = passData.StrokeSampleOffsetRate;
 
                 computePassData.computeShader = sketchComputeShader;
                 computePassData.kernelID = computeApplyStrokeKernelID;

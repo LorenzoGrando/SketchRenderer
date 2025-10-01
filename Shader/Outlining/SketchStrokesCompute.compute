@@ -134,6 +134,7 @@ float SampleStrokeSDF(StrokeData data, float2 pointID, float2 dimensions, float 
 RWStructuredBuffer<StrokeData> _OutlineStrokeData;
 StructuredBuffer<VariationData> _OutlineStrokeVariationData;
 int _StrokeSampleScale;
+float _StrokeScaleOffsetRate;
 groupshared StrokeData groupData;
 groupshared float isEdge;
 groupshared uint flatIndex;
@@ -155,7 +156,7 @@ void ApplyStrokeSDFs(uint3 id, uint2 idG, uint3 idGs, uint2 kernelSizes)
             uint xClamp = clamp((uint)(((int)idGs.x + x)), 0, _GroupsX - 1);
             uint yClamp = clamp((uint)(((int)idGs.y + y)), 0, _GroupsY - 1);
             //if we did downscale, the division will be by a value higher than one
-            //taking the floor of both x and y collapses the higher grid from the upscale into the downscale-espected group index
+            //taking the floor of both x and y collapses the higher grid from the upscale into the downscale-expected group index
             xClamp = (uint)floor((float)xClamp/(float)_DownscaleFactor);
             yClamp = (uint)floor((float)yClamp/(float)_DownscaleFactor);
             uint groupsClamp = (uint)(floor((float)_GroupsX/(float)_DownscaleFactor));
@@ -167,6 +168,8 @@ void ApplyStrokeSDFs(uint3 id, uint2 idG, uint3 idGs, uint2 kernelSizes)
                 isEdge = step(0.5, length(float2(edgeData.ba)));
                 data.coords = float4(edgeData.rg, 0, 0);
                 data.direction = float4(edgeData.ba, 0, 0);
+                float2 originOffsetRates = 1.0/float2(widthScalar/_DownscaleFactor, heightScalar/_DownscaleFactor) * 0.5;
+                data.coords.xy -= (data.direction.xy * (originOffsetRates * data.length * (_StrokeSampleScale - 1) * _StrokeScaleOffsetRate));
                 data = GetRandomizedParamsStrokeData(data, _OutlineStrokeVariationData[0], int(groupFlatIndex), float(_TextureWidth));
                 groupData = data;
                 if (x == 0 && y == 0)
