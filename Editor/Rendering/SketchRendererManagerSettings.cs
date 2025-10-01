@@ -12,13 +12,20 @@ namespace SketchRenderer.Editor.Rendering
 {
     internal class SketchRendererManagerSettings : ScriptableObject
     {
+        internal event Action OnContextSettingsChanged;
+        
         [SerializeField] [HideInInspector]
         private SketchRendererContext currentRendererContext;
         internal SketchRendererContext CurrentRendererContext
         {
             get => currentRendererContext;
-            set => currentRendererContext = value;
+            set
+            {
+                currentRendererContext = value; 
+                TrackCurrentContext();
+            }
         }
+        internal SketchRendererContext listenerContext;
         
         [SerializeField] [HideInInspector]
         internal bool AlwaysUpdateRendererData = false;
@@ -28,12 +35,36 @@ namespace SketchRenderer.Editor.Rendering
 
         internal readonly int delayedValidateEditorFrameCount = 500;
 
-        private void OnEnable() => ApplyGlobalSettings();
-        private void OnValidate() => ApplyGlobalSettings();
-
-        public void ApplyGlobalSettings()
+        internal void ValidateGlobalSettings()
         {
+            TrackCurrentContext();
             SketchGlobalFrameData.AllowSceneRendering = DisplayInSceneView;
+        }
+
+        internal void ForceDirtySettings()
+        {
+            if (CurrentRendererContext != null)
+            {
+                bool previous = AlwaysUpdateRendererData;
+                AlwaysUpdateRendererData = true;
+                OnContextSettingsChanged?.Invoke();
+                AlwaysUpdateRendererData = previous;
+            }
+        }
+
+        private void TrackCurrentContext()
+        {
+            if (listenerContext != null)
+                listenerContext.OnValidated -= RendererContext_OnValidate;
+                
+            listenerContext = CurrentRendererContext;
+            listenerContext.OnValidated += RendererContext_OnValidate;
+        }
+
+        private void RendererContext_OnValidate()
+        {
+            if(listenerContext.IsDirty)
+                OnContextSettingsChanged?.Invoke();
         }
 
         #region Texture Tool Persistent Asset References

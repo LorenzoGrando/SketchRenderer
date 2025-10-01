@@ -64,7 +64,6 @@ namespace SketchRenderer.Editor.Rendering
         
         internal void ForceRepaint()
         {
-            Debug.Log("Hi");
             passDataField.SendEvent(ExecuteCommandEvent.GetPooled(SketchRendererUIData.RepaintEditorCommand));
         }
 

@@ -15,6 +15,8 @@ namespace SketchRenderer.Editor.Rendering
         static SketchRendererManager()
         {
             SketchRendererFeatureWrapper.OnFeatureValidated += feature => UpdateFeatureByContext(feature, CurrentRendererContext);
+            ManagerSettings.OnContextSettingsChanged += UpdateBySettingsChange;
+            ManagerSettings.ValidateGlobalSettings();
         }
         
         private static SketchRendererManagerSettings settings;
@@ -113,6 +115,15 @@ namespace SketchRenderer.Editor.Rendering
                     SketchRendererFeatureWrapper.ConfigureRendererFeature(features[i].Feature, rendererContext, ResourceAsset);
                 else
                     SketchRendererFeatureWrapper.RemoveRendererFeature(features[i].Feature);
+            }
+        }
+
+        private static void UpdateBySettingsChange()
+        {
+            if (ManagerSettings.AlwaysUpdateRendererData)
+            {
+                UpdateRendererToCurrentContext();
+                CurrentRendererContext.IsDirty = false;
             }
         }
       
