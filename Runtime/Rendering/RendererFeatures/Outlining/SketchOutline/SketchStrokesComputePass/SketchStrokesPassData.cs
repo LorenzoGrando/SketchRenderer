@@ -20,6 +20,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public int DownscaleFactor;
         [Range(0f, 1f)] 
         public float StrokeThreshold;
+        [Range(0f, 1f)]
+        public float DirectionSmoothingFactor;
         [Range(0f, 1f)] 
         public float FrameSmoothingFactor;
         
@@ -34,6 +36,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             DoDownscale = false;
             DownscaleFactor = 2;
             StrokeThreshold = 0.05f;
+            DirectionSmoothingFactor = 0.5f;
             FrameSmoothingFactor = 0;
         }
 
@@ -46,6 +49,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             DoDownscale = passData.DoDownscale;
             DownscaleFactor = passData.DownscaleFactor;
             StrokeThreshold = passData.StrokeThreshold;
+            DirectionSmoothingFactor = passData.DirectionSmoothingFactor;
             FrameSmoothingFactor = passData.FrameSmoothingFactor;
             UsePerpendicularDirection = passData.UsePerpendicularDirection;
         }
@@ -87,6 +91,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             else
                 overrideData.DownscaleFactor = 1;
             overrideData.StrokeThreshold = volumeComponent.MinThresholdForStroke.overrideState ? volumeComponent.MinThresholdForStroke.value : StrokeThreshold;;
+            overrideData.DirectionSmoothingFactor = volumeComponent.DirectionSmoothing.overrideState? volumeComponent.DirectionSmoothing.value : DirectionSmoothingFactor;
             overrideData.FrameSmoothingFactor = volumeComponent.FrameSmoothingFactor.overrideState ? volumeComponent.FrameSmoothingFactor.value : FrameSmoothingFactor;
             
             return overrideData;

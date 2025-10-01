@@ -31,7 +31,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         private static readonly int DOWNSCALE_FACTOR_ID = Shader.PropertyToID("_DownscaleFactor");
         private static readonly int COMPUTE_GRADIENT_VECTORS_ID = Shader.PropertyToID("_GradientVectors");
         private static readonly int THRESHOLD_ID = Shader.PropertyToID("_ThresholdForStroke");
-        private static readonly int SMOOTHING_THRESHOLD_ID = Shader.PropertyToID("_SmoothingThreshold");
+        private static readonly int DIRECTION_SMOOTHING_ID = Shader.PropertyToID("_DirectionSmoothingFactor");
+        private static readonly int FRAME_SMOOTHING_THRESHOLD_ID = Shader.PropertyToID("_SmoothingThreshold");
         private static readonly int STROKE_SCALE_ID = Shader.PropertyToID("_StrokeSampleScale");
         private static readonly int STROKE_SCALE_OFFSET_RATE_OD = Shader.PropertyToID("_StrokeScaleOffsetRate");
         private static readonly int STROKE_DATA_ID = Shader.PropertyToID("_OutlineStrokeData");
@@ -129,6 +130,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             public Vector2Int dimensions;
             public TextureHandle outlineTex;
             public float threshold;
+            public float directionSmoothingFactor;
             public float frameSmoothingFactor;
             public ComputeBuffer outputBuffer;
         }
@@ -169,7 +171,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             context.cmd.SetComputeIntParam(passData.computeShader, GROUPS_Y_ID, passData.threadGroupSize.y);
             context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, COMPUTE_GRADIENT_VECTORS_ID, passData.outputBuffer);
             context.cmd.SetComputeFloatParam(passData.computeShader, THRESHOLD_ID, passData.threshold);
-            context.cmd.SetComputeFloatParam(passData.computeShader, SMOOTHING_THRESHOLD_ID, passData.frameSmoothingFactor);
+            context.cmd.SetComputeFloatParam(passData.computeShader, DIRECTION_SMOOTHING_ID, passData.directionSmoothingFactor);
+            context.cmd.SetComputeFloatParam(passData.computeShader, FRAME_SMOOTHING_THRESHOLD_ID, passData.frameSmoothingFactor);
             context.cmd.DispatchCompute(passData.computeShader, passData.kernelID, passData.threadGroupSize.x, passData.threadGroupSize.y, passData.threadGroupSize.z);
         }
 
@@ -256,6 +259,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 
                 computePassData.dimensions = new Vector2Int(dimensions.x, dimensions.y);
                 computePassData.threshold = passData.StrokeThreshold;
+                computePassData.directionSmoothingFactor = passData.DirectionSmoothingFactor;
                 computePassData.frameSmoothingFactor = passData.FrameSmoothingFactor;
                 computePassData.outputBuffer = gradientBuffer;
                 

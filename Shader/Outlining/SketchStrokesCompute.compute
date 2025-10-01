@@ -21,6 +21,7 @@ uint _DownscaleFactor;
 uint _TextureWidth;
 uint _TextureHeight;
 float _ThresholdForStroke;
+float _DirectionSmoothingFactor;
 float _SmoothingThreshold;
 
 //declare them at max supported kernel size, though this does lead to some wasted memory
@@ -55,7 +56,11 @@ void ComputeAverageStroke (uint3 id, uint3 idG, uint3 idGs, uint2 kernelSizes)
             if (localIsEdge[i] > 0)
             {
                 averagePosition += gradients[i].rg;
-                averageDirection += gradients[i].ba;
+                float2 dir = gradients[i].ba;
+                float isSimilarButOpposite = dot(averageDirection/length(averageDirection), gradients[i].ba);
+                if (isSimilarButOpposite < 0 && step(1.0 - _DirectionSmoothingFactor, abs(isSimilarButOpposite) ))
+                    dir = -dir;
+                averageDirection += dir;
                 summed++;
             }
         }
@@ -169,8 +174,8 @@ void ApplyStrokeSDFs(uint3 id, uint2 idG, uint3 idGs, uint2 kernelSizes)
                 data.coords = float4(edgeData.rg, 0, 0);
                 data.direction = float4(edgeData.ba, 0, 0);
                 float2 originOffsetRates = 1.0/float2(widthScalar/_DownscaleFactor, heightScalar/_DownscaleFactor) * 0.5;
-                data.coords.xy -= (data.direction.xy * (originOffsetRates * data.length * (_StrokeSampleScale - 1) * _StrokeScaleOffsetRate));
                 data = GetRandomizedParamsStrokeData(data, _OutlineStrokeVariationData[0], int(groupFlatIndex), float(_TextureWidth));
+                data.coords.xy -= (data.direction.xy * (originOffsetRates * data.length * (_StrokeSampleScale - 1) * _StrokeScaleOffsetRate));
                 groupData = data;
                 if (x == 0 && y == 0)
                     flatIndex = groupFlatIndex;

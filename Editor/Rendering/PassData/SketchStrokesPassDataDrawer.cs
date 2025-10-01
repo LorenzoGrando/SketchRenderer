@@ -43,6 +43,10 @@ namespace SketchRenderer.Editor.Rendering
             var thresholdField = SketchRendererUI.SketchFloatSliderPropertyWithInput(thresholdProp, nameOverride: "Detection Threshold");
             SketchRendererUIUtils.AddWithMargins(passDataField, thresholdField.Container, SketchRendererUIData.MajorIndentCorners);
             
+            SerializedProperty directionSmoothingProp = property.FindPropertyRelative("DirectionSmoothingFactor");
+            var directionSmoothingField = SketchRendererUI.SketchFloatSliderPropertyWithInput(directionSmoothingProp, nameOverride: "Direction Smoothing");
+            SketchRendererUIUtils.AddWithMargins(passDataField, directionSmoothingField.Container, SketchRendererUIData.MajorIndentCorners);
+            
             SerializedProperty smoothingProp = property.FindPropertyRelative("FrameSmoothingFactor");
             var smoothingField = SketchRendererUI.SketchFloatSliderPropertyWithInput(smoothingProp, nameOverride: "Per-Frame Smoothing");
             SketchRendererUIUtils.AddWithMargins(passDataField, smoothingField.Container, SketchRendererUIData.MajorIndentCorners);

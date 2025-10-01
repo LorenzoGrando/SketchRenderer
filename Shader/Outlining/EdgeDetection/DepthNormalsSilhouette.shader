@@ -173,7 +173,7 @@ Shader "SketchRenderer/DepthNormalsSilhouette"
                     #elif defined(SOURCE_DEPTH_NORMALS)
                     float edge = max(0, max(depthGradient, normalGradient));
                     float angleDepth = atan2(depthGradientVector.y, depthGradientVector.x);
-                    float angleNormal = atan2(-normalGradientVector.y, normalGradientVector.x);
+                    float angleNormal = atan2(normalGradientVector.y, normalGradientVector.x);
                     float useDepth = step(1, depthGradient);
                     float useNormal = 1 - useDepth;
                     float angle = angleDepth * useDepth + angleNormal * useNormal;
@@ -189,7 +189,7 @@ Shader "SketchRenderer/DepthNormalsSilhouette"
                     #elif defined(SOURCE_DEPTH_NORMALS)
                     float edge = max(0, max(depthGradient, normalGradient));
                     float2 directionDepth = depthGradientVector.xy;
-                    float2 directionNormal = float2(-normalGradientVector.y, normalGradientVector.x);
+                    float2 directionNormal = normalGradientVector.xy;
                     float useDepth = step(0.05, depthGradient);
                     float useNormal = 1 - useDepth;
                     float2 direction = normalize(directionDepth * useDepth + directionNormal * useNormal);

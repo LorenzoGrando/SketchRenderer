@@ -42,6 +42,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             Method = passData.Method;
             Source = passData.Source;
             OutlineThreshold = passData.OutlineThreshold;
+            OutlineOffset = passData.OutlineOffset;
             OutlineDistanceFalloff = passData.OutlineDistanceFalloff;
             OutlineAngleSensitivity = passData.OutlineAngleSensitivity;
             OutlineAngleConstraint = passData.OutlineAngleConstraint;
