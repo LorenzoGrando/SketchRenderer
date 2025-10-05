@@ -23,13 +23,25 @@ namespace SketchRenderer.Editor.Rendering
             var strokeAssetField = SketchRendererUI.SketchObjectProperty(strokeProp, typeof(StrokeAsset), nameOverride:"Stroke Asset");
             SketchRendererUIUtils.AddWithMargins(passDataField, strokeAssetField.Container, SketchRendererUIData.MajorIndentCorners);
             
+            SerializedProperty combinationRangeProp = property.FindPropertyRelative("StrokeCombinationRange");
+            var combinationRangeField = SketchRendererUI.SketchIntSliderPropertyWithInput(combinationRangeProp, changeCallback:evt => ZeroToggleableFeature_Changed(evt, 0));
+            SketchRendererUIUtils.AddWithMargins(passDataField, combinationRangeField.Container, SketchRendererUIData.MajorIndentCorners);
+
+            if (combinationRangeProp.intValue > 0)
+            {
+                SerializedProperty combinationThresholdProp = property.FindPropertyRelative("StrokeCombinationThreshold");
+                var combinationThresholdField = SketchRendererUI.SketchFloatSliderPropertyWithInput(combinationThresholdProp);
+                SketchRendererUIUtils.AddWithMargins(passDataField, combinationThresholdField.Container, SketchRendererUIData.MajorIndentCorners);
+            }
+            
+            
             SerializedProperty kernelSizeProp = property.FindPropertyRelative("SampleArea");
             ComputeData.KernelSize2D kernelSize = (ComputeData.KernelSize2D)kernelSizeProp.enumValueIndex;
             var kernelSizeField = SketchRendererUI.SketchEnumProperty(kernelSizeProp, kernelSize, nameOverride: "Stroke Detection Area"); 
             SketchRendererUIUtils.AddWithMargins(passDataField, kernelSizeField.Container, SketchRendererUIData.MajorIndentCorners);
             
             SerializedProperty strokeScaleProp = property.FindPropertyRelative("StrokeSampleScale");
-            var strokeScaleField = SketchRendererUI.SketchIntSliderPropertyWithInput(strokeScaleProp, changeCallback:StrokeScale_Changed, nameOverride: "Stroke Scaling Area");
+            var strokeScaleField = SketchRendererUI.SketchIntSliderPropertyWithInput(strokeScaleProp, changeCallback:evt => ZeroToggleableFeature_Changed(evt, 1), nameOverride: "Stroke Scaling Area");
             SketchRendererUIUtils.AddWithMargins(passDataField, strokeScaleField.Container, SketchRendererUIData.MajorIndentCorners);
 
             if (strokeScaleProp.intValue > 1)
@@ -71,11 +83,11 @@ namespace SketchRenderer.Editor.Rendering
             passDataField.SendEvent(ExecuteCommandEvent.GetPooled(SketchRendererUIData.RepaintEditorCommand));
         }
 
-        internal void StrokeScale_Changed(ChangeEvent<int> evt)
+        internal void ZeroToggleableFeature_Changed(ChangeEvent<int> evt, int thresholdValue)
         {
-            if (evt.previousValue > 1 && evt.newValue == 1)
+            if (evt.previousValue > thresholdValue && evt.newValue == thresholdValue)
                 ForceRepaint();
-            else if(evt.previousValue == 1 && evt.newValue > 1)
+            else if(evt.previousValue == thresholdValue && evt.newValue > thresholdValue)
                 ForceRepaint();
         }
     }

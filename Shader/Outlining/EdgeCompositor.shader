@@ -26,11 +26,12 @@ Shader "SketchRenderer/EdgeCompositor"
                float4 primaryColor = SAMPLE_TEXTURE2D_X(_PrimaryEdgeTex, sampler_PointClamp, uv);
                float4 secondaryColor = SAMPLE_TEXTURE2D_X(_SecondaryEdgeTex, sampler_PointClamp, uv);
 
-               float isPrimary = primaryColor.a;
-
-               float4 color = primaryColor * isPrimary + secondaryColor * (1.0 - isPrimary);
+               float isPrimary = step (0.5 , primaryColor.a);
                
-               return float4(color);
+               if(isPrimary)
+                   return float4(primaryColor * isPrimary);
+               else
+                   return float4(secondaryColor * (1.0 - isPrimary));
            }
 
            ENDHLSL

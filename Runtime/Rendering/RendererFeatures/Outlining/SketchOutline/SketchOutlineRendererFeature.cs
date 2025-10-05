@@ -100,7 +100,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
             if (CurrentEdgeDetectionPassData.IsAllPassDataValid())
             {
-                if (CurrentEdgeDetectionPassData.Source != EdgeDetectionGlobalData.EdgeDetectionSource.ALL)
+                if (!CurrentEdgeDetectionPassData.IsSplitEdgePass)
                 {
                     edgeDetectionPass.Setup(CurrentEdgeDetectionPassData, edgeDetectionMaterial);
                     renderer.EnqueuePass(edgeDetectionPass);
@@ -110,12 +110,14 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     EdgeDetectionPassData primaryData = new EdgeDetectionPassData();
                     primaryData.CopyFrom(CurrentEdgeDetectionPassData);
                     primaryData.Source = EdgeDetectionGlobalData.EdgeDetectionSource.DEPTH_NORMALS;
+                    primaryData.OutlineThreshold = primaryData.PrimarySplitOutlineThreshold;
                     edgeDetectionPass.Setup(primaryData, edgeDetectionMaterial);
                     edgeDetectionPass.SetSecondary(false);
                     
                     EdgeDetectionPassData secondaryData = new EdgeDetectionPassData();
                     secondaryData.CopyFrom(CurrentEdgeDetectionPassData);
                     secondaryData.Source = EdgeDetectionGlobalData.EdgeDetectionSource.COLOR;
+                    secondaryData.OutlineThreshold = secondaryData.SecondarySplitOutlineThreshold;
                     renderer.EnqueuePass(edgeDetectionPass);
                     secondaryEdgeDetectionPass.Setup(secondaryData, secondaryEdgeDetectionMaterial);
                     secondaryEdgeDetectionPass.SetSecondary(true);

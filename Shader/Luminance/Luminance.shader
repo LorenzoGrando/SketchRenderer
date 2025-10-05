@@ -12,6 +12,7 @@ Shader "SketchRenderer/Luminance"
            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
            #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
            #include "Packages/com.lorenzogrando.sketchrenderer/Shader/Luminance/TamSampleInclude.hlsl"
+           #include "Packages/com.lorenzogrando.sketchrenderer/ShaderLibrary/LuminanceSample.hlsl"
         
            
            #pragma vertex Vert
@@ -37,10 +38,7 @@ Shader "SketchRenderer/Luminance"
 
                //get pixel luminance: https://stackoverflow.com/questions/596216/formula-to-determine-perceived-brightness-of-rgb-color
                float4 col = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_PointClamp, screenSpaceUV, _BlitMipLevel);
-               //simple luminance
-               //float lum = (col.r * 2 + col.b + + col.g * 3)/6.0;
-               //perceived luminance, updated to use dot
-               float lum = pow(dot(col.rgb, float3(0.299, 0.587, 0.114)), _LuminanceOffset);
+               float lum = pow(SamplePerceivedLuminance(col.rgb), _LuminanceOffset);
                #if defined(QUANTIZE)
                lum = floor(lum * _NumTones)/_NumTones;
                #endif

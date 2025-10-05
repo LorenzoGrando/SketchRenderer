@@ -11,6 +11,10 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
     {
         public StrokeAsset OutlineStrokeData;
         public ComputeData.KernelSize2D SampleArea;
+        [Range(0, 3)]
+        public int StrokeCombinationRange;
+        [Range(0, 1)]
+        public float StrokeCombinationThreshold;
         [Range(1f, 4f)] 
         public int StrokeSampleScale;
         [Range(0f, 1f)] 
@@ -31,6 +35,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public SketchStrokesPassData()
         {
             SampleArea = ComputeData.KernelSize2D.SIZE_8X8;
+            StrokeCombinationThreshold = 0.15f;
+            StrokeCombinationRange = 1;
             StrokeSampleScale = 2;
             StrokeSampleOffsetRate = 1f;
             DoDownscale = false;
@@ -43,6 +49,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public void CopyFrom(SketchStrokesPassData passData)
         {
             OutlineStrokeData = passData.OutlineStrokeData;
+            StrokeCombinationThreshold = passData.StrokeCombinationThreshold;
+            StrokeCombinationRange = passData.StrokeCombinationRange;
             SampleArea = passData.SampleArea;
             StrokeSampleScale = passData.StrokeSampleScale;
             StrokeSampleOffsetRate = passData.StrokeSampleOffsetRate;
@@ -58,6 +66,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         {
             return OutlineStrokeData != null;
         }
+
+        public bool IsDoingCombination => StrokeCombinationRange > 0;
 
         public void ConfigurePerpendicularDirection(EdgeDetectionGlobalData.EdgeDetectionMethod method)
         {
@@ -82,6 +92,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             
             SketchStrokesPassData overrideData = new SketchStrokesPassData();
             overrideData.OutlineStrokeData = OutlineStrokeData;
+            overrideData.StrokeCombinationThreshold = volumeComponent.StrokeCombinationThreshold.overrideState ? volumeComponent.StrokeCombinationThreshold.value : StrokeCombinationThreshold;
+            overrideData.StrokeCombinationRange = volumeComponent.StrokeCombinationRange.overrideState ? volumeComponent.StrokeCombinationRange.value : StrokeCombinationRange;
             overrideData.SampleArea = volumeComponent.StrokeArea.overrideState ? volumeComponent.StrokeArea.value : SampleArea;
             overrideData.StrokeSampleScale = volumeComponent.StrokeScale.overrideState ? volumeComponent.StrokeScale.value : StrokeSampleScale;
             overrideData.StrokeSampleOffsetRate = volumeComponent.StrokeScaleOffset.overrideState ? volumeComponent.StrokeScaleOffset.value : StrokeSampleOffsetRate;

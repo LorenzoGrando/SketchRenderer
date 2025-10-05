@@ -2,55 +2,43 @@
 
 #include "Packages/com.lorenzogrando.sketchrenderer/Shader/Outlining/EdgeDetection/SobelInclude.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareOpaqueTexture.hlsl"
+#include "Packages/com.lorenzogrando.sketchrenderer/ShaderLibrary/LuminanceSample.hlsl"
 
 float SobelColorHorizontal3x3(float3x3 kernel, float2 c, float2 uL, float2 cL, float2 dL, float2 uR, float2 cR, float2 dR)
 {
-    float3 vUL = SampleSceneColor(uL) * kernel._11;
-    float3 vCL = SampleSceneColor(cL) * kernel._21;
-    float3 vDL = SampleSceneColor(dL) * kernel._31;
-    float3 vUR = SampleSceneColor(uR) * kernel._13;
-    float3 vCR = SampleSceneColor(cR) * kernel._23;
-    float3 vDR = SampleSceneColor(dR) * kernel._33;
+    float vUL = SamplePerceivedLuminance(SampleSceneColor(uL)) * kernel._11;
+    float vCL = SamplePerceivedLuminance(SampleSceneColor(cL)) * kernel._21;
+    float vDL = SamplePerceivedLuminance(SampleSceneColor(dL)) * kernel._31;
+    float vUR = SamplePerceivedLuminance(SampleSceneColor(uR)) * kernel._13;
+    float vCR = SamplePerceivedLuminance(SampleSceneColor(cR)) * kernel._23;
+    float vDR = SamplePerceivedLuminance(SampleSceneColor(dR)) * kernel._33;
 
-    float x = vUL.x + vCL.x + vDL.x + vUR.x + vCR.x + vDR.x;
-    float y = vUL.y + vCL.y + vDL.y + vUR.y + vCR.y + vDR.y;
-    float z = vUL.z + vCL.z + vDL.z + vUR.z + vCR.z + vDR.z;
-
-    float n = max(x, max(y, z))/6.0;
+    return vUL + vCL + vDL + vUR + vCR + vDR;
     
-    return clamp(n, -1, 1);
+    return clamp((vUL + vCL + vDL + vUR + vCR + vDR), -1, 1);
 }
 
 float SobelColorVertical3x3(float3x3 kernel, float2 c, float2 uL, float2 uC, float2 uR, float2 dL, float2 dC, float2 dR)
 {
-    float3 vUL = SampleSceneColor(uL) * kernel._11;
-    float3 vUC = SampleSceneColor(uC) * kernel._12;
-    float3 vUR = SampleSceneColor(uR) * kernel._13;
-    float3 vDL = SampleSceneColor(dL) * kernel._31;
-    float3 vDC = SampleSceneColor(dC) * kernel._32;
-    float3 vDR = SampleSceneColor(dR) * kernel._33;
-    
+    float vUL = SamplePerceivedLuminance(SampleSceneColor(uL)) * kernel._11;
+    float vUC = SamplePerceivedLuminance(SampleSceneColor(uC)) * kernel._12;
+    float vUR = SamplePerceivedLuminance(SampleSceneColor(uR)) * kernel._13;
+    float vDL = SamplePerceivedLuminance(SampleSceneColor(dL)) * kernel._31;
+    float vDC = SamplePerceivedLuminance(SampleSceneColor(dC)) * kernel._32;
+    float vDR = SamplePerceivedLuminance(SampleSceneColor(dR)) * kernel._33;
 
-    float x = vUL.x + vUC.x + vDL.x + vUR.x + vDC.x + vDR.x;
-    float y = vUL.y + vUC.y + vDL.y + vUR.y + vDC.y + vDR.y;
-    float z = vUL.z + vUC.z + vDL.z + vUR.z + vDC.z + vDR.z;
+    return vUL + vUC + vUR + vDL + vDC + vDR;
 
-    float n = max(x, max(y, z))/6.0;
-    
-    return clamp(n, -1, 1);
+    return clamp((vUL + vUC + vUR + vDL + vDC + vDR), -1, 1);
 }
 
 float SobelColor1X3(float3 kernel, float2 uv0, float2 uv1, float2 uv2)
 {
-    float3 v0 = SampleSceneColor(uv0) * kernel.r;
-    //float3 v1 = SampleSceneColor(uv1);
-    float3 v2 = SampleSceneColor(uv2) * kernel.b;
+    float v0 = SamplePerceivedLuminance(SampleSceneColor(uv0)) * kernel.r;
+    float v1 = SamplePerceivedLuminance(SampleSceneColor(uv1)) * kernel.g;
+    float v2 = SamplePerceivedLuminance(SampleSceneColor(uv2)) * kernel.b;
 
-    float x = v0.x + v2.x;
-    float y = v0.y + v2.y;
-    float z = v0.z + v2.z;
+    return v0 + v1 + v2;
 
-    float n = max(x, max(y, z))/2.0;
-
-    return clamp(n, -1, 1);
+    return clamp((v0 + v1 + v2), -1, 1);
 }

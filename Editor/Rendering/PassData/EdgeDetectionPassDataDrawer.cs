@@ -26,10 +26,26 @@ namespace SketchRenderer.Editor.Rendering
             var sourceField = SketchRendererUI.SketchEnumProperty(sourceProp, source); 
             sourceField.Field.RegisterValueChangedCallback(_ => Source_Changed());
             SketchRendererUIUtils.AddWithMargins(passDataField, sourceField.Container, SketchRendererUIData.MajorIndentCorners);
-            
-            SerializedProperty thresholdProp = property.FindPropertyRelative("OutlineThreshold");
-            var thresholdField = SketchRendererUI.SketchFloatSliderPropertyWithInput(thresholdProp, "Threshold");
-            SketchRendererUIUtils.AddWithMargins(passDataField, thresholdField.Container, SketchRendererUIData.MajorIndentCorners);
+
+            if (source != EdgeDetectionGlobalData.EdgeDetectionSource.ALL)
+            {
+                SerializedProperty thresholdProp = property.FindPropertyRelative("OutlineThreshold");
+                var thresholdField = SketchRendererUI.SketchFloatSliderPropertyWithInput(thresholdProp, "Threshold");
+                SketchRendererUIUtils.AddWithMargins(passDataField, thresholdField.Container,
+                    SketchRendererUIData.MajorIndentCorners);
+            }
+            else
+            {
+                SerializedProperty primaryThresholdProp = property.FindPropertyRelative("PrimarySplitOutlineThreshold");
+                var primaryThresholdField = SketchRendererUI.SketchFloatSliderPropertyWithInput(primaryThresholdProp, "Edge Normals Threshold");
+                SketchRendererUIUtils.AddWithMargins(passDataField, primaryThresholdField.Container,
+                    SketchRendererUIData.MajorIndentCorners);
+                SerializedProperty secondaryThresholdProp = property.FindPropertyRelative("SecondarySplitOutlineThreshold");
+                var secondaryThresholdField = SketchRendererUI.SketchFloatSliderPropertyWithInput(secondaryThresholdProp, "Color Threshold");
+                SketchRendererUIUtils.AddWithMargins(passDataField, secondaryThresholdField.Container,
+                    SketchRendererUIData.MajorIndentCorners);
+            }
+
 
             SerializedProperty offsetProp = property.FindPropertyRelative("OutlineOffset");
             var offsetField = SketchRendererUI.SketchIntSliderPropertyWithInput(offsetProp, "Offset");

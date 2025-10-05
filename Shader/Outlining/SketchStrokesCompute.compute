@@ -2,6 +2,7 @@
 #pragma kernel ComputeAverageStroke16
 #pragma kernel ComputeAverageStroke8
 #pragma kernel ComputeAverageStroke4
+#pragma kernel CollapseSimilarStrokes
 #pragma kernel ApplyStrokes32
 #pragma kernel ApplyStrokes16
 #pragma kernel ApplyStrokes8
@@ -24,6 +25,11 @@ float _ThresholdForStroke;
 float _DirectionSmoothingFactor;
 float _SmoothingThreshold;
 
+
+//Used by combination step to know where to sample
+RWStructuredBuffer<uint> _CombineStrokesPointerBuffer; // current stroke id in gradient buffers.
+RWStructuredBuffer<uint> _CombineStrokesLengthBuffer;//stroke length multiplier, aka how many times it has been combined
+
 //declare them at max supported kernel size, though this does lead to some wasted memory
 groupshared float4 gradients[32*32];
 groupshared float localIsEdge[32*32];
@@ -35,10 +41,13 @@ void ComputeAverageStroke (uint3 id, uint3 idG, uint3 idGs, uint2 kernelSizes)
 
     float angle = _OriginalSource[id.xy].g;
     angle = angle * 2.0 * PI - PI;
+    float directionStrength = _OriginalSource[id.xy].b;
     
     float isEdge = _OriginalSource[id.xy].r;
     float2 position = float2(id.x/(float)_TextureWidth, id.y/(float)_TextureHeight);
-    float2 direction = float2(cos(angle), sin(angle));
+    float2 direction = float2(cos(angle), sin(angle)) * (directionStrength);
+    if (length(direction) < 0.9)
+        direction = -direction;
     float4 gradient = float4(position.xy, direction.xy);
     gradients[gFlatIndex] = gradient;
     localIsEdge[gFlatIndex] = step(0.5, isEdge);
@@ -57,32 +66,37 @@ void ComputeAverageStroke (uint3 id, uint3 idG, uint3 idGs, uint2 kernelSizes)
             {
                 averagePosition += gradients[i].rg;
                 float2 dir = gradients[i].ba;
-                float isSimilarButOpposite = dot(averageDirection/length(averageDirection), gradients[i].ba);
-                if (isSimilarButOpposite < 0 && step(1.0 - _DirectionSmoothingFactor, abs(isSimilarButOpposite) ))
-                    dir = -dir;
+                float currentMag = length(averageDirection);
+                if (currentMag > 0)
+                {
+                    float isSimilarButOpposite = dot(averageDirection/currentMag, dir);
+                    if (isSimilarButOpposite < 0 && step(1.0 - _DirectionSmoothingFactor, abs(isSimilarButOpposite) ))
+                        dir = -dir;
+                }
                 averageDirection += dir;
                 summed++;
             }
         }
-        float isAverageStroke = step(_ThresholdForStroke, summed/(float)(totalElements));
+        float isAverageStroke = step(_ThresholdForStroke, (float)summed/(float)(totalElements));
         if(isAverageStroke)
         {
+            //averagePosition = gradients[0].rg + float2(float(id.x + kernelSizes.x)/2.0, float(id.y + kernelSizes.y)/2.0);
             averagePosition /= (float)summed;
-            averageDirection /= (float)summed;
-            #if defined (USE_PERPENDICULAR_DIRECTION)
-            averageDirection = float4(cross(float3(averageDirection.xy, 0), float3(0, 0, 1)).xy, 0, 0);
-            #endif
+            averageDirection = normalize(averageDirection);
         }
         gradients[0] = float4(averagePosition.xy, averageDirection.xy * isAverageStroke);
 
         #if defined (FRAME_SMOOTHING)
         float4 previousGradient = _GradientVectors[groupFlatIndex];
         float4 diff = abs(gradients[0] - previousGradient);
-        if(max(diff.x, max(diff.y, max(diff.z, diff.w))) > 0.5)
-            gradients[0] = lerp(gradients[0], previousGradient, _SmoothingThreshold);
+        if(max(diff.x, max(diff.y, max(diff.z, diff.w))) < _SmoothingThreshold)
+            //gradients[0] = previousGradient;
+            gradients[0] = lerp(gradients[0], previousGradient, 0.35);
         #endif
         
         _GradientVectors[groupFlatIndex] = gradients[0];
+        _CombineStrokesPointerBuffer[groupFlatIndex] = groupFlatIndex; //this id, 
+        _CombineStrokesLengthBuffer[groupFlatIndex] = 1; //base stroke length (1.0)
     }
     GroupMemoryBarrierWithGroupSync();
 
@@ -92,7 +106,10 @@ void ComputeAverageStroke (uint3 id, uint3 idG, uint3 idGs, uint2 kernelSizes)
     
     //float x = float(idG.x)/(float)kernelSizes.x;
     //float y = float(idG.y)/(float)kernelSizes.y;
-    //_OriginalSource[id.xy] = float4(x, y, 0.0, 1.0);
+    if(length(gradients[0].ba) > 0.1)
+        _OriginalSource[id.xy] = float4(gradients[0].xy, 0.0, 1.0);
+    else
+        _OriginalSource[id.xy] = float4(1.0, 0.0, 0.0, 1.0);
 }
 
 
@@ -120,6 +137,56 @@ void ComputeAverageStroke4 (uint3 id : SV_DispatchThreadID, uint3 idG : SV_Group
     ComputeAverageStroke(id, idG, idGs, uint2(4, 4));
 }
 
+float _CombinationThreshold;
+uint _CombinationRange;
+[numthreads(64, 1, 1)]
+void CollapseSimilarStrokes(uint3 idG : SV_GroupThreadID, uint3 idGs : SV_GroupID)
+{
+    [loop]
+    for (uint i = 1; i <= _CombinationRange; i++)
+    {
+        uint gFlatIndex = idG.x + (64 * idGs.x);
+        uint thisStrokeBufferData = _CombineStrokesPointerBuffer[gFlatIndex];
+        float isStillOwnerStroke = thisStrokeBufferData == gFlatIndex;
+        if (!isStillOwnerStroke)
+            continue;
+        float4 thisStroke = _GradientVectors[gFlatIndex];
+        uint thisCombinationStep = _CombineStrokesLengthBuffer[gFlatIndex];
+        float isValidCombinationStep = thisCombinationStep >= i;
+        if (!isValidCombinationStep)
+            continue;
+        float isEdge = step(0.5, length(float2(thisStroke.ba)));
+        if (!isEdge)
+            continue;
+        
+        int2 targetSampleOffset = int2(round(thisStroke.ba * i)); //determine direction of sample
+        int sampleOffset = targetSampleOffset.x + targetSampleOffset.y * _GroupsX;
+        uint samplegFlatIndex = uint(int(gFlatIndex) + sampleOffset);
+        
+        uint sampleStrokeBufferData = _CombineStrokesPointerBuffer[samplegFlatIndex];
+        float isStrokeStillOwned = sampleStrokeBufferData == samplegFlatIndex;
+        if (!isStrokeStillOwned)
+            continue;
+
+        //Is similar enough?
+        float4 sampleStroke = _GradientVectors[samplegFlatIndex];
+        float isEdgeSample = step(0.5, length(float2(sampleStroke.ba)));
+        if (!isEdgeSample)
+            continue;
+        
+        float similarity = step(_CombinationThreshold, dot(thisStroke.ba, sampleStroke.ba));
+        if (similarity)
+        {
+            _CombineStrokesPointerBuffer[samplegFlatIndex] = gFlatIndex;
+            _CombineStrokesLengthBuffer[gFlatIndex] = thisCombinationStep + i; //_CombineStrokesLengthBuffer[samplegFlatIndex];
+
+            //Keep our origin, we are now the owner of the stroke
+            float2 averageDir = normalize(thisStroke.ba + sampleStroke.ba);
+            _GradientVectors[gFlatIndex] = float4(thisStroke.rg, averageDir);
+        }
+    }
+}
+
 float SampleStrokeSDF(StrokeData data, float2 pointID, float2 dimensions, float thicknessScalar, float lengthScalar)
 {
     uint sample = 0;
@@ -135,14 +202,13 @@ float SampleStrokeSDF(StrokeData data, float2 pointID, float2 dimensions, float 
     return (float)sample;
 }
 
-
 RWStructuredBuffer<StrokeData> _OutlineStrokeData;
 StructuredBuffer<VariationData> _OutlineStrokeVariationData;
 int _StrokeSampleScale;
 float _StrokeScaleOffsetRate;
 groupshared StrokeData groupData;
 groupshared float isEdge;
-groupshared uint flatIndex;
+groupshared float4 debugColor;
 void ApplyStrokeSDFs(uint3 id, uint2 idG, uint3 idGs, uint2 kernelSizes)
 {
     float value = 1;
@@ -166,19 +232,41 @@ void ApplyStrokeSDFs(uint3 id, uint2 idG, uint3 idGs, uint2 kernelSizes)
             yClamp = (uint)floor((float)yClamp/(float)_DownscaleFactor);
             uint groupsClamp = (uint)(floor((float)_GroupsX/(float)_DownscaleFactor));
             uint groupFlatIndex = yClamp * groupsClamp + xClamp;
-    
             if(idG.x == 0 && idG.y == 0)
             {
-                float4 edgeData = _GradientVectors[groupFlatIndex];
+                uint combinationCascadeID = groupFlatIndex;
+                float combinationLengthMultiplier = 0;
+                //cascade onto the correct, combined stroke
+                if (_CombinationRange > 0)
+                {
+                    [loop]
+                    for (uint c = 0; c <= _CombinationRange; c++)
+                    {
+                        uint originalID = combinationCascadeID;
+                        uint strokePointerData = _CombineStrokesPointerBuffer[combinationCascadeID];
+                        combinationLengthMultiplier = float(_CombineStrokesLengthBuffer[combinationCascadeID]);
+                        combinationCascadeID = strokePointerData;
+                        if (combinationCascadeID == originalID)
+                            break;
+                    }
+                }
+                debugColor = float4((float(combinationCascadeID)/float(_GroupsX * _GroupsY)).xxx, 1.0);
+                
+                float4 edgeData = _GradientVectors[combinationCascadeID];
                 isEdge = step(0.5, length(float2(edgeData.ba)));
                 data.coords = float4(edgeData.rg, 0, 0);
                 data.direction = float4(edgeData.ba, 0, 0);
                 float2 originOffsetRates = 1.0/float2(widthScalar/_DownscaleFactor, heightScalar/_DownscaleFactor) * 0.5;
-                data = GetRandomizedParamsStrokeData(data, _OutlineStrokeVariationData[0], int(groupFlatIndex), float(_TextureWidth));
+                data = GetRandomizedParamsStrokeData(data, _OutlineStrokeVariationData[0], int(combinationCascadeID), float(_TextureWidth));
                 data.coords.xy -= (data.direction.xy * (originOffsetRates * data.length * (_StrokeSampleScale - 1) * _StrokeScaleOffsetRate));
+                //Some aditional modulation based on the level of combined strokes
+                if (_CombinationRange > 0)
+                {
+                    data.length += (float(combinationLengthMultiplier) * 2.0); //Increase length to match the expected total size of all combined strokes
+                    data.lengthThicknessFalloff -= ((data.lengthThicknessFalloff/2.0) * (combinationLengthMultiplier/float(_CombinationRange)));
+                    data.lengthThicknessFalloff = min(0, data.lengthThicknessFalloff);
+                }
                 groupData = data;
-                if (x == 0 && y == 0)
-                    flatIndex = groupFlatIndex;
             }
             GroupMemoryBarrierWithGroupSync();
 
@@ -198,6 +286,7 @@ void ApplyStrokeSDFs(uint3 id, uint2 idG, uint3 idGs, uint2 kernelSizes)
     direction = (direction + 1) * 0.5;
     // R: Value graphite, GB: Average direction of found strokes. A: Value mask
     _OriginalSource[id.xy] = float4(value.r, direction.rg * value.r, value.r);
+    _OriginalSource[id.xy] *= debugColor;
     //float u = float(idG.x)/(float)kernelSizes.x * (1- value);
     //float v = float(idG.y)/(float)kernelSizes.y * (1- value);
     //_OriginalSource[id.xy] = float4(u, v, 0.0, 1.0);

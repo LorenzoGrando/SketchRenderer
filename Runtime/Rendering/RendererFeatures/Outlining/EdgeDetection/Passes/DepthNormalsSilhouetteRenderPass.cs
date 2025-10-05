@@ -70,7 +70,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
             var dstDesc = renderGraph.GetTextureDesc(resourceData.activeColorTexture);
             dstDesc.name = IsSecondary ? OUTLINE_SECONDARY_TEXTURE_NAME : OUTLINE_TEXTURE_NAME;
-            dstDesc.format = GraphicsFormat.R8G8B8A8_UNorm;
+            dstDesc.format = GraphicsFormat.R16G16B16A16_SFloat;
             dstDesc.clearBuffer = true;
             dstDesc.msaaSamples = MSAASamples.None;
             dstDesc.enableRandomWrite = true;
