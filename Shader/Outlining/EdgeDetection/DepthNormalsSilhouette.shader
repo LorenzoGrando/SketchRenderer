@@ -153,7 +153,7 @@ Shader "SketchRenderer/DepthNormalsSilhouette"
                float gradN = length(normalGradientVector);
 
                float eyeDepth = LinearEyeDepth(SampleSceneDepth(uv), _ZBufferParams);
-               float normalDistanceThresholdOffset = (1 - _OutlineThreshold) * (lerp(0, 1, eyeDepth/32) * ( 1 - _OutlineNormalDistanceSensitivity));
+               float normalDistanceThresholdOffset = (1 - _OutlineThreshold) * ( 1 - _OutlineNormalDistanceSensitivity);
                
                float normalGradient = step(_OutlineThreshold + normalDistanceThresholdOffset, gradN);
                #endif

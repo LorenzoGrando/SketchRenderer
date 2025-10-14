@@ -58,7 +58,8 @@ namespace SketchRenderer.Editor.Rendering
                 listenerContext.OnValidated -= RendererContext_OnValidate;
                 
             listenerContext = CurrentRendererContext;
-            listenerContext.OnValidated += RendererContext_OnValidate;
+            if(listenerContext != null)
+                listenerContext.OnValidated += RendererContext_OnValidate;
         }
 
         private void RendererContext_OnValidate()

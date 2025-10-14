@@ -6,6 +6,13 @@ This project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.7.1-beta] - 2025-10-14
+
+### Changed
+
+- Hotfixed an error in sketch settings affecting new package installs.
+- Updated a change that was hiding the Normals improvements from the previous version.
+
 ## [v0.7.0-beta] - 2025-10-14
 
 ### Changed
@@ -43,7 +50,8 @@ This project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renderer Manager and Project Settings for dynamically handling feature dependencies and URP renderer data.
 
 ---
-[unreleased]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.7.0-beta...HEAD
-[v0.7.0-belta]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.5.6-alpha...v0.7.0-beta
+[unreleased]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.7.1-beta...HEAD
+[v0.7.1-beta]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.7.0-alpha...v0.7.1-beta
+[v0.7.0-beta]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.5.6-alpha...v0.7.0-beta
 [v0.5.6-alpha]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.5.5-alpha...v0.5.6-alpha
 [v0.5.5-alpha]: https://github.com/LorenzoGrando/SketchRenderer/releases/tag/v0.5.5-alpha
