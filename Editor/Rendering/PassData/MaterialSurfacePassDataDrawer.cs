@@ -27,7 +27,7 @@ namespace SketchRenderer.Editor.Rendering
             var projectionField = SketchRendererUI.SketchEnumProperty(projectionProp, method); 
             projectionField.Field.RegisterValueChangedCallback(_ => ForceRepaint());
             SketchRendererUIUtils.AddWithMargins(projectionRegion, projectionField.Container, SketchRendererUIData.MajorIndentCorners);
-            if (method is TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_REVERSED_CONSTANT_SCALE)
+            if (method is TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE) //or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_REVERSED_CONSTANT_SCALE)
             {
                 var falloffField = SketchRendererUI.SketchFloatSliderPropertyWithInput(property.FindPropertyRelative("ConstantScaleFalloffFactor"), nameOverride:"Falloff Factor");
                 SketchRendererUIUtils.AddWithMargins(projectionRegion, falloffField.Container, SketchRendererUIData.MajorIndentCorners);
@@ -40,11 +40,11 @@ namespace SketchRenderer.Editor.Rendering
             texturingRegion.Add(texturingLabel);
             
             AlbedoTextureProp = property.FindPropertyRelative("AlbedoTexture");
-            var albedoTextureField = SketchRendererUI.SketchObjectField("Albedo Texture", typeof(Texture2D), AlbedoTextureProp.objectReferenceValue, changeCallback:AlbedoField_Changed);
+            var albedoTextureField = SketchRendererUI.SketchObjectProperty(AlbedoTextureProp, typeof(Texture2D), changeCallback:evt => ForceRepaint());
             SketchRendererUIUtils.AddWithMargins(texturingRegion, albedoTextureField.Container, SketchRendererUIData.MajorIndentCorners);
             
             DirectionalTextureProp = property.FindPropertyRelative("NormalTexture");
-            var directionalTextureField = SketchRendererUI.SketchObjectField("Normal Texture", typeof(Texture2D), DirectionalTextureProp.objectReferenceValue, changeCallback:DirectionalField_Changed);
+            var directionalTextureField = SketchRendererUI.SketchObjectProperty(DirectionalTextureProp, typeof(Texture2D), changeCallback:evt => ForceRepaint(), nameOverride:"Directional Texture");
             SketchRendererUIUtils.AddWithMargins(texturingRegion, directionalTextureField.Container, SketchRendererUIData.MajorIndentCorners);
             
             var scalesField = SketchRendererUI.SketchVector2IntProperty(property.FindPropertyRelative("Scale"));
@@ -61,20 +61,6 @@ namespace SketchRenderer.Editor.Rendering
         internal void ForceRepaint()
         {
             passDataField.SendEvent(ExecuteCommandEvent.GetPooled(SketchRendererUIData.RepaintEditorCommand));
-        }
-
-        internal void AlbedoField_Changed(ChangeEvent<UnityEngine.Object> bind)
-        {
-            AlbedoTextureProp.serializedObject.Update();
-            AlbedoTextureProp.objectReferenceValue = bind.newValue;
-            AlbedoTextureProp.serializedObject.ApplyModifiedProperties();
-        }
-        
-        internal void DirectionalField_Changed(ChangeEvent<UnityEngine.Object> bind)
-        {
-            DirectionalTextureProp.serializedObject.Update();
-            DirectionalTextureProp.objectReferenceValue = bind.newValue;
-            DirectionalTextureProp.serializedObject.ApplyModifiedProperties();
         }
     }
 }

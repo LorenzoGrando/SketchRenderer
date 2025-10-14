@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using SketchRenderer.Editor.Rendering;
 using SketchRenderer.Editor.UIToolkit;
 using SketchRenderer.Editor.Utils;
 using SketchRenderer.Runtime.Data;
@@ -26,14 +27,19 @@ namespace SketchRenderer.Editor.TextureTools
         internal SketchElement<TextField> pathField;
         internal TextureToolGenerationStatusArgs toolStatusDisplay;
         
-        internal override void InitializeTool(SketchResourceAsset resources)
+        private SketchRendererManagerSettings settings;
+        
+        internal override void InitializeTool(SketchResourceAsset resources, SketchRendererManagerSettings settings)
         {
+            this.settings = settings;
+            
             MaterialGenerator.OnTextureUpdated += UpdatePreviewTargetTexture;
             TextureGenerator.OnRecreateTargetTexture += UpdatePreviewTargetTexture;
             
             MaterialGenerator.OnTextureUpdated += FinalizeProgressBar;
-            
-            MaterialGenerator.Init(resources);
+
+            MaterialDataAsset asset = settings.PersistentMaterialDataAsset != null ? settings.PersistentMaterialDataAsset : resources.Scriptables.MaterialData;
+            MaterialGenerator.Init(resources, asset);
             ApplyToMatchGeneratorSettings();
         }
 
@@ -116,6 +122,7 @@ namespace SketchRenderer.Editor.TextureTools
             CornerData assetMargins = (materialAsset != null ? SketchRendererUIData.BaseFieldMargins : SketchRendererUIData.BaseFieldNoVerticalMargins);
             SketchRendererUIUtils.AddWithMargins(materialDataRegion, materialAssetField.Container, assetMargins);
 
+            Button createCustomMaterialAsset = null;
             if (materialAsset != null)
             {
                 if (materialAssetEditor == null)
@@ -126,7 +133,7 @@ namespace SketchRenderer.Editor.TextureTools
             }
             else
             {
-                var createCustomMaterialAsset = new Button(CreateMaterialData_Clicked) { text = "Create New And Assign"};
+                createCustomMaterialAsset = new Button(CreateMaterialData_Clicked) { text = "Create New And Assign"};
                 SketchRendererUIUtils.AddWithMargins(materialDataRegion, createCustomMaterialAsset, SketchRendererUIData.BaseFieldMargins);
             }
             
@@ -137,7 +144,9 @@ namespace SketchRenderer.Editor.TextureTools
             
             materialDataRegion.ToggleElementInteractions(MaterialGenerator.HasNonDefaultMaterialDataAsset);
             materialAssetField.Container.SetEnabled(true);
-            if(!MaterialGenerator.HasNonDefaultMaterialDataAsset)
+            if(createCustomMaterialAsset != null)
+                createCustomMaterialAsset.SetEnabled(true);
+            if(!MaterialGenerator.HasNonDefaultMaterialDataAsset && materialAsset != null)
                 SketchRendererUIUtils.AddWithMargins(materialDataRegion, SketchRendererUI.SketchInmutableAssetHelpBox(), SketchRendererUIData.BaseFieldMargins);
             
             return materialDataRegion;
@@ -241,6 +250,7 @@ namespace SketchRenderer.Editor.TextureTools
         {
             MaterialDataAsset materialAsset = (MaterialDataAsset)bind.newValue;
             MaterialGenerator.MaterialDataAsset = materialAsset;
+            settings.PersistentMaterialDataAsset = materialAsset;
             ForceRebuildGUI();
         }
 

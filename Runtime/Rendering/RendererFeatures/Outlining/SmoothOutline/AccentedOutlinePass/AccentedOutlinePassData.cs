@@ -31,7 +31,11 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public AccentedOutlinePassData()
         {
             Rate = 20.0f;
-            Strength = 1.0f;
+            Strength = 0.3f;
+            AdditionalLines = 0;
+            AdditionalLineTintPersistence = 0.75f;
+            AdditionalLineDistortionJitter = 0.25f;
+            MaskScale = Vector2.one;
         }
         
         public bool RequireMultipleTextures => AdditionalLines > 1;

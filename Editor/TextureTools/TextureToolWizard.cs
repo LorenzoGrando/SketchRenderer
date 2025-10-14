@@ -46,7 +46,7 @@ namespace SketchRenderer.Editor.TextureTools
             
             TonalArtMapGeneratorWindow tamWindow = EditorWindow.GetWindow<TonalArtMapGeneratorWindow>();
             tamWindow.OnWindowClosed += DestroyTonalArtMapWindow;
-            tamWindow.InitializeTool(SketchRendererManager.ResourceAsset);
+            tamWindow.InitializeTool(SketchRendererManager.ResourceAsset, SketchRendererManager.ManagerSettings);
             tamWindow.Show();
             TonalArtMapGeneratorWindow.window = tamWindow;
         }
@@ -68,7 +68,7 @@ namespace SketchRenderer.Editor.TextureTools
                     TonalArtMapGeneratorWindow.window = Resources.FindObjectsOfTypeAll<TonalArtMapGeneratorWindow>()[0];
                 }
                 //Clear any existing buffers before they are lost
-                TonalArtMapGeneratorWindow.window.InitializeTool(SketchRendererManager.ResourceAsset);
+                TonalArtMapGeneratorWindow.window.InitializeTool(SketchRendererManager.ResourceAsset, SketchRendererManager.ManagerSettings);
             }
 
             if (hasDelayedTonalWindowCall)
@@ -93,7 +93,7 @@ namespace SketchRenderer.Editor.TextureTools
             
             MaterialGeneratorWindow materialWindow = EditorWindow.GetWindow<MaterialGeneratorWindow>();
             materialWindow.OnWindowClosed += DestroyMaterialWindow;
-            materialWindow.InitializeTool(SketchRendererManager.ResourceAsset);
+            materialWindow.InitializeTool(SketchRendererManager.ResourceAsset, SketchRendererManager.ManagerSettings);
             materialWindow.Show();
             MaterialGeneratorWindow.window = materialWindow;
         }
@@ -115,7 +115,7 @@ namespace SketchRenderer.Editor.TextureTools
                     MaterialGeneratorWindow.window = Resources.FindObjectsOfTypeAll<MaterialGeneratorWindow>()[0];
                 }
                 //Clear any existing buffers before they are lost
-                MaterialGeneratorWindow.window.InitializeTool(SketchRendererManager.ResourceAsset);
+                MaterialGeneratorWindow.window.InitializeTool(SketchRendererManager.ResourceAsset, SketchRendererManager.ManagerSettings);
             }
 
             if (hasDelayedMaterialWindowCall)

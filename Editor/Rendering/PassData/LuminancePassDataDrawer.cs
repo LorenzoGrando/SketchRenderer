@@ -10,15 +10,13 @@ namespace SketchRenderer.Editor.Rendering
     public class LuminancePassDataDrawer : PropertyDrawer
     {
         private VisualElement passDataField;
-        private SerializedProperty AlbedoTextureProp;
-        private SerializedProperty DirectionalTextureProp;
         
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
             passDataField = new VisualElement();
             
             SerializedProperty tamProp = property.FindPropertyRelative("ActiveTonalMap");
-            var tonalArtMapField = SketchRendererUI.SketchObjectField("Tonal Art Map Asset", typeof(TonalArtMapAsset), tamProp.objectReferenceValue);
+            var tonalArtMapField = SketchRendererUI.SketchObjectProperty(tamProp, typeof(TonalArtMapAsset), changeCallback:evt => ForceRepaint(), nameOverride:"Tonal Art Map Asset");
             SketchRendererUIUtils.AddWithMargins(passDataField, tonalArtMapField.Container, CornerData.Empty);
             
             
@@ -31,7 +29,7 @@ namespace SketchRenderer.Editor.Rendering
             var projectionField = SketchRendererUI.SketchEnumProperty(projectionProp, method); 
             projectionField.Field.RegisterValueChangedCallback(_ => ForceRepaint());
             SketchRendererUIUtils.AddWithMargins(projectionRegion, projectionField.Container, SketchRendererUIData.MajorIndentCorners);
-            if (method is TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_REVERSED_CONSTANT_SCALE)
+            if (method is TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE) //or TextureProjectionGlobalData.TextureProjectionMethod.OBJECT_SPACE_REVERSED_CONSTANT_SCALE)
             {
                 var falloffField = SketchRendererUI.SketchFloatSliderPropertyWithInput(property.FindPropertyRelative("ConstantScaleFalloffFactor"), nameOverride:"Falloff Factor");
                 SketchRendererUIUtils.AddWithMargins(projectionRegion, falloffField.Container, SketchRendererUIData.MajorIndentCorners);

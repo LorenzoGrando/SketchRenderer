@@ -1,3 +1,4 @@
+using SketchRenderer.Editor.TextureTools;
 using SketchRenderer.Editor.UIToolkit;
 using SketchRenderer.Runtime.Data;
 using UnityEditor;
@@ -14,6 +15,8 @@ namespace SketchRenderer.Editor.Rendering
         private bool hadSingleOutline;
         SerializedProperty UseSmoothOutlineProp;
         SerializedProperty UseSketchyOutlineProp;
+
+        private bool assignedListeners;
         
         public override VisualElement CreateInspectorGUI()
         {
@@ -32,7 +35,12 @@ namespace SketchRenderer.Editor.Rendering
             var assetField = new VisualElement();
             
             SketchRendererContext context = (SketchRendererContext)target;
-            
+            if (!assignedListeners)
+            {
+                context.OnRedrawSettings += ForceRepaint;
+                assignedListeners = true;
+            }
+
             //- UVS Feature
             if (context.UseUVsFeature)
             {
@@ -55,6 +63,11 @@ namespace SketchRenderer.Editor.Rendering
             materialDataField.BindProperty(materialDataProp);
             materialDataField.RegisterCallback<ExecuteCommandEvent>(TriggerRepaint);
             SketchRendererUIUtils.AddWithMargins(materialDataFoldout, materialDataField, SketchRendererUIData.MinorFieldMargins);
+            if (!context.MaterialFeatureData.IsAllPassDataValid())
+            {
+                var openCreator = SketchRendererUI.SketchMajorButton("Open Material Generator", OpenMaterialGenerator_Clicked);
+                SketchRendererUIUtils.AddWithMargins(materialDataFoldout, openCreator, SketchRendererUIData.MinorFieldMargins);
+            }
             
             assetField.Add(materialDataFoldout);
             
@@ -67,6 +80,17 @@ namespace SketchRenderer.Editor.Rendering
             luminanceDataField.BindProperty(luminanceDataProp);
             luminanceDataField.RegisterCallback<ExecuteCommandEvent>(TriggerRepaint);
             SketchRendererUIUtils.AddWithMargins(luminanceDataFoldout, luminanceDataField, SketchRendererUIData.MinorFieldMargins);
+            if (!context.LuminanceFeatureData.IsAllPassDataValid())
+            {
+                if (context.LuminanceFeatureData.ActiveTonalMap != null && !context.LuminanceFeatureData.ActiveTonalMap.IsPacked)
+                {
+                    var warningBox = SketchRendererUI.SketchHelpBox($"The current textures in the asset have not properly been packed.\n Please regenerate the tones to automatically pack them");
+                    SketchRendererUIUtils.AddWithMargins(luminanceDataFoldout, warningBox, SketchRendererUIData.MinorFieldMargins);
+                    context.LuminanceFeatureData.ActiveTonalMap.OnTonesPacked += OnActiveTonalArtMapPacked;
+                }
+                var openCreatorTam = SketchRendererUI.SketchMajorButton("Open Tonal Art Map Generator", OpenTonalArtMapGenerator_Clicked);
+                SketchRendererUIUtils.AddWithMargins(luminanceDataFoldout, openCreatorTam, SketchRendererUIData.MinorFieldMargins);
+            }
             
             assetField.Add(luminanceDataFoldout);
             
@@ -189,7 +213,7 @@ namespace SketchRenderer.Editor.Rendering
         {
             if(evt.commandName != SketchRendererUIData.RepaintEditorCommand)
                 return;
-
+            
             ForceRepaint();
         }
 
@@ -198,6 +222,23 @@ namespace SketchRenderer.Editor.Rendering
             root.Clear();
             ConstructAssetField();
             Repaint();
+        }
+
+        private void OnActiveTonalArtMapPacked()
+        {
+            SketchRendererContext context = (SketchRendererContext)target;
+            context.LuminanceFeatureData.ActiveTonalMap.OnTonesPacked -= OnActiveTonalArtMapPacked;
+            ForceRepaint();
+        }
+
+        private void OpenTonalArtMapGenerator_Clicked()
+        {
+            TextureToolWizard.CreateTonalArtMapWindow();
+        }
+
+        private void OpenMaterialGenerator_Clicked()
+        {
+            TextureToolWizard.CreateMaterialWindow();
         }
     }
 }

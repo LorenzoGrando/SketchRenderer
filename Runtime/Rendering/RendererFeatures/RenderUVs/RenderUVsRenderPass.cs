@@ -15,6 +15,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         private Material uvsMaterial;
 
         private readonly int ROTATION_MATRIX_ID = Shader.PropertyToID("_SkyboxRotationMatrix");
+        private readonly int SCALE_ID = Shader.PropertyToID("_SkyboxScale");
         private readonly string ROTATE_SKYBOX_ID = "ROTATE_SKYBOX";
         
         private LocalKeyword RotateSkyboxKeyword;
@@ -45,6 +46,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             }
             else
                 uvsMaterial.SetKeyword(RotateSkyboxKeyword, false);
+            
+            uvsMaterial.SetInteger(SCALE_ID, passData.SkyboxScale);
         }
 
         public void Dispose()
@@ -83,7 +86,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
                 TextureDesc desc = renderGraph.GetTextureDesc(resourceData.activeColorTexture);
                 desc.name = SketchGlobalFrameData.ScreenUVTexture.TextureName;
-                desc.format = GraphicsFormat.R32G32_SFloat;
+                desc.format = GraphicsFormat.R32G32B32A32_SFloat;
                 desc.msaaSamples = MSAASamples.None;
                 TextureHandle dst = renderGraph.CreateTexture(desc);
                 

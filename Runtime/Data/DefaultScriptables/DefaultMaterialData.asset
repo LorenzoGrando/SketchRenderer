@@ -14,13 +14,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UseGranularity: 1
   Granularity:
-    Scale: {x: 7, y: 7}
+    Scale: {x: 3, y: 3}
     DetailLevel: 5
     DetailFrequency: 4
     DetailPersistence: 0.411
     MinimumGranularity: 0.307
     MaximumGranularity: 0.81
     GranularityTint: {r: 1, g: 0.96603775, b: 0.9009434, a: 1}
+  UseWrinkles: 1
+  Wrinkles:
+    WrinkleScale: {x: 5, y: 2}
+    WrinkleJitter: 0.415
+    WrinkleStrength: 0.8
+    WrinkleDetailLevel: 2
+    WrinkleDetailFrequency: 2
+    WrinkleDetailPersistence: 0.215
   UseLaidLines: 1
   LaidLines:
     LineFrequency: 50
@@ -31,14 +39,14 @@ MonoBehaviour:
     LineTint: {r: 0.5849056, g: 0.5180442, b: 0.40005338, a: 1}
   UseCrumples: 1
   Crumples:
-    CrumpleScale: {x: 3, y: 3}
-    CrumpleJitter: 0.571
+    CrumpleScale: {x: 2, y: 2}
+    CrumpleJitter: 0.16
     CrumpleStrength: 0.871
     CrumpleDetailLevel: 2
     CrumpleDetailFrequency: 2
-    CrumpleDetailPersistence: 0.399
+    CrumpleDetailPersistence: 0.043
     CrumpleTintStrength: 1
-    CrumpleTintSharpness: 5.69
+    CrumpleTintSharpness: 5.5
     CrumpleTint: {r: 0.4811321, g: 0.4189102, b: 0.374466, a: 1}
   UseNotebookLines: 1
   NotebookLines:

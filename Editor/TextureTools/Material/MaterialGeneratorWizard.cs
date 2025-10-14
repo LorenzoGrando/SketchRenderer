@@ -18,7 +18,9 @@ namespace SketchRenderer.Editor.TextureTools
         
         internal static MaterialDataAsset CreateMaterialDataAsset(string path)
         {
-            return SketchAssetCreationWrapper.CreateScriptableInstance<MaterialDataAsset>(path);
+            MaterialDataAsset materialData = SketchAssetCreationWrapper.CreateScriptableInstance<MaterialDataAsset>(path);
+            materialData.CopyFrom(SketchRendererManager.ResourceAsset.Scriptables.MaterialData);
+            return materialData;
         }
         
         internal static void SetAsActiveAlbedo(Texture albedoTexture)
@@ -32,6 +34,7 @@ namespace SketchRenderer.Editor.TextureTools
                 EditorUtility.SetDirty(SketchRendererManager.CurrentRendererContext);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
+                SketchRendererManager.CurrentRendererContext.Redraw();
                 
                 SketchRendererManager.UpdateFeatureByCurrentContext(SketchRendererFeatureType.MATERIAL);
             }

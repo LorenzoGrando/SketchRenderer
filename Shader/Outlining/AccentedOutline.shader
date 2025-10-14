@@ -107,12 +107,15 @@ Shader "SketchRenderer/AccentedOutline"
                     #endif
                #endif
                
-               col = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_PointClamp, uv1, _BlitMipLevel) * strengths.x ;
-               col += SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_PointClamp, uv2, _BlitMipLevel) * strengths.y * _LineTintFalloff;
+               col = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_PointClamp, uv1, _BlitMipLevel) * strengths.x;
+               float4 col2 = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_PointClamp, uv2, _BlitMipLevel) * strengths.y * _LineTintFalloff;
+               col = max(col, col2);
 
                #if defined MULTIPLE_DISTORTIONS
-               col += SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_PointClamp, uv3, _BlitMipLevel) * strengths.z * pow(_LineTintFalloff, 2.0);
-               col += SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_PointClamp, uv4, _BlitMipLevel) * strengths.w * pow(_LineTintFalloff, 3.0);
+               float4 col3 = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_PointClamp, uv3, _BlitMipLevel) * strengths.z * pow(_LineTintFalloff, 2.0);
+               col = max(col, col3);
+               float4 col4 = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_PointClamp, uv4, _BlitMipLevel) * strengths.w * pow(_LineTintFalloff, 3.0);
+               col = max(col, col4);
                #endif
 
                #if defined MASK_OUTLINES

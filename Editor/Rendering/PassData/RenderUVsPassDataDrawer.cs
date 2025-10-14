@@ -12,9 +12,13 @@ namespace SketchRenderer.Editor.Rendering
         {
             var passDataField = new VisualElement();
             
-            SerializedProperty skyboxRotationProp = property.FindPropertyRelative("SkyboxRotation");
-            var skyboxRotationField = SketchRendererUI.SketchFloatSliderPropertyWithInput(skyboxRotationProp);
+            SerializedProperty skyboxRotationProp = property.FindPropertyRelative("SkyboxRotationStep");
+            var skyboxRotationField = SketchRendererUI.SketchIntSliderPropertyWithInput(skyboxRotationProp, nameOverride:"Skybox Orientation");
             SketchRendererUIUtils.AddWithMargins(passDataField, skyboxRotationField.Container, CornerData.Empty);
+            
+            SerializedProperty skyboxScaleProp = property.FindPropertyRelative("SkyboxScale");
+            var skyboxScaleField = SketchRendererUI.SketchIntegerProperty(skyboxScaleProp);
+            SketchRendererUIUtils.AddWithMargins(passDataField, skyboxScaleField.Container, CornerData.Empty);
             
             return passDataField;
         }

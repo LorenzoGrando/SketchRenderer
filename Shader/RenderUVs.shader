@@ -13,6 +13,7 @@ Shader "SketchRenderer/RenderUVs"
             #pragma fragment frag
             
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.lorenzogrando.sketchrenderer/ShaderLibrary/TextureOperations.hlsl"
 
             struct Attributes
             {
@@ -28,23 +29,24 @@ Shader "SketchRenderer/RenderUVs"
                         
             Varyings vert(Attributes i)
             {
-                UNITY_SETUP_INSTANCE_ID(input);
-                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                UNITY_SETUP_INSTANCE_ID(i);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
                 Varyings o;
                 
                 VertexPositionInputs vertexPositions = GetVertexPositionInputs(i.positionOS.xyz);
                 o.positionCS = vertexPositions.positionCS;
-
-                o.uvs = i.uvs;
                 
+                o.uvs = i.uvs;
+
                 return o;
             }
                         
             float4 frag(Varyings i) : SV_Target
             {
-                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
                 
-                return float4(i.uvs, 0.0, 0.0);
+                float mip = GetMipFactor(i.uvs);
+                return float4(i.uvs, mip, 0.0);
             }
             ENDHLSL
         }
@@ -55,6 +57,7 @@ Shader "SketchRenderer/RenderUVs"
             HLSLPROGRAM
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
+            #include "Packages/com.lorenzogrando.sketchrenderer/ShaderLibrary/TextureOperations.hlsl"
 
             #pragma vertex Vert
             #pragma fragment Frag
@@ -62,6 +65,7 @@ Shader "SketchRenderer/RenderUVs"
             #pragma multi_compile_local_fragment _ ROTATE_SKYBOX
 
             float4x4 _SkyboxRotationMatrix;
+            int _SkyboxScale;
             
             float4 Frag(Varyings input) : SV_Target0
             {
@@ -77,8 +81,9 @@ Shader "SketchRenderer/RenderUVs"
                 #if defined(ROTATE_SKYBOX)
                 uv = mul((float2x2)_SkyboxRotationMatrix, uv);
                 #endif
+                float mip = GetMipFactor(uv);
                 
-                return float4(uv, 0.0, 1.0);
+                return float4(uv * _SkyboxScale, mip, 1.0);
             }
             ENDHLSL
         }

@@ -15,7 +15,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
         public ThicknessDilationPassData()
         {
-            ThicknessRange = 1;
+            ThicknessRange = 2;
             ThicknessStrength = 1;
         }
 

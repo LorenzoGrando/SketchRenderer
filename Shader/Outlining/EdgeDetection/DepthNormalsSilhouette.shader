@@ -33,7 +33,7 @@ Shader "SketchRenderer/DepthNormalsSilhouette"
                Get3X3NeighborhoodPositions(uv, _OutlineOffset, _CameraDepthTexture_TexelSize.xy, dUL, dUC, dUR, dCL, dCR, dDL, dDC, dDR);
 
                #if defined(SOBEL_KERNEL_3X3)
-               float depthEdge = SobelDepthHorizontal3X3(ModifiedSobel3X3HorizontalKernel,dUL, dCL, dDL, dUR, dCR, dDR);
+               float depthEdge = SobelDepthHorizontal3X3(BaseSobel3X3HorizontalKernel,dUL, dCL, dDL, dUR, dCR, dDR);
                #elif defined(SOBEL_KERNEL_1X3)
                float depthEdge = SobelDepth1X3(Sobel1X3Kernel, dCL, uv, dCR);
                #endif
@@ -45,7 +45,7 @@ Shader "SketchRenderer/DepthNormalsSilhouette"
                Get3X3NeighborhoodPositions(uv, _OutlineOffset, _CameraNormalsTexture_TexelSize.xy, nUL, nUC, nUR, nCL, nCR, nDL, nDC, nDR);
 
                #if defined(SOBEL_KERNEL_3X3)
-               float normalEdge = SobelNormalHorizontal3x3(ModifiedSobel3X3HorizontalKernel, uv, nUL, nCL, nDL, nUR, nCR, nDR);
+               float normalEdge = SobelNormalHorizontal3x3(BaseSobel3X3HorizontalKernel, uv, nUL, nCL, nDL, nUR, nCR, nDR);
                #elif defined(SOBEL_KERNEL_1X3)
                float normalEdge = SobelNormal1X3(Sobel1X3Kernel, nCL, uv, nCR);
                #endif
@@ -54,8 +54,10 @@ Shader "SketchRenderer/DepthNormalsSilhouette"
 
                //Store for use in vertical pass
                #if defined(SOURCE_DEPTH)
+               return float4(depthEdge, 0, 0, 1);
                return float4((depthEdge + 1) * 0.5, 0, 0, 1);
                #elif defined(SOURCE_DEPTH_NORMALS)
+               return float4(depthEdge, normalEdge, 0.0, 1.0);
                return float4((depthEdge + 1) * 0.5, (normalEdge + 1) * 0.5, 0.0, 1.0);
                #endif
            }
@@ -98,7 +100,7 @@ Shader "SketchRenderer/DepthNormalsSilhouette"
                Get3X3NeighborhoodPositions(uv, _OutlineOffset, _CameraDepthTexture_TexelSize.xy, dUL, dUC, dUR, dCL, dCR, dDL, dDC, dDR);
 
                #if defined(SOBEL_KERNEL_3X3)
-               float depthEdge = SobelDepthVertical3X3(ModifiedSobel3X3VerticalKernel,dUL, dUC, dUR, dDL, dDC, dDR);
+               float depthEdge = SobelDepthVertical3X3(BaseSobel3X3VerticalKernel,dUL, dUC, dUR, dDL, dDC, dDR);
                #elif defined(SOBEL_KERNEL_1X3)
                float depthEdge = SobelDepth1X3(Sobel1X3Kernel, dUC, uv, dDC);
                #endif
@@ -110,7 +112,7 @@ Shader "SketchRenderer/DepthNormalsSilhouette"
                Get3X3NeighborhoodPositions(uv, _OutlineOffset, _CameraNormalsTexture_TexelSize.xy, nUL, nUC, nUR, nCL, nCR, nDL, nDC, nDR);
 
                #if defined(SOBEL_KERNEL_3X3)
-               float3 normalEdge = SobelNormalVertical3x3(ModifiedSobel3X3VerticalKernel, uv, nUL, nUC, nUR, nDL, nDC, nDR);
+               float3 normalEdge = SobelNormalVertical3x3(BaseSobel3X3VerticalKernel, uv, nUL, nUC, nUR, nDL, nDC, nDR);
                #elif defined(SOBEL_KERNEL_1X3)
                float normalEdge = SobelNormal1X3(Sobel1X3Kernel, dUC, uv, dDC);
                #endif
@@ -120,10 +122,10 @@ Shader "SketchRenderer/DepthNormalsSilhouette"
                //Sample horizontal pass (passed as blit texture) and get filter results in RG (depth, normal)
                float4 horizontalValue = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_PointClamp, uv, _BlitMipLevel);
                //Bring depth back to -1 to 1
-               horizontalValue.r = (horizontalValue.r * 2.0) - 1.0;
-               //Get gradient of each image, and threshold for silhouette)
-               //If normals texture is available, modify threshold depending on viewing angle to avoid thick edges in very shallow angles
-               //Specifically, if view vector is almost perpendicular to surface normal, make the threshold higher.
+               //horizontalValue.r = (horizontalValue.r * 2.0) - 1.0;
+                //Get gradient of each image, and threshold for silhouette)
+                //If normals texture is available, modify threshold depending on viewing angle to avoid thick edges in very shallow angles
+                //Specifically, if view vector is almost perpendicular to surface normal, make the threshold higher.
                #if defined(SOURCE_DEPTH)
                float depth = LinearEyeDepth(SampleSceneDepth(uv), _ZBufferParams);
                float2 depthGradientVector = float2(horizontalValue.r, depthEdge);
@@ -146,7 +148,7 @@ Shader "SketchRenderer/DepthNormalsSilhouette"
                #endif
                
                #if defined(SOURCE_DEPTH_NORMALS)
-               horizontalValue.g = (horizontalValue.g * 2.0) - 1.0;
+               //horizontalValue.g = (horizontalValue.g * 2.0) - 1.0;
                float2 normalGradientVector = float2(horizontalValue.g, normalEdge.r)/2.0;
                float gradN = length(normalGradientVector);
 
@@ -169,30 +171,34 @@ Shader "SketchRenderer/DepthNormalsSilhouette"
                     angle /= PI;
                     angle = (angle + 1) * 0.5;
                     float edge = max(0, depthGradient);
-                    return float4(edge, angle, 0.0, edge);
+                     //Is Edge, the angle of outline flow, the strength of the direction, and a repeated edge presence as the alpha strength
+                    return float4(edge, angle * edge, 1.0 * edge, edge);
                     #elif defined(SOURCE_DEPTH_NORMALS)
                     float edge = max(0, max(depthGradient, normalGradient));
                     float angleDepth = atan2(depthGradientVector.y, depthGradientVector.x);
-                    float angleNormal = atan2(-normalGradientVector.y, normalGradientVector.x);
+                    float angleNormal = atan2(normalGradientVector.y, normalGradientVector.x);
                     float useDepth = step(1, depthGradient);
                     float useNormal = 1 - useDepth;
                     float angle = angleDepth * useDepth + angleNormal * useNormal;
                     angle /= PI;
                     angle = (angle + 1) * 0.5;
-                    return float4(edge, angle * edge, 0.0, edge);
+                     //Is Edge, the angle of outline flow (only if edge present), the strength of the direction, and a repeated edge presence as the alpha strength
+                    return float4(edge, angle * edge, 1.0 * edge, edge);
                     #endif
                #elif defined(OUTPUT_DIRECTION_DATA_VECTOR)
                     #if defined(SOURCE_DEPTH)
                     float2 direction = depthGradientVector.xy;
                     float edge = max(0, depthGradient);
+                    //Is Edge, the direciton of outline flow (only if edge present), and a repeated edge presence as the alpha strength
                     return float4(edge, direction, edge);
                     #elif defined(SOURCE_DEPTH_NORMALS)
                     float edge = max(0, max(depthGradient, normalGradient));
                     float2 directionDepth = depthGradientVector.xy;
-                    float2 directionNormal = float2(-normalGradientVector.y, normalGradientVector.x);
+                    float2 directionNormal = normalGradientVector.xy;
                     float useDepth = step(0.05, depthGradient);
                     float useNormal = 1 - useDepth;
                     float2 direction = normalize(directionDepth * useDepth + directionNormal * useNormal);
+                    //Is Edge, the direction of outline flow (only if edge present), and a repeated edge presence as the alpha strength
                     return float4(edge, ((direction * 0.5) + 0.5) * edge, edge);
                     #endif
                #endif

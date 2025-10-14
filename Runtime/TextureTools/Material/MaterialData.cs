@@ -5,7 +5,7 @@ namespace TextureTools.Material
     [System.Serializable]
     public struct GranularityData
     {
-        [Range(1, 20)]
+        [Range(2, 20)]
         public Vector2Int Scale;
         [Range(1, 10)]
         public int DetailLevel;
@@ -75,5 +75,21 @@ namespace TextureTools.Material
         [Range(0, 1)]
         public float VerticalLineThickness;
         public Color VerticalLineTint;
+    }
+    
+    [System.Serializable]
+    public struct WrinkleData
+    {
+        public Vector2Int WrinkleScale;
+        [Range(0, 1)]
+        public float WrinkleJitter;
+        [Range(0, 1)]
+        public float WrinkleStrength;
+        [Range(1, 10)]
+        public int WrinkleDetailLevel;
+        [Range(0, 50)]
+        public int WrinkleDetailFrequency;
+        [Range(0, 1)]
+        public float WrinkleDetailPersistence;
     }
 }

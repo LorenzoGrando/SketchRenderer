@@ -1,7 +1,6 @@
 using System;
+using SketchRenderer.Editor.Rendering;
 using SketchRenderer.Runtime.Data;
-using SketchRenderer.Runtime.TextureTools.Strokes;
-using SketchRenderer.Runtime.TextureTools.TonalArtMap;
 using TextureTools.Material;
 using UnityEditor;
 using UnityEngine;
@@ -93,23 +92,33 @@ namespace SketchRenderer.Editor.TextureTools
         private static readonly int NOTEBOOK_HORIZONTAL_TINT_ID = Shader.PropertyToID("_NotebookLineHorizontalTint");
         private static readonly int NOTEBOOK_VERTICAL_TINT_ID = Shader.PropertyToID("_NotebookLineVerticalTint");
         
+        //Wrinkles
+        private static readonly int WRINKLES_SCALE_ID = Shader.PropertyToID("_WrinklesScale");
+        private static readonly int WRINKLES_JITTER_ID = Shader.PropertyToID("_WrinklesJitter");
+        private static readonly int WRINKLES_STRENGTH_ID = Shader.PropertyToID("_WrinklesStrength");
+        private static readonly int WRINKLES_OCTAVES_ID = Shader.PropertyToID("_WrinklesOctaves");
+        private static readonly int WRINKLES_LACUNARITY_ID = Shader.PropertyToID("_WrinklesLacunarity");
+        private static readonly int WRINKLES_PERSISTENCE_ID = Shader.PropertyToID("_WrinklesPersistence");
+        
         //Shader Keywords
         private static readonly string USE_GRANULARITY_KEYWORD = "USE_GRANULARITY";
         private static readonly string USE_LAID_LINES_KEYWORD = "USE_LAID_LINES";
         private static readonly string USE_CRUMPLES_KEYWORD = "USE_CRUMPLES";
         private static readonly string USE_NOTEBOOK_LINES_KEYWORD = "USE_NOTEBOOK_LINES";
+        private static readonly string USE_WRINKLES_KEYWORD = "USE_WRINKLES";
 
         private static LocalKeyword GranularityKeyword;
         private static LocalKeyword LaidLineKeyword;
         private static LocalKeyword CrumpleKeyword;
         private static LocalKeyword NotebookLineKeyword;
+        private static LocalKeyword WrinklesKeyword;
         
         internal static bool Generating { get; private set; }
 
         internal static Texture LastGeneratedAlbedoTexture {get; private set;}
         internal static Texture LastGeneratedDirectionalTexture { get; private set; }
         
-        internal static void Init(SketchResourceAsset resources)
+        internal static void Init(SketchResourceAsset resources, MaterialDataAsset initialAsset)
         {
             if (MaterialGeneratorShader == null)
                 MaterialGeneratorShader = resources.Shaders.MaterialGenerator;
@@ -119,7 +128,7 @@ namespace SketchRenderer.Editor.TextureTools
             defaultMaterialDataAsset = resources.Scriptables.MaterialData;
             if (MaterialDataAsset == null)
             {
-                MaterialDataAsset = resources.Scriptables.MaterialData;
+                MaterialDataAsset = initialAsset;
             }
 
             ConfigureGeneratorData();
@@ -178,6 +187,9 @@ namespace SketchRenderer.Editor.TextureTools
             
             NotebookLineKeyword = new LocalKeyword(MaterialGeneratorShader, USE_NOTEBOOK_LINES_KEYWORD);
             MaterialGeneratorMaterial.SetKeyword(NotebookLineKeyword, MaterialDataAsset.UseNotebookLines);
+            
+            WrinklesKeyword = new LocalKeyword(MaterialGeneratorShader, USE_WRINKLES_KEYWORD);
+            MaterialGeneratorMaterial.SetKeyword(WrinklesKeyword, MaterialDataAsset.UseWrinkles);
         }
 
         private static void UpdateShaderMaterialData()
@@ -190,6 +202,16 @@ namespace SketchRenderer.Editor.TextureTools
                 MaterialGeneratorMaterial.SetFloat(GRANULARITY_PERSISTENCE_ID, MaterialDataAsset.Granularity.DetailPersistence);
                 MaterialGeneratorMaterial.SetVector(GRANULARITY_VALUE_RANGES_ID, new Vector4(MaterialDataAsset.Granularity.MinimumGranularity, MaterialDataAsset.Granularity.MaximumGranularity, 0, 0));
                 MaterialGeneratorMaterial.SetVector(GRANULARITY_TINT_ID, MaterialDataAsset.Granularity.GranularityTint);
+            }
+
+            if (MaterialDataAsset.UseWrinkles)
+            {
+                MaterialGeneratorMaterial.SetVector(WRINKLES_SCALE_ID, new Vector4(MaterialDataAsset.Wrinkles.WrinkleScale.x, MaterialDataAsset.Wrinkles.WrinkleScale.y, 0, 0));
+                MaterialGeneratorMaterial.SetFloat(WRINKLES_JITTER_ID, MaterialDataAsset.Wrinkles.WrinkleJitter);
+                MaterialGeneratorMaterial.SetFloat(WRINKLES_STRENGTH_ID, MaterialDataAsset.Wrinkles.WrinkleStrength);
+                MaterialGeneratorMaterial.SetInteger(WRINKLES_OCTAVES_ID, MaterialDataAsset.Wrinkles.WrinkleDetailLevel);
+                MaterialGeneratorMaterial.SetFloat(WRINKLES_LACUNARITY_ID, MaterialDataAsset.Wrinkles.WrinkleDetailFrequency);
+                MaterialGeneratorMaterial.SetFloat(WRINKLES_PERSISTENCE_ID, MaterialDataAsset.Wrinkles.WrinkleDetailPersistence);
             }
 
             if (MaterialDataAsset.UseLaidLines)

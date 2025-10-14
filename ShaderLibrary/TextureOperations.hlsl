@@ -49,12 +49,26 @@ float4 ConstantScaleTexture2DSample(Texture2D tex, SamplerState samp, float texe
 {
     float3 scales = ConstantScaleUVs2DFalloff(texelSize, uv, _ConstantScaleFalloff);
 
-    #if defined (UVS_OBJECT_SPACE_REVERSED_CONSTANT)
-    scales = 1.0 / (scales + 1.0);
+    #if defined (UVS_OBJECT_SPACE_CONSTANT)
+    //Keep a similar ratio to object space textures at the nearest plane
+    scales /= 2.0;
     #endif
 
     float4 s1 = SAMPLE_TEXTURE2D_X(tex, samp, scales.x * uv * scaleOffset);
     float4 s2 = SAMPLE_TEXTURE2D_X(tex, samp, scales.y * uv * scaleOffset);
     float4 sample = lerp(s1, s2, scales.z);
     return sample;
+}
+
+float GetMipFactor(float2 uv)
+{
+    float2 uvdx = ddx(uv);
+    float2 uvdy = ddy(uv);
+    float factor = max(length(uvdx), length(uvdy));
+    return factor;
+}
+
+float GetMipLevel(float factor, float maxTextureDimension)
+{
+    return log2(factor * maxTextureDimension);
 }

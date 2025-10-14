@@ -29,6 +29,19 @@ namespace SketchRenderer.Editor.TextureTools
             
             SketchRendererUIUtils.AddWithMargins(assetField, granularityFoldout, SketchRendererUIData.MajorIndentCorners);
             
+            //- Wrinkles
+            SerializedProperty useWrinklesProp = serializedObject.FindProperty("UseWrinkles");
+            var wrinklesFoldout = SketchRendererUI.SketchFoldoutWithToggle("Wrinkles", useWrinklesProp, false);
+            
+            SerializedProperty wrinklesDataProp = serializedObject.FindProperty("Wrinkles");
+            var wrinklesDataField = new PropertyField(wrinklesDataProp);
+            wrinklesDataField.BindProperty(wrinklesDataProp);
+            wrinklesDataField.TrackPropertyValue(wrinklesDataProp);
+            wrinklesDataField.RegisterValueChangeCallback(MaterialData_Changed);
+            SketchRendererUIUtils.AddWithMargins(wrinklesFoldout, wrinklesDataField, CornerData.Empty);
+            
+            SketchRendererUIUtils.AddWithMargins(assetField, wrinklesFoldout, SketchRendererUIData.MajorIndentCorners);
+            
             //- LaidLine
             SerializedProperty useLaidLinesProp = serializedObject.FindProperty("UseLaidLines");
             var laidLineFouldout = SketchRendererUI.SketchFoldoutWithToggle("Laid Lines", useLaidLinesProp, false);

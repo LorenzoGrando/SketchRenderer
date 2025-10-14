@@ -11,10 +11,14 @@ namespace SketchRenderer.Runtime.Rendering.Volume
     {
         [Header("Sketch Outlines")]
         public EnumParameter<ComputeData.KernelSize2D> StrokeArea = new (ComputeData.KernelSize2D.SIZE_8X8);
+        public ClampedIntParameter StrokeCombinationRange = new(0, 0, 8);
+        public ClampedFloatParameter StrokeCombinationThreshold = new(0.75f, 0f, 1f);
         public ClampedIntParameter StrokeScale = new (1, 1, 4);
+        public ClampedFloatParameter StrokeScaleOffset = new (1, 0, 1);
         public BoolParameter DoDownscale = new (true);
         public ClampedIntParameter DownscaleFactor = new (2, 2, 4);
         public ClampedFloatParameter MinThresholdForStroke = new (0.1f, 0, 1);
+        public ClampedFloatParameter DirectionSmoothing = new (0.5f, 1, 1);
         public ClampedFloatParameter FrameSmoothingFactor = new (0, 0, 1);
     }
 }

@@ -49,8 +49,13 @@ namespace SketchRenderer.Editor.UIToolkit
 
         internal static HelpBox SketchInmutableAssetHelpBox()
         {
+            return SketchHelpBox($"The assigned asset is inmutable.\nCreate and assign a new asset instance to change settings.");
+        }
+
+        internal static HelpBox SketchHelpBox(string text)
+        {
             HelpBox helpBox = new HelpBox();
-            helpBox.text = $"The assigned asset is inmutable.\nCreate and assign a new asset instance to change settings.";
+            helpBox.text = text;
             helpBox.style.justifyContent = Justify.Center;
             helpBox.style.unityTextAlign = TextAnchor.MiddleCenter;
             return helpBox;
@@ -435,6 +440,27 @@ namespace SketchRenderer.Editor.UIToolkit
                 objectField.SetValueWithoutNotify(initial);
 
             ConfigureSketchElementField(element, objectField, name);
+            return element;
+        }
+        
+        internal static SketchElement<ObjectField> SketchObjectProperty(SerializedProperty property, Type objectType, ISketchManipulator<ObjectField> manipulator = null, EventCallback<ChangeEvent<Object>> changeCallback = null, string nameOverride = null)
+        {
+            SketchElement<ObjectField> element = new SketchElement<ObjectField>();
+            ObjectField objectField = new ObjectField();
+            element.Field = objectField;
+            if (manipulator != null)
+            {
+                manipulator.Initialize(objectField);
+                objectField.AddManipulator(manipulator.GetBaseManipulator());
+            }
+            objectField.objectType = objectType;
+            if(changeCallback != null)
+                objectField.RegisterValueChangedCallback(changeCallback);
+
+            objectField.BindProperty(property);
+            objectField.TrackPropertyValue(property);
+
+            ConfigureSketchElementProperty(element, property, objectField, nameOverride);
             return element;
         }
 

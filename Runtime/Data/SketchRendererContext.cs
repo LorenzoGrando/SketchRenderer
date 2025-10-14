@@ -10,6 +10,7 @@ namespace SketchRenderer.Runtime.Data
     [CreateAssetMenu(fileName = "SketchRendererContext", menuName = SketchRendererData.PackageAssetItemPath + "SketchRendererContext")]
     public class SketchRendererContext : ScriptableObject {
         public event Action OnValidated;
+        public event Action OnRedrawSettings;
         public bool IsDirty { get; set; }
         
         [HideInInspector] public bool UseUVsFeature => (UseMaterialFeature && MaterialFeatureData.RequiresTextureCoordinateFeature())
@@ -63,6 +64,11 @@ namespace SketchRenderer.Runtime.Data
                 CompositionFeatureData.FeaturesToCompose = featuresInContext;
             if(AccentedOutlineFeatureData != null)
                 AccentedOutlineFeatureData.ForceRebake = true;
+        }
+
+        public void Redraw()
+        {
+            OnRedrawSettings?.Invoke();
         }
 
         public void OnValidate()

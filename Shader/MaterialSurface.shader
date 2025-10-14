@@ -32,13 +32,15 @@ Shader "SketchRenderer/MaterialSurface"
                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                float2 screenSpaceUV = input.texcoord;
                float2 uv = screenSpaceUV;
+               float mip = _BlitMipLevel;
                #if defined UVS_OBJECT_SPACE || defined UVS_OBJECT_SPACE_CONSTANT || defined UVS_OBJECT_SPACE_REVERSED_CONSTANT
-               float2 objectUVs = SAMPLE_TEXTURE2D_X_LOD(_CameraUVsTexture, sampler_PointClamp, screenSpaceUV, _BlitMipLevel).xy;
-               uv = objectUVs;
+               float3 objectUVsMip = SAMPLE_TEXTURE2D_X_LOD(_CameraUVsTexture, sampler_PointClamp, screenSpaceUV, _BlitMipLevel).xyz;
+               uv = objectUVsMip.xy;
+               mip = GetMipLevel(objectUVsMip.z, max(_MaterialAlbedoTex_TexelSize.z, _MaterialAlbedoTex_TexelSize.w));
                #endif
                
                float4 col = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_PointClamp, screenSpaceUV, _BlitMipLevel);
-               float4 albedo = SAMPLE_TEX(_MaterialAlbedoTex, sampler_PointRepeat, _MaterialAlbedoTex_TexelSize.z, _BlitMipLevel, uv, _TextureScales);
+               float4 albedo = SAMPLE_TEX(_MaterialAlbedoTex, sampler_PointRepeat, _MaterialAlbedoTex_TexelSize.z, mip, uv, _TextureScales);
 
                float4 final = lerp(albedo, col, _BlendStrength);
                return float4(final.rgba);
@@ -75,12 +77,14 @@ Shader "SketchRenderer/MaterialSurface"
                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                float2 screenSpaceUV = input.texcoord;
                float2 uv = screenSpaceUV;
+               float mip = _BlitMipLevel;
                #if defined UVS_OBJECT_SPACE || defined UVS_OBJECT_SPACE_CONSTANT
-               float2 objectUVs = SAMPLE_TEXTURE2D_X_LOD(_CameraUVsTexture, sampler_PointClamp, screenSpaceUV, _BlitMipLevel).xy;
-               uv = objectUVs;
+               float3 objectUVsMip = SAMPLE_TEXTURE2D_X_LOD(_CameraUVsTexture, sampler_PointClamp, screenSpaceUV, _BlitMipLevel).xyz;
+               uv = objectUVsMip.xy;
+               mip = GetMipLevel(objectUVsMip.z, max(_MaterialDirectionalTex_TexelSize.z, _MaterialDirectionalTex_TexelSize.w));
                #endif
 
-               float4 direction = SAMPLE_TEX(_MaterialDirectionalTex, sampler_PointRepeat, _MaterialDirectionalTex_TexelSize.z, _BlitMipLevel, uv, _TextureScales);
+               float4 direction = SAMPLE_TEX(_MaterialDirectionalTex, sampler_PointRepeat, _MaterialDirectionalTex_TexelSize.z, mip, uv, _TextureScales);
                direction = float4(UnpackNormal(direction), 0.0);
                direction *= 0.5;
                direction += 0.5;

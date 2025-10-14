@@ -4,6 +4,8 @@ namespace SketchRenderer.Runtime.Rendering
 {
     public static class SketchGlobalFrameData
     {
+        public static bool AllowSceneRendering;
+        
         public static class ScreenUVTexture
         {
             public const string TextureName = "_CameraUVsTexture";

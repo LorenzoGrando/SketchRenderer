@@ -1,3 +1,4 @@
+using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.RenderGraphModule;
@@ -12,6 +13,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         
         private LocalKeyword edgeSobel3x3Keyword;
         private LocalKeyword edgeSobel1x3Keyword;
+
+        private static readonly int DIRECTION_STRENGTH_SHADER_ID = Shader.PropertyToID("_DirectionStrengthMod");
 
         public override void ConfigureMaterial()
         {
@@ -33,6 +36,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             }
 
             ConfigureInput(ScriptableRenderPassInput.Color);
+            edgeDetectionMaterial.SetFloat(DIRECTION_STRENGTH_SHADER_ID, 1f);
+            //edgeDetectionMaterial.SetFloat(DIRECTION_STRENGTH_SHADER_ID, IsSecondary ? 0.000001f : 1f);
         }
 
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
@@ -46,7 +51,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             
             var dstDesc = renderGraph.GetTextureDesc(resourceData.activeColorTexture);
             dstDesc.name = IsSecondary ? OUTLINE_SECONDARY_TEXTURE_NAME : OUTLINE_TEXTURE_NAME;
-            dstDesc.format = GraphicsFormat.R8G8B8A8_UNorm;
+            dstDesc.format = GraphicsFormat.R16G16B16A16_SFloat;
             dstDesc.clearBuffer = true;
             dstDesc.msaaSamples = MSAASamples.None;
             dstDesc.enableRandomWrite = true;

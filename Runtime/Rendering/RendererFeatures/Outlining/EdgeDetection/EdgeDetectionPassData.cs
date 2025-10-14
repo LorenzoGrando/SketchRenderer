@@ -25,16 +25,41 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         
         [HideInInspector]
         public EdgeDetectionGlobalData.EdgeDetectionOutputType OutputType;
+        
+        //Multiple edge passes
+        [HideInInspector]
+        public bool IsSplitEdgePass => Source == EdgeDetectionGlobalData.EdgeDetectionSource.ALL;
+        [HideInInspector] [SerializeField]
+        [Range(0, 1)]
+        public float PrimarySplitOutlineThreshold = 0;
+        [HideInInspector] [SerializeField]
+        [Range(0, 1)]
+        public float SecondarySplitOutlineThreshold = 0;
+
+        public EdgeDetectionPassData()
+        {
+            Method = EdgeDetectionGlobalData.EdgeDetectionMethod.SOBEL_3X3;
+            Source = EdgeDetectionGlobalData.EdgeDetectionSource.DEPTH_NORMALS;
+            OutlineThreshold = 0.075f;
+            OutlineOffset = 0;
+            OutlineDistanceFalloff = 0.5f;
+            OutlineAngleSensitivity = 1f;
+            OutlineAngleConstraint = 0.45f;
+            OutlineNormalSensitivity = 0.5f;
+        }
         public void CopyFrom(EdgeDetectionPassData passData)
         {
             Method = passData.Method;
             Source = passData.Source;
             OutlineThreshold = passData.OutlineThreshold;
+            OutlineOffset = passData.OutlineOffset;
             OutlineDistanceFalloff = passData.OutlineDistanceFalloff;
             OutlineAngleSensitivity = passData.OutlineAngleSensitivity;
             OutlineAngleConstraint = passData.OutlineAngleConstraint;
             OutlineNormalSensitivity = passData.OutlineNormalSensitivity;
             OutputType = passData.OutputType;
+            PrimarySplitOutlineThreshold = passData.PrimarySplitOutlineThreshold;
+            SecondarySplitOutlineThreshold = passData.SecondarySplitOutlineThreshold;
         }
         public bool IsAllPassDataValid()
         {
@@ -84,6 +109,9 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             overrideData.OutlineAngleConstraint = volumeComponent.AngleConstraint.overrideState ? volumeComponent.AngleConstraint.value : OutlineAngleConstraint;
             overrideData.OutlineNormalSensitivity = volumeComponent.NormalSensitivity.overrideState ? volumeComponent.NormalSensitivity.value : OutlineNormalSensitivity;
             overrideData.OutputType = OutputType;
+
+            overrideData.PrimarySplitOutlineThreshold = PrimarySplitOutlineThreshold;
+            overrideData.SecondarySplitOutlineThreshold = SecondarySplitOutlineThreshold;
             
             return overrideData;
         }

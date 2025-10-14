@@ -12,7 +12,7 @@ namespace SketchRenderer.Editor.TextureTools.MaterialData
         {
             var assetField = new VisualElement();
 
-            var scaleManipulator = new ClampedVector2IntManipulator(1, 10);
+            var scaleManipulator = new ClampedVector2IntManipulator(2, 20);
             var scaleField = SketchRendererUI.SketchVector2IntProperty(property.FindPropertyRelative("CrumpleScale"), scaleManipulator, nameOverride:"Scale");
             SketchRendererUIUtils.AddWithMargins(assetField, scaleField.Container, SketchRendererUIData.MajorIndentCorners);
             

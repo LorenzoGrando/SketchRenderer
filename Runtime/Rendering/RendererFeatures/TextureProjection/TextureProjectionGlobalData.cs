@@ -7,7 +7,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
     {
         public enum TextureProjectionMethod
         {
-            SCREEN_SPACE, OBJECT_SPACE, OBJECT_SPACE_CONSTANT_SCALE, OBJECT_SPACE_REVERSED_CONSTANT_SCALE
+            SCREEN_SPACE, OBJECT_SPACE, OBJECT_SPACE_CONSTANT_SCALE//, OBJECT_SPACE_REVERSED_CONSTANT_SCALE
         }
     
         public static readonly string UVS_SCREEN_SPACE_KEYWORD = "UVS_SCREEN_SPACE";
@@ -25,7 +25,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     return false;
                 case TextureProjectionMethod.OBJECT_SPACE:
                 case TextureProjectionMethod.OBJECT_SPACE_CONSTANT_SCALE:
-                case TextureProjectionMethod.OBJECT_SPACE_REVERSED_CONSTANT_SCALE:
+                //case TextureProjectionMethod.OBJECT_SPACE_REVERSED_CONSTANT_SCALE:
                     return true;
             }
             return false;

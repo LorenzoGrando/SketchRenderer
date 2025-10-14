@@ -17,7 +17,6 @@ namespace SketchRenderer.Editor.Rendering
         internal bool visible;
         internal VisualElement root;
         internal SketchElement<ObjectField> contextField;
-        internal SketchRendererContext listenerContext;
         
         private Coroutine delayedValidateRoutine;
         private float validateFrameProgress;
@@ -25,11 +24,13 @@ namespace SketchRenderer.Editor.Rendering
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
             ConstructGUI(rootElement);
+            SketchRendererManager.ManagerSettings.OnContextSettingsChanged += RendererContext_OnValidate;
             visible = true;
         }
 
         public override void OnDeactivate()
         {
+            SketchRendererManager.ManagerSettings.OnContextSettingsChanged -= RendererContext_OnValidate;
             visible = false;
         }
 
@@ -58,17 +59,10 @@ namespace SketchRenderer.Editor.Rendering
             else
             {
                 SketchRendererUIUtils.AddWithMargins(root, contextField.Container, SketchRendererUIData.BaseFieldMargins);
-                if (listenerContext != null)
-                    listenerContext.OnValidated -= RendererContext_OnValidate;
-                
-                listenerContext = (SketchRendererContext)contextField.Field.value;
-                listenerContext.OnValidated += RendererContext_OnValidate;
+                SketchRendererContext listenerContext = (SketchRendererContext)contextField.Field.value;
                 if (listenerContext.IsDirty)
                 {
-                    if (SketchRendererManager.ManagerSettings.AlwaysUpdateRendererData)
-                        UpdateOnSettingsChange();
-                    else
-                    {
+                    if (!SketchRendererManager.ManagerSettings.AlwaysUpdateRendererData) {
                         var helpBox = GetContextDirtyHelpBox();
                         SketchRendererUIUtils.AddWithMargins(root, helpBox,
                             SketchRendererUIData.BaseFieldNoVerticalMargins);
@@ -84,6 +78,13 @@ namespace SketchRenderer.Editor.Rendering
             SerializedProperty alwaysApplyProp = settingsObject.FindProperty("AlwaysUpdateRendererData");
             var alwaysApplyField = SketchRendererUI.SketchBoolProperty(alwaysApplyProp, nameOverride: "Update on Settings Change");
             SketchRendererUIUtils.AddWithMargins(root, alwaysApplyField.Container, SketchRendererUIData.BaseFieldMargins);
+            alwaysApplyField.Field.RegisterValueChangedCallback(evt => ValidateSettings());
+            
+            SerializedProperty sceneViewProp = settingsObject.FindProperty("DisplayInSceneView");
+            var sceneViewField = SketchRendererUI.SketchBoolProperty(sceneViewProp);
+            SketchRendererUIUtils.AddWithMargins(root, sceneViewField.Container, SketchRendererUIData.BaseFieldMargins);
+            sceneViewField.Field.RegisterValueChangedCallback(evt => ValidateSettings());
+            
             this.root = root;
         }
 
@@ -115,10 +116,8 @@ namespace SketchRenderer.Editor.Rendering
 
         private void RendererContext_OnValidate()
         {
-            if(visible && !SketchRendererManager.ManagerSettings.AlwaysUpdateRendererData)
+            if(visible)
                 ForceRepaint();
-            else
-                UpdateOnSettingsChange();
         }
 
         private VisualElement GetContextDirtyHelpBox()
@@ -141,22 +140,20 @@ namespace SketchRenderer.Editor.Rendering
         {
             if (contextField.Field.value != null)
             {
-                UpdateOnSettingsChange();
+                SketchRendererManager.ManagerSettings.ForceDirtySettings();
                 ForceRepaint();
             }
-        }
-
-        private void UpdateOnSettingsChange()
-        {
-            SketchRendererContext context = (SketchRendererContext)contextField.Field.value;
-            SketchRendererManager.UpdateRendererToCurrentContext();
-            context.IsDirty = false;
         }
 
         private void CreateAndApplyActive_Clicked()
         {
             SketchRendererContext context = SketchRendererContextWizard.CreateSketchRendererContext();
             UpdateActiveRendererContext(context);
+        }
+
+        private void ValidateSettings()
+        {
+            SketchRendererManager.ManagerSettings.ValidateGlobalSettings();
         }
     }
 }
