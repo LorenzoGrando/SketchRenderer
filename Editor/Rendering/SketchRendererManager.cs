@@ -15,8 +15,11 @@ namespace SketchRenderer.Editor.Rendering
         static SketchRendererManager()
         {
             SketchRendererFeatureWrapper.OnFeatureValidated += feature => UpdateFeatureByContext(feature, CurrentRendererContext);
-            ManagerSettings.OnContextSettingsChanged += UpdateBySettingsChange;
-            ManagerSettings.ValidateGlobalSettings();
+            if (ManagerSettings != null)
+            {
+                ManagerSettings.OnContextSettingsChanged += UpdateBySettingsChange;
+                ManagerSettings.ValidateGlobalSettings();
+            }
         }
         
         private static SketchRendererManagerSettings settings;
