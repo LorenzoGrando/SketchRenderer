@@ -106,10 +106,7 @@ void ComputeAverageStroke (uint3 id, uint3 idG, uint3 idGs, uint2 kernelSizes)
     
     //float x = float(idG.x)/(float)kernelSizes.x;
     //float y = float(idG.y)/(float)kernelSizes.y;
-    if(length(gradients[0].ba) > 0.1)
-        _OriginalSource[id.xy] = float4(gradients[0].xy, 0.0, 1.0);
-    else
-        _OriginalSource[id.xy] = float4(1.0, 0.0, 0.0, 1.0);
+    //_OriginalSource[id.xy] = float4(length(gradients[0].ba), gradients[0].ba, 1.0);
 }
 
 
@@ -139,50 +136,52 @@ void ComputeAverageStroke4 (uint3 id : SV_DispatchThreadID, uint3 idG : SV_Group
 
 float _CombinationThreshold;
 uint _CombinationRange;
-[numthreads(64, 1, 1)]
-void CollapseSimilarStrokes(uint3 idG : SV_GroupThreadID, uint3 idGs : SV_GroupID)
+uint _CombinationXGroups;
+uint _CombinationIteration;
+[numthreads(8, 8, 1)]
+void CollapseSimilarStrokes(uint3 id : SV_DispatchThreadID, uint3 idG : SV_GroupThreadID, uint3 idGs : SV_GroupID)
 {
-    [loop]
-    for (uint i = 1; i <= _CombinationRange; i++)
-    {
-        uint gFlatIndex = idG.x + (64 * idGs.x);
-        uint thisStrokeBufferData = _CombineStrokesPointerBuffer[gFlatIndex];
-        float isStillOwnerStroke = thisStrokeBufferData == gFlatIndex;
-        if (!isStillOwnerStroke)
-            continue;
-        float4 thisStroke = _GradientVectors[gFlatIndex];
-        uint thisCombinationStep = _CombineStrokesLengthBuffer[gFlatIndex];
-        float isValidCombinationStep = thisCombinationStep >= i;
-        if (!isValidCombinationStep)
-            continue;
-        float isEdge = step(0.5, length(float2(thisStroke.ba)));
-        if (!isEdge)
-            continue;
-        
-        int2 targetSampleOffset = int2(round(thisStroke.ba * i)); //determine direction of sample
-        int sampleOffset = targetSampleOffset.x + targetSampleOffset.y * _GroupsX;
-        uint samplegFlatIndex = uint(int(gFlatIndex) + sampleOffset);
-        
-        uint sampleStrokeBufferData = _CombineStrokesPointerBuffer[samplegFlatIndex];
-        float isStrokeStillOwned = sampleStrokeBufferData == samplegFlatIndex;
-        if (!isStrokeStillOwned)
-            continue;
+    uint threadFlatIndex = id.x + id.y * 8 * _CombinationXGroups;
+    int i = _CombinationIteration + 1;
+    float failed = 0;
+    uint thisStrokeBufferData = _CombineStrokesPointerBuffer[threadFlatIndex];
+    float isStillOwnerStroke = thisStrokeBufferData == threadFlatIndex;
+    if (!isStillOwnerStroke)
+        failed++;
+    float4 thisStroke = _GradientVectors[threadFlatIndex];
+    uint thisCombinationStep = _CombineStrokesLengthBuffer[threadFlatIndex];
+    float isValidCombinationStep = thisCombinationStep >= i;
+    if (!isValidCombinationStep)
+        failed++;
+    
+    int2 targetSampleOffset = int2(round(thisStroke.ba * i)); //determine direction of sample
+    int2 offsetGroupCoords = idG.xy + targetSampleOffset;
+    //Check if outside group bounds, prevent race conditions with other groups
+    if(offsetGroupCoords.x < 0 || offsetGroupCoords.y < 0 || offsetGroupCoords.x >= 8 || offsetGroupCoords.y >= 8)
+        failed++;
+    
+    int sampleOffset = targetSampleOffset.x + targetSampleOffset.y * _CombinationXGroups * 8;
+    uint sampleThreadFlatIndex = uint(int(threadFlatIndex) + sampleOffset);
 
-        //Is similar enough?
-        float4 sampleStroke = _GradientVectors[samplegFlatIndex];
-        float isEdgeSample = step(0.5, length(float2(sampleStroke.ba)));
-        if (!isEdgeSample)
-            continue;
-        
-        float similarity = step(_CombinationThreshold, dot(thisStroke.ba, sampleStroke.ba));
-        if (similarity)
+    uint sampleStrokeBufferData = _CombineStrokesPointerBuffer[sampleThreadFlatIndex];
+    float isStrokeStillOwned = sampleStrokeBufferData == sampleThreadFlatIndex;
+    if (!isStrokeStillOwned)
+        failed++;
+
+    //Is similar enough?
+    float4 sampleStroke = _GradientVectors[sampleThreadFlatIndex]; 
+    float similarity = step(_CombinationThreshold, dot(thisStroke.ba, sampleStroke.ba));
+    if (similarity && failed <= 0)
+    {
+        //Additional check to ensure no other thread that passed all checks was able to write to the buffer before this one
+        if(_CombineStrokesPointerBuffer[sampleThreadFlatIndex] == sampleThreadFlatIndex)
         {
-            _CombineStrokesPointerBuffer[samplegFlatIndex] = gFlatIndex;
-            _CombineStrokesLengthBuffer[gFlatIndex] = thisCombinationStep + i; //_CombineStrokesLengthBuffer[samplegFlatIndex];
+            _CombineStrokesPointerBuffer[sampleThreadFlatIndex] = threadFlatIndex;
+            _CombineStrokesLengthBuffer[threadFlatIndex] = thisCombinationStep + i; //_CombineStrokesLengthBuffer[samplegFlatIndex];
 
             //Keep our origin, we are now the owner of the stroke
             float2 averageDir = normalize(thisStroke.ba + sampleStroke.ba);
-            _GradientVectors[gFlatIndex] = float4(thisStroke.rg, averageDir);
+            _GradientVectors[threadFlatIndex] = float4(thisStroke.rg, averageDir);
         }
     }
 }
@@ -226,6 +225,7 @@ void ApplyStrokeSDFs(uint3 id, uint2 idG, uint3 idGs, uint2 kernelSizes)
         {
             uint xClamp = clamp((uint)(((int)idGs.x + x)), 0, _GroupsX - 1);
             uint yClamp = clamp((uint)(((int)idGs.y + y)), 0, _GroupsY - 1);
+            //uint groupFlatIndex = idGs.x + idGs.y * _GroupsX;
             //if we did downscale, the division will be by a value higher than one
             //taking the floor of both x and y collapses the higher grid from the upscale into the downscale-expected group index
             xClamp = (uint)floor((float)xClamp/(float)_DownscaleFactor);
@@ -236,11 +236,12 @@ void ApplyStrokeSDFs(uint3 id, uint2 idG, uint3 idGs, uint2 kernelSizes)
             {
                 uint combinationCascadeID = groupFlatIndex;
                 float combinationLengthMultiplier = 0;
+                
                 //cascade onto the correct, combined stroke
                 if (_CombinationRange > 0)
                 {
                     [loop]
-                    for (uint c = 0; c <= _CombinationRange; c++)
+                    for (uint c = 0; c < _CombinationRange; c++)
                     {
                         uint originalID = combinationCascadeID;
                         uint strokePointerData = _CombineStrokesPointerBuffer[combinationCascadeID];
@@ -248,9 +249,8 @@ void ApplyStrokeSDFs(uint3 id, uint2 idG, uint3 idGs, uint2 kernelSizes)
                         combinationCascadeID = strokePointerData;
                         if (combinationCascadeID == originalID)
                             break;
-                    }
+                    } 
                 }
-                debugColor = float4((float(combinationCascadeID)/float(_GroupsX * _GroupsY)).xxx, 1.0);
                 
                 float4 edgeData = _GradientVectors[combinationCascadeID];
                 isEdge = step(0.5, length(float2(edgeData.ba)));
@@ -262,7 +262,7 @@ void ApplyStrokeSDFs(uint3 id, uint2 idG, uint3 idGs, uint2 kernelSizes)
                 //Some aditional modulation based on the level of combined strokes
                 if (_CombinationRange > 0)
                 {
-                    data.length += (float(combinationLengthMultiplier) * 2.0); //Increase length to match the expected total size of all combined strokes
+                    data.length += (float(combinationLengthMultiplier * 2.0)); //Increase length to match the expected total size of all combined strokes
                     data.lengthThicknessFalloff -= ((data.lengthThicknessFalloff/2.0) * (combinationLengthMultiplier/float(_CombinationRange)));
                     data.lengthThicknessFalloff = min(0, data.lengthThicknessFalloff);
                 }
@@ -286,7 +286,7 @@ void ApplyStrokeSDFs(uint3 id, uint2 idG, uint3 idGs, uint2 kernelSizes)
     direction = (direction + 1) * 0.5;
     // R: Value graphite, GB: Average direction of found strokes. A: Value mask
     _OriginalSource[id.xy] = float4(value.r, direction.rg * value.r, value.r);
-    _OriginalSource[id.xy] *= debugColor;
+    //_OriginalSource[id.xy] = debugColor;
     //float u = float(idG.x)/(float)kernelSizes.x * (1- value);
     //float v = float(idG.y)/(float)kernelSizes.y * (1- value);
     //_OriginalSource[id.xy] = float4(u, v, 0.0, 1.0);

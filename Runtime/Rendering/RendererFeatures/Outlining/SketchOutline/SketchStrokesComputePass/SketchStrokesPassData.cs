@@ -11,7 +11,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
     {
         public StrokeAsset OutlineStrokeData;
         public ComputeData.KernelSize2D SampleArea;
-        [Range(0, 3)]
+        [Range(0, 8)]
         public int StrokeCombinationRange;
         [Range(0, 1)]
         public float StrokeCombinationThreshold;

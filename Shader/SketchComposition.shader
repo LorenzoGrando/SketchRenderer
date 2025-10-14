@@ -62,7 +62,7 @@ Shader "SketchRenderer/SketchComposition"
                #if defined (DEBUG_MATERIAL_ALBEDO)
                return float4(material.rgb, 1);
                #elif defined (DEBUG_MATERIAL_DIRECTION)
-               return float4(direction.rgb, 1);
+               return float4(direction.rgb * _MaterialAccumulationStrength, 1);
                #elif defined(DEBUG_OUTLINES)
                float4 debugOutline = 1 - outline;
                return float4(debugOutline.rrr, outline.a);
@@ -89,7 +89,7 @@ Shader "SketchRenderer/SketchComposition"
                #if defined(HAS_LUMINANCE)
                float luminanceAccumulation = 0;
                #if defined(HAS_MATERIAL)
-               luminanceAccumulation = 1.0 - dot(_LuminanceBasisDirection.rg, direction.rg) ;
+               luminanceAccumulation = 1.0 - dot(_LuminanceBasisDirection.rg, direction.rg);
                #endif
                luminance = float4(1.0 - luminance.rgb, saturate(((1.0 - luminance.a) * _ShadingColor.a) + lerp(0, _MaterialAccumulationStrength, luminanceAccumulation * isLuminanceStroke)));
                float4 lumShade = float4(luminance.rgb * _ShadingColor.rgb, luminance.a);
@@ -106,7 +106,7 @@ Shader "SketchRenderer/SketchComposition"
                //return blend;
                float3 materialBlend = BLENDING_OPERATION(material.rgba, blend).rgb;
                //First, apply an attenuation to the blend effect
-               materialBlend = lerp(blend, materialBlend, _BlendStrength);
+               materialBlend = lerp(material, materialBlend, _BlendStrength);
                //Then blend only if a stroke
                materialBlend = lerp(material, materialBlend, isAnyStroke);
                
