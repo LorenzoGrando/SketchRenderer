@@ -49,8 +49,9 @@ float4 ConstantScaleTexture2DSample(Texture2D tex, SamplerState samp, float texe
 {
     float3 scales = ConstantScaleUVs2DFalloff(texelSize, uv, _ConstantScaleFalloff);
 
-    #if defined (UVS_OBJECT_SPACE_REVERSED_CONSTANT)
-    scales = 1.0 / (scales + 1.0);
+    #if defined (UVS_OBJECT_SPACE_CONSTANT)
+    //Keep a similar ratio to object space textures at the nearest plane
+    scales /= 2.0;
     #endif
 
     float4 s1 = SAMPLE_TEXTURE2D_X(tex, samp, scales.x * uv * scaleOffset);

@@ -45,6 +45,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         private static readonly int STROKE_VARIATION_DATA_ID = Shader.PropertyToID("_OutlineStrokeVariationData");
         private static readonly int COLLAPSE_THRESHOLD_ID = Shader.PropertyToID("_CombinationThreshold");
         private static readonly int COLLAPSE_RANGE_ID = Shader.PropertyToID("_CombinationRange");
+        private static readonly int COLLAPSE_GROUPS_ID = Shader.PropertyToID("_CombinationXGroups");
+        private static readonly int COLLAPSE_ITERATION_ID = Shader.PropertyToID("_CombinationIteration");
         
         private static readonly string PERPENDICULAR_DIRECTION_KEYWORD_ID = "USE_PERPENDICULAR_DIRECTION";
         private static readonly string SMOOTHING_KEYWORD_ID = "FRAME_SMOOTHING";
@@ -180,6 +182,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             public ComputeBuffer lengthBuffer;
             public float combinationThreshold;
             public int combinationRange;
+            public int combinationXGroups;
+            public int combinationIteration;
         }
 
         class StrokesPassData
@@ -228,6 +232,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, COLLAPSE_LENGTH_ID, passData.lengthBuffer);
             context.cmd.SetComputeFloatParam(passData.computeShader, COLLAPSE_THRESHOLD_ID, passData.combinationThreshold);
             context.cmd.SetComputeIntParam(passData.computeShader, COLLAPSE_RANGE_ID, passData.combinationRange);
+            context.cmd.SetComputeIntParam(passData.computeShader, COLLAPSE_GROUPS_ID, passData.combinationXGroups);
+            context.cmd.SetComputeIntParam(passData.computeShader, COLLAPSE_ITERATION_ID, passData.combinationIteration);
             context.cmd.DispatchCompute(passData.computeShader, passData.kernelID, passData.threadGroupSize.x, passData.threadGroupSize.y, passData.threadGroupSize.z);
         }
 
@@ -337,27 +343,33 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
             if (this.passData.IsDoingCombination)
             {
-                using (var builder = renderGraph.AddComputePass(PassName + "_Combine", out CollapsePassData collapsePassData))
+                for (int i = 0; i < passData.StrokeCombinationRange; i++)
                 {
-                    builder.AllowPassCulling(false);
-                    collapsePassData.computeShader = sketchComputeShader;
-                    collapsePassData.kernelID = computeCollapseKernelID;
+                    using (var builder =
+                           renderGraph.AddComputePass(PassName + "_Combine{i}", out CollapsePassData collapsePassData))
+                    {
+                        builder.AllowPassCulling(false);
+                        collapsePassData.computeShader = sketchComputeShader;
+                        collapsePassData.kernelID = computeCollapseKernelID;
 
-                    Vector3Int groups = new Vector3Int(
-                        Mathf.CeilToInt(((float)totalStrokeGroups.x * (float)totalStrokeGroups.y) /
-                                        (float)collapseKernelThreads.x),
-                        1, //Mathf.CeilToInt(totalStrokeGroups.y / collapseKernelThreads.y), 
-                        1
-                    );
+                        Vector3Int groups = new Vector3Int(
+                            Mathf.CeilToInt((float)totalStrokeGroups.x / (float)collapseKernelThreads.x),
+                            Mathf.CeilToInt((float)totalStrokeGroups.y / (float)collapseKernelThreads.y),
+                            1
+                        );
 
-                    collapsePassData.threadGroupSize = groups;
-                    collapsePassData.inputBuffer = gradientBuffer;
-                    collapsePassData.pointerBuffer = combinationPointerBuffer;
-                    collapsePassData.lengthBuffer = combinationLengthBuffer;
-                    
-                    collapsePassData.combinationThreshold = passData.StrokeCombinationThreshold;
-                    collapsePassData.combinationRange = passData.StrokeCombinationRange;
-                    builder.SetRenderFunc((CollapsePassData collapsePassData, ComputeGraphContext context) => ExecuteCollapseStrokesCompute(collapsePassData, context));
+                        collapsePassData.threadGroupSize = groups;
+                        collapsePassData.inputBuffer = gradientBuffer;
+                        collapsePassData.pointerBuffer = combinationPointerBuffer;
+                        collapsePassData.lengthBuffer = combinationLengthBuffer;
+                        collapsePassData.combinationXGroups = groups.x;
+
+                        collapsePassData.combinationThreshold = passData.StrokeCombinationThreshold;
+                        collapsePassData.combinationRange = passData.StrokeCombinationRange;
+                        collapsePassData.combinationIteration = i;
+                        builder.SetRenderFunc((CollapsePassData collapsePassData, ComputeGraphContext context) =>
+                            ExecuteCollapseStrokesCompute(collapsePassData, context));
+                    }
                 }
             }
             

@@ -36,7 +36,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             }
 
             ConfigureInput(ScriptableRenderPassInput.Color);
-            edgeDetectionMaterial.SetFloat(DIRECTION_STRENGTH_SHADER_ID, IsSecondary ? 0.000001f : 1f);
+            edgeDetectionMaterial.SetFloat(DIRECTION_STRENGTH_SHADER_ID, 1f);
+            //edgeDetectionMaterial.SetFloat(DIRECTION_STRENGTH_SHADER_ID, IsSecondary ? 0.000001f : 1f);
         }
 
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
