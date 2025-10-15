@@ -186,8 +186,7 @@ namespace SketchRenderer.Editor.TextureTools
 
             previewImage = new Image();
             previewImage.scaleMode = ScaleMode.ScaleToFit;
-
-            Debug.Log($"Has mat texture: {MaterialGenerator.TargetTexture != null}");
+            
             UpdatePreviewTargetTexture(MaterialGenerator.TargetTexture);
             previewPanel.Add(previewImage);
             return previewPanel;

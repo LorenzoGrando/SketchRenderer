@@ -165,8 +165,6 @@ namespace SketchRenderer.Editor.TextureTools
             var outputSettingsRegion = SketchRendererUI.SketchFoldout("Output Settings", applyMargins:false);
             outputSettingsRegion.style.justifyContent = Justify.FlexStart;
             
-            Debug.Log($"Setting winow tonar art map asset, is it valid? {TonalArtMapGenerator.TonalArtMapAsset != null}");
-            
             if (tonalArtMapAssetField == null)
                 tonalArtMapAssetField = SketchRendererUI.SketchObjectField("Tonal Art Map Asset", typeof(TonalArtMapAsset), TonalArtMapGenerator.TonalArtMapAsset, changeCallback:TonalArtMap_Changed);
             else

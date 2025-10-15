@@ -178,7 +178,6 @@ namespace SketchRenderer.Editor.TextureTools
             defaultTonalArtMapAsset = resources.Scriptables.TonalArtMap;
             if (TonalArtMapAsset == null)
             {
-                Debug.Log($"Setting initial tonar art map asset, is it valid? {initialTonalArtMapAsset != null}");
                 TonalArtMapAsset = initialTonalArtMapAsset;
             }
 
