@@ -13,6 +13,9 @@ namespace SketchRenderer.Editor.TextureTools
         internal static bool hasDelayedMaterialWindowCall;
         static TextureToolWizard()
         {
+            EditorApplication.playModeStateChanged += _ => ValidateTonalArtMapWindow();
+            EditorApplication.playModeStateChanged += _ => ValidateMaterialWindow();
+            
             //Delayed init on project open so layout has time to load.
             if (!SessionState.GetBool("SketchRendererTonalArtMapWindowInitialized", false))
             {

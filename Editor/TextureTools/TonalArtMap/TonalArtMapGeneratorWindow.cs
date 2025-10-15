@@ -51,6 +51,7 @@ namespace SketchRenderer.Editor.TextureTools
             TonalArtMapAsset tamAsset = settings.PersistentTonalArtMapAsset != null ? settings.PersistentTonalArtMapAsset : resources.Scriptables.TonalArtMap;
             TonalArtMapGenerator.Init(resources, strokeAsset, tamAsset);
             ApplyToMatchGeneratorSettings();
+            ForceRebuildGUI();
         }
 
         internal override void FinalizeTool()
@@ -82,7 +83,7 @@ namespace SketchRenderer.Editor.TextureTools
             }
         }
 
-        internal void FinalizeProgressBar()
+        internal void FinalizeProgressBar(RenderTexture _)
         {
             TonalArtMapGenerator.OnTonalArtMapGenerationStep -= UpdateToolStatus;
             EditorUtility.ClearProgressBar();
@@ -164,6 +165,8 @@ namespace SketchRenderer.Editor.TextureTools
             var outputSettingsRegion = SketchRendererUI.SketchFoldout("Output Settings", applyMargins:false);
             outputSettingsRegion.style.justifyContent = Justify.FlexStart;
             
+            Debug.Log($"Setting winow tonar art map asset, is it valid? {TonalArtMapGenerator.TonalArtMapAsset != null}");
+            
             if (tonalArtMapAssetField == null)
                 tonalArtMapAssetField = SketchRendererUI.SketchObjectField("Tonal Art Map Asset", typeof(TonalArtMapAsset), TonalArtMapGenerator.TonalArtMapAsset, changeCallback:TonalArtMap_Changed);
             else
@@ -216,7 +219,7 @@ namespace SketchRenderer.Editor.TextureTools
                 if(fieldAsset.Tones[0] != null)
                     initialResolution = TextureAssetManager.GetClosestResolutionFromTexture(fieldAsset.Tones[0]);
                 else
-                    initialResolution = TextureGenerator.Resolution;
+                    initialResolution = TonalArtMapGenerator.TargetResolution;
                 var resolutionField = SketchRendererUI.SketchEnumField("Texture Size", initialResolution, changeCallback:Resolution_Changed);
                 
                 SketchRendererUIUtils.AddWithMargins(tonalArtMapRegion, resolutionField.Container, SketchRendererUIData.MinorFieldMargins);
@@ -261,7 +264,7 @@ namespace SketchRenderer.Editor.TextureTools
 
             var generateTamButton = SketchRendererUI.SketchMajorButton("Generate Tonal Art Map", GenerateTonalArtMap_Clicked);
             SketchRendererUIUtils.AddWithMargins(settingsContainer, generateTamButton, SketchRendererUIData.MinorFieldMargins);
-            generateTamButton.SetEnabled(TonalArtMapGenerator.HasNonDefaultTonalArtMapAsset);
+            generateTamButton.SetEnabled(TonalArtMapGenerator.IsGeneratorValid() && TonalArtMapGenerator.HasNonDefaultTonalArtMapAsset);
             
             SketchRendererUIUtils.AddWithMargins(exportRegion, settingsContainer, SketchRendererUIData.BaseFieldMargins);
             return exportRegion;
@@ -276,7 +279,7 @@ namespace SketchRenderer.Editor.TextureTools
             previewImage = new Image();
             previewImage.scaleMode = ScaleMode.ScaleToFit;
 
-            UpdatePreviewTargetTexture();
+            UpdatePreviewTargetTexture(TonalArtMapGenerator.TargetTexture);
             previewPanel.Add(previewImage);
             return previewPanel;
         }
@@ -289,21 +292,19 @@ namespace SketchRenderer.Editor.TextureTools
             previewPanel.style.height = windowWidth;
         }
 
-        internal void UpdatePreviewTargetTexture()
+        internal void UpdatePreviewTargetTexture(RenderTexture texture)
         {
-            if (previewImage != null)
+            if (previewImage != null && texture == TonalArtMapGenerator.TargetTexture)
             {
-                previewImage.visible = (strokeAssetField != null && strokeAssetField.Field.value != null) && (IsActiveWindow || hasDirtyRepaint);
-                previewImage.image = TextureGenerator.TargetRT;
+                previewImage.visible = (strokeAssetField != null && strokeAssetField.Field.value != null);
+                previewImage.image = TonalArtMapGenerator.TargetTexture;
             }
         }
 
         internal void ForceRepaint()
         {
-            hasDirtyRepaint = true;
             TonalArtMapGenerator.DisplaySDF();
             Repaint();
-            hasDirtyRepaint = false;
         }
 
         internal void ForceRebuildGUI()
@@ -338,9 +339,8 @@ namespace SketchRenderer.Editor.TextureTools
             {
                 //--Stroke Panel
                 strokeAssetField.Field.SetValueWithoutNotify(TonalArtMapGenerator.StrokeDataAsset);
+                tonalArtMapAssetField.Field.SetValueWithoutNotify(TonalArtMapGenerator.TonalArtMapAsset);
             }
-
-            ForceRebuildGUI();
         }
         
         // -- Stroke Panel
@@ -368,7 +368,8 @@ namespace SketchRenderer.Editor.TextureTools
                 TonalArtMapGenerator.TonalArtMapAsset.OnTonesPacked -= ForceRebuildGUI;
             
             TonalArtMapAsset tonalArtMapAsset = (TonalArtMapAsset)bind.newValue;
-            tonalArtMapAsset.OnTonesPacked += ForceRebuildGUI;
+            if(tonalArtMapAsset != null)
+                tonalArtMapAsset.OnTonesPacked += ForceRebuildGUI;
             TonalArtMapGenerator.TonalArtMapAsset = tonalArtMapAsset;
             settings.PersistentTonalArtMapAsset = tonalArtMapAsset;
             ForceRebuildGUI();

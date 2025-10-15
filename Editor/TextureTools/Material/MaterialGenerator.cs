@@ -10,7 +10,7 @@ namespace SketchRenderer.Editor.TextureTools
 {
     public static class MaterialGenerator
     {
-        internal static event Action OnTextureUpdated;
+        internal static event Action<RenderTexture> OnTextureUpdated;
         internal static event Action<TextureToolGenerationStatusArgs> OnMaterialGenerationStep; 
         
         internal static string DefaultFileOutputName
@@ -50,6 +50,18 @@ namespace SketchRenderer.Editor.TextureTools
         internal static TextureImporterType TextureOutputType
         {
             get { return textureOutputType; } private set { textureOutputType = value; }
+        }
+        
+        private static RenderTexture targetTexture;
+
+        internal static RenderTexture TargetTexture
+        {
+            get
+            {
+                if (targetTexture == null)
+                    TextureGenerator.CreateOrClearTarget(ref targetTexture, TextureAssetManager.GetTextureResolution(TargetResolution));
+                return targetTexture;
+            }
         }
         
         //Shader Data
@@ -140,11 +152,7 @@ namespace SketchRenderer.Editor.TextureTools
             if(!IsGeneratorValid())
                 return;
             
-            if (TextureGenerator.Resolution != TargetResolution)
-            {
-                TextureGenerator.Resolution = TargetResolution;
-                TextureGenerator.PrepareGeneratorForRender();
-            }
+            TextureGenerator.PrepareGeneratorForRender();
 
             TextureGenerator.OverwriteGeneratorOutputSettings(DefaultFileOutputName, DefaultFileOutputPath);
             
@@ -254,6 +262,7 @@ namespace SketchRenderer.Editor.TextureTools
         {
             if (!IsGeneratorValid())
             {
+                TextureGenerator.CreateOrClearTarget(ref targetTexture, TextureAssetManager.GetTextureResolution(TargetResolution));
                 TextureGenerator.PrepareGeneratorForRender();
                 return false;
             }
@@ -287,7 +296,7 @@ namespace SketchRenderer.Editor.TextureTools
             if(MaterialGeneratorMaterial == null)
                 return;
             
-            TextureGenerator.BlitToTargetTexture(MaterialGeneratorMaterial, ALBEDO_PASS_ID);
+            TextureGenerator.BlitToTargetTexture(TargetTexture, MaterialGeneratorMaterial, ALBEDO_PASS_ID);
         }
 
         private static void BlitDirectionalTexture()
@@ -295,7 +304,7 @@ namespace SketchRenderer.Editor.TextureTools
             if(MaterialGeneratorMaterial == null)
                 return;
             
-            TextureGenerator.BlitToTargetTexture(MaterialGeneratorMaterial, DIRECTIONAL_PASS_ID);
+            TextureGenerator.BlitToTargetTexture(TargetTexture, MaterialGeneratorMaterial, DIRECTIONAL_PASS_ID);
         }
 
         internal static void GenerateAlbedoTexture()
@@ -305,7 +314,7 @@ namespace SketchRenderer.Editor.TextureTools
             OnMaterialGenerationStep?.Invoke(CreateStatusArgs("Creating Albedo Texture", 0.25f));
             UpdateMaterialAlbedoTexture();
             ConfigureGeneratorData();
-            LastGeneratedAlbedoTexture = TextureGenerator.SaveCurrentTargetTexture(TextureOutputType, overwrite: true);
+            LastGeneratedAlbedoTexture = TextureGenerator.SaveCurrentTargetTexture(TargetTexture, TextureOutputType, overwrite: true);
         }
 
         internal static void GenerateDirectionalTexture()
@@ -316,7 +325,7 @@ namespace SketchRenderer.Editor.TextureTools
             OnMaterialGenerationStep?.Invoke(CreateStatusArgs("Creating Normal Texture", 0.25f));
             UpdateMaterialDirectionalTexture();
             ConfigureGeneratorData();
-            LastGeneratedDirectionalTexture = TextureGenerator.SaveCurrentTargetTexture(TextureOutputType, overwrite: true);
+            LastGeneratedDirectionalTexture = TextureGenerator.SaveCurrentTargetTexture(TargetTexture, TextureOutputType, overwrite: true);
         }
 
         internal static void GenerateMaterialTextures()
@@ -325,7 +334,7 @@ namespace SketchRenderer.Editor.TextureTools
             GenerateAlbedoTexture();
             GenerateDirectionalTexture();
             Generating = false;
-            OnTextureUpdated?.Invoke();
+            OnTextureUpdated?.Invoke(TargetTexture);
         }
         
         #endregion
