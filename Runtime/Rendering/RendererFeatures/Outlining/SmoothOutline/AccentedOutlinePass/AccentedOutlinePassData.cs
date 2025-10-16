@@ -56,7 +56,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         
         public bool IsAllPassDataValid()
         {
-            return UseAccentedOutlines && (Strength > 0 || (PencilOutlineMask != null && MaskScale != Vector2.zero));
+            AccentedOutlinePassData passData = GetPassDataByVolume();
+            return passData.UseAccentedOutlines && (passData.Strength > 0 || (passData.PencilOutlineMask != null && passData.MaskScale != Vector2.zero));
         }
 
         public AccentedOutlinePassData GetPassDataByVolume()
