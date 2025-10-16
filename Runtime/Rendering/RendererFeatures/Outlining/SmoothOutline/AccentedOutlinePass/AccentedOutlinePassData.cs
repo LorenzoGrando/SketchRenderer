@@ -25,7 +25,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public float AdditionalLineDistortionJitter;
 
         [Header("Outline Masking")] 
-        public Texture2D PencilOutlineMask;
+        public Texture PencilOutlineMask;
         public Vector2 MaskScale;
         
         public AccentedOutlinePassData()
@@ -76,8 +76,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             overrideData.AdditionalLines = volumeComponent.AdditionalDistortionLines.overrideState ? volumeComponent.AdditionalDistortionLines.value : AdditionalLines;
             overrideData.AdditionalLineTintPersistence = volumeComponent.AdditionalLineTintPersistence.overrideState ? volumeComponent.AdditionalLineTintPersistence.value : AdditionalLineTintPersistence;
             overrideData.AdditionalLineDistortionJitter = volumeComponent.AdditionalLinesDistortionJitter.overrideState ? volumeComponent.AdditionalLinesDistortionJitter.value : AdditionalLineDistortionJitter;
-            overrideData.PencilOutlineMask = PencilOutlineMask;
-            overrideData.MaskScale = MaskScale;
+            overrideData.PencilOutlineMask = volumeComponent.MaskTexture.overrideState ? volumeComponent.MaskTexture.value : PencilOutlineMask;
+            overrideData.MaskScale = volumeComponent.MaskTextureScale.overrideState ? volumeComponent.MaskTextureScale.value : MaskScale;
             
             return overrideData;
         }
