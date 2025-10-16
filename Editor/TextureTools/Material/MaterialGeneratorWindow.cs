@@ -41,6 +41,7 @@ namespace SketchRenderer.Editor.TextureTools
             MaterialDataAsset asset = settings.PersistentMaterialDataAsset != null ? settings.PersistentMaterialDataAsset : resources.Scriptables.MaterialData;
             MaterialGenerator.Init(resources, asset);
             ApplyToMatchGeneratorSettings();
+            ForceRebuildGUI();
         }
 
         internal override void FinalizeTool()
@@ -70,7 +71,7 @@ namespace SketchRenderer.Editor.TextureTools
             }
         }
 
-        internal void FinalizeProgressBar()
+        internal void FinalizeProgressBar(RenderTexture _)
         {
             MaterialGenerator.OnMaterialGenerationStep -= UpdateToolStatus;
             EditorUtility.ClearProgressBar();
@@ -137,7 +138,7 @@ namespace SketchRenderer.Editor.TextureTools
                 SketchRendererUIUtils.AddWithMargins(materialDataRegion, createCustomMaterialAsset, SketchRendererUIData.BaseFieldMargins);
             }
             
-            TextureResolution initialResolution = TextureGenerator.Resolution;
+            TextureResolution initialResolution = MaterialGenerator.TargetResolution;
             var resolutionField = SketchRendererUI.SketchEnumField("Texture Size", initialResolution, changeCallback:Resolution_Changed);
 
             SketchRendererUIUtils.AddWithMargins(materialDataRegion, resolutionField.Container, SketchRendererUIData.MinorFieldMargins);
@@ -167,9 +168,11 @@ namespace SketchRenderer.Editor.TextureTools
 
             var generateTexButton = SketchRendererUI.SketchMajorButton("Generate Material Textures", GenerateTextures_Clicked);
             SketchRendererUIUtils.AddWithMargins(settingsContainer, generateTexButton, SketchRendererUIData.MinorFieldMargins);
+            generateTexButton.SetEnabled(MaterialGenerator.IsGeneratorValid());
                 
             var generateAndAssignTexButton = SketchRendererUI.SketchMajorButton("Generate and Assign to Renderer Context", GenerateAndAssignTextures_Clicked);
             SketchRendererUIUtils.AddWithMargins(settingsContainer, generateAndAssignTexButton, SketchRendererUIData.MinorFieldMargins);
+            generateAndAssignTexButton.SetEnabled(MaterialGenerator.IsGeneratorValid());
             
             SketchRendererUIUtils.AddWithMargins(exportRegion, settingsContainer, SketchRendererUIData.BaseFieldMargins);
             return exportRegion;
@@ -183,8 +186,8 @@ namespace SketchRenderer.Editor.TextureTools
 
             previewImage = new Image();
             previewImage.scaleMode = ScaleMode.ScaleToFit;
-
-            UpdatePreviewTargetTexture();
+            
+            UpdatePreviewTargetTexture(MaterialGenerator.TargetTexture);
             previewPanel.Add(previewImage);
             return previewPanel;
         }
@@ -197,21 +200,19 @@ namespace SketchRenderer.Editor.TextureTools
             previewPanel.style.height = windowWidth;
         }
 
-        internal void UpdatePreviewTargetTexture()
+        internal void UpdatePreviewTargetTexture(RenderTexture texture)
         {
-            if (previewImage != null)
+            if (previewImage != null && texture == MaterialGenerator.TargetTexture)
             {
-                previewImage.visible = (materialAssetField != null && materialAssetField.Field.value != null) && (IsActiveWindow || hasDirtyRepaint);
-                previewImage.image = TextureGenerator.TargetRT;
+                previewImage.visible = (materialAssetField != null && materialAssetField.Field.value != null);
+                previewImage.image = MaterialGenerator.TargetTexture;
             }
         }
 
         internal void ForceRepaint()
         {
-            hasDirtyRepaint = true;
             MaterialGenerator.UpdateMaterialAlbedoTexture();
             Repaint();
-            hasDirtyRepaint = false;
         }
 
         internal void ForceRebuildGUI()
@@ -241,8 +242,6 @@ namespace SketchRenderer.Editor.TextureTools
                 //--Stroke Panel
                 materialAssetField.Field.SetValueWithoutNotify(MaterialGenerator.MaterialDataAsset);
             }
-
-            ForceRebuildGUI();
         }
         
         // -- Material Panel

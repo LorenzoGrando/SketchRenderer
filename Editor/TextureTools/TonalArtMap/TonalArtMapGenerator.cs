@@ -15,7 +15,7 @@ namespace SketchRenderer.Editor.TextureTools
 {
     internal static class TonalArtMapGenerator
     {
-        internal static event Action OnTextureUpdated;
+        internal static event Action<RenderTexture> OnTextureUpdated;
         internal static event Action<TextureToolGenerationStatusArgs> OnTonalArtMapGenerationStep; 
         internal static event Action OnTonalArtMapGenerated;
         
@@ -44,6 +44,7 @@ namespace SketchRenderer.Editor.TextureTools
         [Range(0, 1)] 
         internal static float TargetFillRate = 1f;
         internal static TextureResolution TargetResolution = TextureResolution.SIZE_512;
+        private static int Dimension = TextureAssetManager.GetTextureResolution(TargetResolution);
 
         internal static StrokeAsset strokeDataAsset;
         internal static StrokeAsset[] defaultStrokeDataAssets;
@@ -83,6 +84,18 @@ namespace SketchRenderer.Editor.TextureTools
         }
         internal static bool HasNonDefaultTonalArtMapAsset { get; private set; }
         internal static bool PackTAMTextures = true;
+
+        private static RenderTexture targetTexture;
+
+        internal static RenderTexture TargetTexture
+        {
+            get
+            {
+                if (targetTexture == null)
+                    TextureGenerator.CreateOrClearTarget(ref targetTexture, TextureAssetManager.GetTextureResolution(TargetResolution));
+                return targetTexture;
+            }
+        }
         
         //Compute Data
         private static readonly string GENERATE_STROKE_BUFFER_KERNEL = "GenerateRandomStrokeBuffer";
@@ -148,7 +161,7 @@ namespace SketchRenderer.Editor.TextureTools
             private set
             {
                 if(generating && !value)
-                    OnTextureUpdated?.Invoke();
+                    OnTextureUpdated?.Invoke(TargetTexture);
                 generating = value;
             }
         }
@@ -192,12 +205,8 @@ namespace SketchRenderer.Editor.TextureTools
         {
             if(!IsGeneratorValid())
                 return;
-
-            if (TextureGenerator.Resolution != TargetResolution)
-            {
-                TextureGenerator.Resolution = TargetResolution;
-                TextureGenerator.PrepareGeneratorForRender();
-            }
+            
+            TextureGenerator.PrepareGeneratorForRender();
 
             TextureGenerator.OverwriteGeneratorOutputSettings(DefaultFileOutputName, DefaultFileOutputPath);
             
@@ -272,7 +281,7 @@ namespace SketchRenderer.Editor.TextureTools
                     1, 
                     1);
                 
-                TAMGeneratorShader.SetInt(DIMENSION_ID, TextureGenerator.Dimension);
+                TAMGeneratorShader.SetInt(DIMENSION_ID, Dimension);
                 TAMGeneratorShader.SetBuffer(csGenerateStrokeBufferKernelID, STROKE_DATA_ID, strokeDataBuffer);      
                 TAMGeneratorShader.SetBuffer(csGenerateStrokeBufferKernelID, VARIATION_DATA_ID, variationDataBuffer);      
             }
@@ -282,14 +291,14 @@ namespace SketchRenderer.Editor.TextureTools
                 csApplyStrokeKernelID = TAMGeneratorShader.FindKernel(APPLY_STROKE_KERNEL);
                 TAMGeneratorShader.GetKernelThreadGroupSizes(csApplyStrokeKernelID, out uint groupsX, out uint groupsY, out uint groupsZ);
                 csApplyStrokeKernelThreads = new Vector3Int(
-                    Mathf.CeilToInt((float)TextureGenerator.Dimension / groupsX), 
-                    Mathf.CeilToInt((float)TextureGenerator.Dimension / groupsY), 
+                    Mathf.CeilToInt((float)Dimension / groupsX), 
+                    Mathf.CeilToInt((float)Dimension / groupsY), 
                     1);
                 
-                TAMGeneratorShader.SetTexture(csApplyStrokeKernelID, RENDER_TEXTURE_ID, TextureGenerator.TargetRT);
+                TAMGeneratorShader.SetTexture(csApplyStrokeKernelID, RENDER_TEXTURE_ID, TargetTexture);
                 TAMGeneratorShader.SetBuffer(csApplyStrokeKernelID, REDUCED_SOURCE_ID, strokeReducedSource);
                 TAMGeneratorShader.SetBuffer(csApplyStrokeKernelID, STROKE_DATA_ID, strokeDataBuffer);
-                TAMGeneratorShader.SetInt(DIMENSION_ID, TextureGenerator.Dimension);
+                TAMGeneratorShader.SetInt(DIMENSION_ID, Dimension);
             }
 
             if (TAMGeneratorShader.HasKernel(TONE_FILL_RATE_KERNEL))
@@ -308,11 +317,11 @@ namespace SketchRenderer.Editor.TextureTools
                 csBlitStrokeKernelID = TAMGeneratorShader.FindKernel(BLIT_STROKE_KERNEL);
                 TAMGeneratorShader.GetKernelThreadGroupSizes(csBlitStrokeKernelID, out uint groupsX, out uint groupsY, out uint groupsZ);
                 csBlitStrokeKernelThreads = new Vector3Int(
-                    Mathf.CeilToInt((float)TextureGenerator.Dimension / groupsX), 
-                    Mathf.CeilToInt((float)TextureGenerator.Dimension / groupsY), 
+                    Mathf.CeilToInt((float)Dimension / groupsX), 
+                    Mathf.CeilToInt((float)Dimension / groupsY), 
                     1);
                 
-                TAMGeneratorShader.SetTexture(csBlitStrokeKernelID, RENDER_TEXTURE_ID, TextureGenerator.TargetRT);
+                TAMGeneratorShader.SetTexture(csBlitStrokeKernelID, RENDER_TEXTURE_ID, TargetTexture);
             }
 
             if (TAMGeneratorShader.HasKernel(PACK_STROKES_KERNEL))
@@ -320,11 +329,11 @@ namespace SketchRenderer.Editor.TextureTools
                 csPackStrokesKernelID = TAMGeneratorShader.FindKernel(PACK_STROKES_KERNEL);
                 TAMGeneratorShader.GetKernelThreadGroupSizes(csPackStrokesKernelID, out uint groupsX, out uint groupsY, out uint groupsZ);
                 csPackStrokesKernelThreads = new Vector3Int(
-                    Mathf.CeilToInt((float)TextureGenerator.Dimension / groupsX),
-                    Mathf.CeilToInt((float)TextureGenerator.Dimension / groupsY),
+                    Mathf.CeilToInt((float)Dimension / groupsX),
+                    Mathf.CeilToInt((float)Dimension / groupsY),
                     1);
                 
-                TAMGeneratorShader.SetTexture(csPackStrokesKernelID, RENDER_TEXTURE_ID, TextureGenerator.TargetRT);
+                TAMGeneratorShader.SetTexture(csPackStrokesKernelID, RENDER_TEXTURE_ID, TargetTexture);
             }
         }
 
@@ -337,12 +346,12 @@ namespace SketchRenderer.Editor.TextureTools
             strokeIterationTextureBuffers = new ComputeBuffer[IterationsPerStroke];
             for (int i = 0; i < IterationsPerStroke; i++)
             {
-                strokeIterationTextureBuffers[i] = new ComputeBuffer(TextureGenerator.Dimension * TextureGenerator.Dimension, sizeof(uint));
+                strokeIterationTextureBuffers[i] = new ComputeBuffer(Dimension * Dimension, sizeof(uint));
             }
             
             strokeTextureTonesBuffer = new ComputeBuffer(IterationsPerStroke, sizeof(uint));
-            strokeReducedSource = new ComputeBuffer(TextureGenerator.Dimension*TextureGenerator.Dimension, sizeof(uint));
-            fillRateBuffer = new ComputeBuffer(TextureGenerator.Dimension*TextureGenerator.Dimension, sizeof(uint));
+            strokeReducedSource = new ComputeBuffer(Dimension*Dimension, sizeof(uint));
+            fillRateBuffer = new ComputeBuffer(Dimension*Dimension, sizeof(uint));
         }
         
         private static void ConfigureStrokesBuffer(float fillRate)
@@ -422,6 +431,7 @@ namespace SketchRenderer.Editor.TextureTools
         {
             if (!IsGeneratorValid())
             {
+                TextureGenerator.CreateOrClearTarget(ref targetTexture, TextureAssetManager.GetTextureResolution(TargetResolution));
                 TextureGenerator.PrepareGeneratorForRender();
                 return;
             }
@@ -433,15 +443,15 @@ namespace SketchRenderer.Editor.TextureTools
             
             int prevIterations = IterationsPerStroke;
             IterationsPerStroke = 1;
+            TextureGenerator.CreateOrClearTarget(ref targetTexture, TextureAssetManager.GetTextureResolution(TargetResolution));
             TextureGenerator.PrepareGeneratorForRender();
             ConfigureGeneratorData();
             strokeDataBuffer.SetData(new [] {StrokeDataAsset.PreviewDisplay()});
             ExecuteIteratedStrokeKernel();
             IterationsPerStroke = prevIterations;
             
-            
             ReleaseBuffers();
-            OnTextureUpdated?.Invoke();
+            OnTextureUpdated?.Invoke(TargetTexture);
         }
         private static float ExecuteIteratedStrokeKernel()
         {
@@ -462,11 +472,11 @@ namespace SketchRenderer.Editor.TextureTools
                 TAMGeneratorShader.SetBuffer(csFillRateKernelID, ITERATION_STEP_TEXTURE_ID, strokeIterationTextureBuffers[j]);
                 TAMGeneratorShader.SetBuffer(csFillRateKernelID, FILL_RATE_ID, fillRateBuffer);
                 TAMGeneratorShader.SetInt(ITERATIONS_ID, j);
-                int expectedBufferSize = TextureGenerator.Dimension * TextureGenerator.Dimension;
+                int expectedBufferSize = Dimension * Dimension;
                 
                 for (int bufferSize = expectedBufferSize; bufferSize > 1; bufferSize = Mathf.CeilToInt((float)bufferSize/(float)csFillRateKernelThreads.x))
                 {
-                    if (bufferSize == TextureGenerator.Dimension * TextureGenerator.Dimension)
+                    if (bufferSize == Dimension * Dimension)
                         TAMGeneratorShader.EnableKeyword(firstIterationLocalKeyword);
                     else
                         TAMGeneratorShader.DisableKeyword(firstIterationLocalKeyword);
@@ -518,7 +528,7 @@ namespace SketchRenderer.Editor.TextureTools
             float maxFillRateFound = -1;
             for (int i = 0; i < fillRates.Length; i++)
             {
-                float fillRate = 1f - ((float)fillRates[i]/(float)(TextureGenerator.Dimension*TextureGenerator.Dimension*255));
+                float fillRate = 1f - ((float)fillRates[i]/(float)(Dimension*Dimension*255));
                 if (fillRate > maxFillRateFound)
                 {
                     maxFillRateFound = fillRate;
@@ -667,7 +677,7 @@ namespace SketchRenderer.Editor.TextureTools
                 return;
             
             TextureGenerator.PrepareGeneratorForRender();
-            TextureGenerator.OverwriteGeneratorDimension(TonalArtMapAsset.Tones[0].width);
+            TextureGenerator.CreateOrClearTarget(ref targetTexture, TonalArtMapAsset.Tones[0].width);
             PrepareComputeData();
             
             List<Texture2D> packedTAMs = new List<Texture2D>();
@@ -699,7 +709,7 @@ namespace SketchRenderer.Editor.TextureTools
             TextureGenerator.OverwriteGeneratorOutputSettings(fileNameOverwrite, DefaultFileOutputPath);
             try
             {
-                return TextureGenerator.SaveCurrentTargetTexture(overwriteExisting, fileNameOverwrite);
+                return TextureGenerator.SaveCurrentTargetTexture(TargetTexture, overwriteExisting, fileNameOverwrite);
             }
             catch (Exception e)
             {

@@ -10,9 +10,6 @@ namespace SketchRenderer.Editor
     {
         internal event Action OnWindowClosed;
         internal static T window;
-        internal static bool hasDirtyRepaint;
-        
-        internal bool IsActiveWindow => mouseOverWindow == this || focusedWindow == this;
 
         internal virtual Vector2 ExpectedMinWindowSize
         {
