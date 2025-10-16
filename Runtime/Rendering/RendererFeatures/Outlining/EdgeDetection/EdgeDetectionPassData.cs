@@ -46,6 +46,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             OutlineAngleSensitivity = 1f;
             OutlineAngleConstraint = 0.45f;
             OutlineNormalSensitivity = 0.5f;
+            PrimarySplitOutlineThreshold = OutlineThreshold;
+            SecondarySplitOutlineThreshold = OutlineThreshold;
         }
         public void CopyFrom(EdgeDetectionPassData passData)
         {
