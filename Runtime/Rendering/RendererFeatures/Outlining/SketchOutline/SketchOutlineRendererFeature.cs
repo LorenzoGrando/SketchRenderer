@@ -35,7 +35,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         
         public override void Create()
         {
-            //This pass needs angles to calculate stroke directins, so set this here
+            //This pass needs angles to calculate stroke directions, so set this here
             if(EdgeDetectionPassData != null)
                 EdgeDetectionPassData.OutputType = EdgeDetectionGlobalData.EdgeDetectionOutputType.OUTPUT_DIRECTION_DATA_ANGLE;
 
@@ -113,7 +113,12 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     primaryData.OutlineThreshold = primaryData.PrimarySplitOutlineThreshold;
                     edgeDetectionPass.Setup(primaryData, edgeDetectionMaterial);
                     edgeDetectionPass.SetSecondary(false);
-                    
+
+                    if (secondaryEdgeDetectionPass == null)
+                    {
+                        Create();
+                        return;
+                    }
                     EdgeDetectionPassData secondaryData = new EdgeDetectionPassData();
                     secondaryData.CopyFrom(CurrentEdgeDetectionPassData);
                     secondaryData.Source = EdgeDetectionGlobalData.EdgeDetectionSource.COLOR;
