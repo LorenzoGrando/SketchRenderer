@@ -47,7 +47,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             if(!CompositionPassData.IsAllPassDataValid())
                 return;
 
-            sketchRenderPass.Setup(CompositionPassData, sketchMaterial);
+            sketchRenderPass.Setup(CompositionPassData.GetPassDataByVolume(), sketchMaterial);
             renderer.EnqueuePass(sketchRenderPass);
         }
 

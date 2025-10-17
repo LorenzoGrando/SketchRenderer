@@ -25,5 +25,9 @@ namespace SketchRenderer.Runtime.Rendering.Volume
         public ClampedIntParameter AdditionalDistortionLines = new ClampedIntParameter(0, 0, 3);
         public ClampedFloatParameter AdditionalLineTintPersistence = new ClampedFloatParameter(0, 0, 1);
         public ClampedFloatParameter AdditionalLinesDistortionJitter = new ClampedFloatParameter(0, 0, 1);
+
+        [Space(2.5f)] [Header("Accented Outlines - Outline Masking")]
+        public Texture2DParameter MaskTexture = new Texture2DParameter(null);
+        public NoInterpVector2Parameter MaskTextureScale = new NoInterpVector2Parameter(Vector2.one);
     }
 }

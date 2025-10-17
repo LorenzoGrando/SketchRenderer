@@ -73,6 +73,10 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public void Setup(SketchStrokesPassData passData, Material _, ComputeShader computeShader)
         {
             this.passData = passData;
+            //Ensure overrideData is never zero due to non-initialized inspector values
+            if (this.passData.DoDownscale)
+                this.passData.DownscaleFactor = Mathf.Max(this.passData.DownscaleFactor, 1);
+            
             sketchComputeShader = computeShader;
             
             requiresIntermediateTexture = false;

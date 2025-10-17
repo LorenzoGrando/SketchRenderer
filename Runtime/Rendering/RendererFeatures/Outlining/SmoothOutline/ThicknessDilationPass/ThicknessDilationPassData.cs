@@ -28,7 +28,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
     
         public bool IsAllPassDataValid()
         {
-            return UseThicknessDilation && ThicknessRange > 0;
+            ThicknessDilationPassData passData = GetPassDataByVolume();
+            return passData.UseThicknessDilation && passData.ThicknessRange > 0;
         }
 
         public ThicknessDilationPassData GetPassDataByVolume()
