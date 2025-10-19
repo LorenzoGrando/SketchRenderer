@@ -15,11 +15,6 @@ namespace SketchRenderer.Editor.Rendering
         static SketchRendererManager()
         {
             SketchRendererFeatureWrapper.OnFeatureValidated += feature => UpdateFeatureByContext(feature, CurrentRendererContext);
-            if (ManagerSettings != null)
-            {
-                ManagerSettings.OnContextSettingsChanged += UpdateBySettingsChange;
-                ManagerSettings.ValidateGlobalSettings();
-            }
         }
         
         private static SketchRendererManagerSettings settings;
@@ -40,6 +35,8 @@ namespace SketchRenderer.Editor.Rendering
                     }
 
                     settings = AssetDatabase.LoadAssetAtPath<SketchRendererManagerSettings>(SketchRendererData.DefaultSketchManagerSettingsPackagePath);
+                    settings.OnContextSettingsChanged += UpdateBySettingsChange;
+                    settings.ValidateGlobalSettings();
                 }
                 return settings;
             }
