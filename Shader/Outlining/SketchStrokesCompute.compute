@@ -189,7 +189,10 @@ void CollapseSimilarStrokes(uint3 id : SV_DispatchThreadID, uint3 idG : SV_Group
     //Is similar enough?
     float4 sampleStroke = _GradientVectors[sampleThreadFlatIndex]; 
     float similarity = step(_CombinationThreshold, dot(thisStroke.ba, sampleStroke.ba));
-    if (similarity && failed <= 0)
+    float depthSimilarity = step(_CombinationThreshold, 1.0 - abs(_StrokesDepthBuffer[threadFlatIndex] - _StrokesDepthBuffer[sampleThreadFlatIndex]));
+    if (similarity + depthSimilarity < 1.9)
+        failed++;
+    if (failed <= 0)
     {
         //Additional check to ensure no other thread that passed all checks was able to write to the buffer before this one
         if(_CombineStrokesPointerBuffer[sampleThreadFlatIndex] == sampleThreadFlatIndex)

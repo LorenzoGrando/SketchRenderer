@@ -200,6 +200,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             public ComputeBuffer inputBuffer;
             public ComputeBuffer pointerBuffer;
             public ComputeBuffer lengthBuffer;
+            public ComputeBuffer depthBuffer;
             public float combinationThreshold;
             public int combinationRange;
             public int combinationXGroups;
@@ -254,6 +255,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, COMPUTE_GRADIENT_VECTORS_ID, passData.inputBuffer);
             context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, COLLAPSE_POINTERS_ID, passData.pointerBuffer);
             context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, COLLAPSE_LENGTH_ID, passData.lengthBuffer);
+            context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, DEPTH_FALLOFF_BUFFER_ID, passData.depthBuffer);
             context.cmd.SetComputeFloatParam(passData.computeShader, COLLAPSE_THRESHOLD_ID, passData.combinationThreshold);
             context.cmd.SetComputeIntParam(passData.computeShader, COLLAPSE_RANGE_ID, passData.combinationRange);
             context.cmd.SetComputeIntParam(passData.computeShader, COLLAPSE_GROUPS_ID, passData.combinationXGroups);
@@ -395,6 +397,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                         collapsePassData.inputBuffer = gradientBuffer;
                         collapsePassData.pointerBuffer = combinationPointerBuffer;
                         collapsePassData.lengthBuffer = combinationLengthBuffer;
+                        collapsePassData.depthBuffer = strokeDepthBuffer;
                         collapsePassData.combinationXGroups = groups.x;
 
                         collapsePassData.combinationThreshold = passData.StrokeCombinationThreshold;
