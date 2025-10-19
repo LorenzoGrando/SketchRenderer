@@ -434,7 +434,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 
                 computePassData.downscaleFactor = passData.DownscaleFactor;
                 computePassData.strokeSampleScale = passData.StrokeSampleScale;
-                computePassData.strokeSampleScaleOffset = passData.StrokeSampleOffsetRate;
+                computePassData.strokeSampleScaleOffset = passData.StrokeSampleScale > 1 ? passData.StrokeSampleOffsetRate : 0;
                 
                 computePassData.didCombination = this.passData.IsDoingCombination;
 
