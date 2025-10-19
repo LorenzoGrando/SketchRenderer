@@ -67,13 +67,15 @@ namespace SketchRenderer.Editor.Rendering
             var downscaleField = SketchRendererUI.SketchBoolProperty(doDownscaleProp, nameOverride: "Do Downscaled Detection");
             downscaleField.Field.RegisterValueChangedCallback(_ => ForceRepaint());
             SketchRendererUIUtils.AddWithMargins(passDataField, downscaleField.Container, SketchRendererUIData.MajorIndentCorners);
-
+            
+            /*
             if (doDownscaleProp.boolValue)
             {
                 SerializedProperty downscaleFactorProp = property.FindPropertyRelative("DownscaleFactor");
                 var downscaleFactorField = SketchRendererUI.SketchIntSliderPropertyWithInput(downscaleFactorProp, nameOverride: "Downscale Amount");
                 SketchRendererUIUtils.AddWithMargins(passDataField, downscaleFactorField.Container, SketchRendererUIData.MajorIndentCorners);
             }
+            */
             
             return passDataField;
         }

@@ -101,12 +101,12 @@ Shader "SketchRenderer/ColorSilhouette"
                     angle = (angle + 1) * 0.5;
                     float edge = max(0, colorGradient);
                     //Is Edge, the angle of outline flow (only if edge present), the strength of the direction, and a repeated edge presence as the alpha strength
-                    return float4(edge, angle * edge, _DirectionStrengthMod * edge, edge);
+                    return float4(edge * _DirectionStrengthMod, angle * edge, 0.0, edge);
                #elif defined(OUTPUT_DIRECTION_DATA_VECTOR)
                     float2 direction = colorGradientVector.xy;
                     float edge = max(0, colorGradient);
                     //Is Edge, the direciton of outline flow (only if edge present) modified by the strength of the direction, and a repeated edge presence as the alpha strength
-                    return float4(edge, direction * edge * _DirectionStrengthMod, edge);
+                    return float4(edge  * _DirectionStrengthMod, direction * edge, edge);
                #endif
            }
 
