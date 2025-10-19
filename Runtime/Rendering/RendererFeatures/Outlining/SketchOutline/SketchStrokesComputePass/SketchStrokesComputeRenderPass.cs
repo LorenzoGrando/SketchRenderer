@@ -18,6 +18,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         private ComputeBuffer combinationLengthBuffer;
         private ComputeBuffer strokeDataBuffer;
         private ComputeBuffer strokeVariationDataBuffer;
+        private ComputeBuffer strokeDepthBuffer;
         
         //Compute Data
         private readonly string COMPUTE_STROKE_KERNEL = "ComputeAverageStroke";
@@ -36,6 +37,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         private static readonly int COMPUTE_GRADIENT_VECTORS_ID = Shader.PropertyToID("_GradientVectors");
         private static readonly int COLLAPSE_POINTERS_ID = Shader.PropertyToID("_CombineStrokesPointerBuffer");
         private static readonly int COLLAPSE_LENGTH_ID = Shader.PropertyToID("_CombineStrokesLengthBuffer");
+        private static readonly int DEPTH_FALLOFF_BUFFER_ID = Shader.PropertyToID("_StrokesDepthBuffer");
         private static readonly int THRESHOLD_ID = Shader.PropertyToID("_ThresholdForStroke");
         private static readonly int DIRECTION_SMOOTHING_ID = Shader.PropertyToID("_DirectionSmoothingFactor");
         private static readonly int FRAME_SMOOTHING_THRESHOLD_ID = Shader.PropertyToID("_SmoothingThreshold");
@@ -47,9 +49,11 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         private static readonly int COLLAPSE_RANGE_ID = Shader.PropertyToID("_CombinationRange");
         private static readonly int COLLAPSE_GROUPS_ID = Shader.PropertyToID("_CombinationXGroups");
         private static readonly int COLLAPSE_ITERATION_ID = Shader.PropertyToID("_CombinationIteration");
+        private static readonly int DEPTH_FALLOFF_ID = Shader.PropertyToID("_DepthFalloff");
         
         private static readonly string PERPENDICULAR_DIRECTION_KEYWORD_ID = "USE_PERPENDICULAR_DIRECTION";
         private static readonly string SMOOTHING_KEYWORD_ID = "FRAME_SMOOTHING";
+        private static readonly string DEPTH_SCALING_KEYWORD_ID = "DEPTH_SCALING";
         
         private Vector3Int strokesKernelThreads;
         private Vector3Int collapseKernelThreads;
@@ -57,11 +61,13 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
         private LocalKeyword PerpendicularDirectionKeyword;
         private LocalKeyword SmoothingThresholdKeyword;
+        private LocalKeyword DepthScalingKeyword;
         private LocalKeyword[] strokeTypeLocalKeywords;
 
         private readonly int GRADIENT_VECTOR_STRIDE_LENGTH = sizeof(float) * 4;
         private readonly int COLLAPSE_POINTER_STRIDE_LENGTH = sizeof(uint);
         private readonly int COLLAPSE_LENGTH_STRIDE_LENGTH = sizeof(uint);
+        private readonly int DEPTH_STRIDE_LENGTH = sizeof(float);
         
         private Vector2Int GetDownscaleTargetDimension(Vector2 currentResolution, int factor)
         {
@@ -88,8 +94,10 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         {
             PerpendicularDirectionKeyword = new LocalKeyword(sketchComputeShader, PERPENDICULAR_DIRECTION_KEYWORD_ID);
             SmoothingThresholdKeyword = new LocalKeyword(sketchComputeShader, SMOOTHING_KEYWORD_ID);
+            DepthScalingKeyword = new LocalKeyword(sketchComputeShader, DEPTH_SCALING_KEYWORD_ID);
             sketchComputeShader.SetKeyword(PerpendicularDirectionKeyword, passData.UsePerpendicularDirection);
             sketchComputeShader.SetKeyword(SmoothingThresholdKeyword, passData.FrameSmoothingFactor > 0);
+            sketchComputeShader.SetKeyword(DepthScalingKeyword, passData.StrokeThicknessDepthFalloff > 0);
             
             string[] sdfTypes = Enum.GetNames(typeof(StrokeSDFType));
             strokeTypeLocalKeywords = new LocalKeyword[sdfTypes.Length];
@@ -142,6 +150,12 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 combinationLengthBuffer = null;
             }
 
+            if (strokeDepthBuffer != null)
+            {
+                strokeDepthBuffer.Release();
+                strokeDepthBuffer = null;
+            }
+
             if (strokeDataBuffer != null)
             {
                 strokeDataBuffer.Release();
@@ -165,9 +179,11 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             public float threshold;
             public float directionSmoothingFactor;
             public float frameSmoothingFactor;
+            public float depthFalloffFactor;
             public ComputeBuffer outputBuffer;
             public ComputeBuffer pointerBuffer;
             public ComputeBuffer lengthBuffer;
+            public ComputeBuffer depthBuffer;
         }
 
         class DownscalePassData
@@ -184,6 +200,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             public ComputeBuffer inputBuffer;
             public ComputeBuffer pointerBuffer;
             public ComputeBuffer lengthBuffer;
+            public ComputeBuffer depthBuffer;
             public float combinationThreshold;
             public int combinationRange;
             public int combinationXGroups;
@@ -202,9 +219,11 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             public ComputeBuffer lengthBuffer;
             public ComputeBuffer strokeDataBuffer;
             public ComputeBuffer strokeVariationDataBuffer;
+            public ComputeBuffer depthBuffer;
             public int downscaleFactor;
             public int strokeSampleScale;
             public float strokeSampleScaleOffset;
+            public bool didCombination;
         }
 
         static void ExecuteDownscale(DownscalePassData passData, UnsafeGraphContext context)
@@ -223,9 +242,11 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, COMPUTE_GRADIENT_VECTORS_ID, passData.outputBuffer);
             context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, COLLAPSE_POINTERS_ID, passData.pointerBuffer);
             context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, COLLAPSE_LENGTH_ID, passData.lengthBuffer);
+            context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, DEPTH_FALLOFF_BUFFER_ID, passData.depthBuffer);
             context.cmd.SetComputeFloatParam(passData.computeShader, THRESHOLD_ID, passData.threshold);
             context.cmd.SetComputeFloatParam(passData.computeShader, DIRECTION_SMOOTHING_ID, passData.directionSmoothingFactor);
             context.cmd.SetComputeFloatParam(passData.computeShader, FRAME_SMOOTHING_THRESHOLD_ID, passData.frameSmoothingFactor);
+            context.cmd.SetComputeFloatParam(passData.computeShader, DEPTH_FALLOFF_ID, passData.depthFalloffFactor);
             context.cmd.DispatchCompute(passData.computeShader, passData.kernelID, passData.threadGroupSize.x, passData.threadGroupSize.y, passData.threadGroupSize.z);
         }
 
@@ -234,6 +255,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, COMPUTE_GRADIENT_VECTORS_ID, passData.inputBuffer);
             context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, COLLAPSE_POINTERS_ID, passData.pointerBuffer);
             context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, COLLAPSE_LENGTH_ID, passData.lengthBuffer);
+            context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, DEPTH_FALLOFF_BUFFER_ID, passData.depthBuffer);
             context.cmd.SetComputeFloatParam(passData.computeShader, COLLAPSE_THRESHOLD_ID, passData.combinationThreshold);
             context.cmd.SetComputeIntParam(passData.computeShader, COLLAPSE_RANGE_ID, passData.combinationRange);
             context.cmd.SetComputeIntParam(passData.computeShader, COLLAPSE_GROUPS_ID, passData.combinationXGroups);
@@ -254,8 +276,11 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, COMPUTE_GRADIENT_VECTORS_ID, passData.inputBuffer);
             context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, COLLAPSE_POINTERS_ID, passData.pointerBuffer);
             context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, COLLAPSE_LENGTH_ID, passData.lengthBuffer);
+            context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, DEPTH_FALLOFF_BUFFER_ID, passData.depthBuffer);
             context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, STROKE_DATA_ID, passData.strokeDataBuffer);
             context.cmd.SetComputeBufferParam(passData.computeShader, passData.kernelID, STROKE_VARIATION_DATA_ID, passData.strokeVariationDataBuffer);
+            if(!passData.didCombination)
+                context.cmd.SetComputeIntParam(passData.computeShader, COLLAPSE_RANGE_ID, 0);
             context.cmd.DispatchCompute(passData.computeShader, passData.kernelID, passData.threadGroupSize.x, passData.threadGroupSize.y, passData.threadGroupSize.z);
         }
 
@@ -329,15 +354,21 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     if(combinationLengthBuffer != null)
                         combinationLengthBuffer.Release();
                     combinationLengthBuffer = new ComputeBuffer(combinationPointerBuffer.count, COLLAPSE_LENGTH_STRIDE_LENGTH);
+                    if(strokeDepthBuffer != null)
+                        strokeDepthBuffer.Release();
+                    strokeDepthBuffer = new ComputeBuffer(gradientBuffer.count, DEPTH_STRIDE_LENGTH);
                 }
                 
                 computePassData.dimensions = new Vector2Int(dimensions.x, dimensions.y);
                 computePassData.threshold = passData.StrokeThreshold;
                 computePassData.directionSmoothingFactor = passData.DirectionSmoothingFactor;
                 computePassData.frameSmoothingFactor = passData.FrameSmoothingFactor;
+                computePassData.depthFalloffFactor = 1f - passData.StrokeThicknessDepthFalloff;
+                
                 computePassData.outputBuffer = gradientBuffer;
                 computePassData.pointerBuffer = combinationPointerBuffer;
                 computePassData.lengthBuffer = combinationLengthBuffer;
+                computePassData.depthBuffer = strokeDepthBuffer;
                 
                 computePassData.computeShader = sketchComputeShader;
                 computePassData.kernelID = computeStrokeKernelID;
@@ -366,6 +397,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                         collapsePassData.inputBuffer = gradientBuffer;
                         collapsePassData.pointerBuffer = combinationPointerBuffer;
                         collapsePassData.lengthBuffer = combinationLengthBuffer;
+                        collapsePassData.depthBuffer = strokeDepthBuffer;
                         collapsePassData.combinationXGroups = groups.x;
 
                         collapsePassData.combinationThreshold = passData.StrokeCombinationThreshold;
@@ -398,9 +430,13 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 computePassData.inputBuffer = gradientBuffer;
                 computePassData.pointerBuffer = combinationPointerBuffer;
                 computePassData.lengthBuffer = combinationLengthBuffer;
+                computePassData.depthBuffer = strokeDepthBuffer;
+                
                 computePassData.downscaleFactor = passData.DownscaleFactor;
                 computePassData.strokeSampleScale = passData.StrokeSampleScale;
-                computePassData.strokeSampleScaleOffset = passData.StrokeSampleOffsetRate;
+                computePassData.strokeSampleScaleOffset = passData.StrokeSampleScale > 1 ? passData.StrokeSampleOffsetRate : 0;
+                
+                computePassData.didCombination = this.passData.IsDoingCombination;
 
                 computePassData.computeShader = sketchComputeShader;
                 computePassData.kernelID = computeApplyStrokeKernelID;

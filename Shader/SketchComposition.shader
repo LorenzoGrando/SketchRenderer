@@ -78,8 +78,8 @@ Shader "SketchRenderer/SketchComposition"
                #if defined(HAS_MATERIAL)
                outlineAccumulation = 1.0 - dot(outlineDirection.rg, direction.rg);
                #endif
-               outline = float4(outline.rgb, saturate((outline.a * _OutlineColor.a) + lerp(0, _MaterialAccumulationStrength, outlineAccumulation * isOutlineStroke)));
-               float maxOut = max(outline.r, max(outline.g, outline.g));
+               outline = float4(outline.agb, saturate((outline.a * _OutlineColor.a) + lerp(0, _MaterialAccumulationStrength, outlineAccumulation * isOutlineStroke)));
+               float maxOut = max(outline.a, max(outline.g, outline.g));
                float4 outlineShade = float4(maxOut * _OutlineColor.rgb, outline.a);
                outline = lerp(white, outlineShade, isOutlineStroke * outline.a);
                
@@ -99,7 +99,7 @@ Shader "SketchRenderer/SketchComposition"
                float isAnyStroke = saturate(isOutlineStroke + isLuminanceStroke);
                //TODO: Make this an option
                //Outlines always on top
-               //float3 blend = (outline * outline.a * isOutlineStroke) + luminance * (1.0 - outline.a * isOutlineStroke);
+               //float3 blend = (outline * outline.r * isOutlineStroke) + luminance * (1.0 - outline.r * isOutlineStroke);
                
                float4 blendOutline = lerp(white, outline, outline.a);
                float4 blend = BLEND_0P_MULTIPLY(luminance, blendOutline);
