@@ -4,7 +4,20 @@ All changes to the package features and functionality will be documented in this
 
 This project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html) after the initial release in `1.0.0`.
 
-## [Unreleased]
+## [unreleased]
+
+## [v0.7.5-beta-samples] - 2025-10-19
+
+### Changed
+
+- Texture tools are now able to be simultaneously open without overriding the preview image between each other.
+- Fixed an indexing error in downscale causing wrong stroke scale sampling in Sketch Outlines.
+
+### Added
+
+- Fully implemented Volume Override Components for all renderer features in the package.
+- Sketch Strokes can now dynamically scale generated stroke thickness and length based on depth distance.
+- Stroke Combination can take into account stroke grid depth as an additional combination threshold.
 
 ## [v0.7.1-beta] - 2025-10-14
 
@@ -50,8 +63,9 @@ This project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renderer Manager and Project Settings for dynamically handling feature dependencies and URP renderer data.
 
 ---
-[unreleased]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.7.1-beta...HEAD
-[v0.7.1-beta]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.7.0-alpha...v0.7.1-beta
+[unreleased]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.7.5-beta-samples...HEAD
+[v0.7.5-beta-samples]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.7.1-beta...v0.7.5-beta-samples
+[v0.7.1-beta]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.7.0-beta...v0.7.1-beta
 [v0.7.0-beta]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.5.6-alpha...v0.7.0-beta
 [v0.5.6-alpha]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.5.5-alpha...v0.5.6-alpha
 [v0.5.5-alpha]: https://github.com/LorenzoGrando/SketchRenderer/releases/tag/v0.5.5-alpha
