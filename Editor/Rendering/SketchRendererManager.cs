@@ -93,30 +93,34 @@ namespace SketchRenderer.Editor.Rendering
             UpdateRendererToCurrentContext();
         }
 
-        internal static void UpdateRendererToCurrentContext()
+        internal static void UpdateRendererToCurrentContext(bool checkDirtyness = false)
         {
             if (CurrentRendererContext == null)
                 throw new NullReferenceException("[SketchRenderer] Current renderer context is not set.");
 
-            UpdateRendererByContext(CurrentRendererContext);
+            UpdateRendererByContext(CurrentRendererContext, checkDirtyness);
         }
 
-        internal static void UpdateRendererByContext(SketchRendererContext rendererContext)
+        internal static void UpdateRendererByContext(SketchRendererContext rendererContext, bool checkDirtyness = false)
         {
             if (rendererContext == null)
                 throw new NullReferenceException("[SketchRenderer] Renderer context used to configure is not set.");
             
-            Span<(SketchRendererFeatureType Feature, bool Active)> features = stackalloc (SketchRendererFeatureType, bool)[totalFeatureTypes];
+            Span<(SketchRendererFeatureType Feature, bool Active, bool Dirty)> features = stackalloc (SketchRendererFeatureType, bool, bool)[totalFeatureTypes];
             for (int i = 0; i < totalFeatureTypes; i++)
             {
-                features[i] = (featureTypesInPackage[i], rendererContext.IsFeaturePresent(featureTypesInPackage[i]));
+                features[i] = (featureTypesInPackage[i], rendererContext.IsFeaturePresent(featureTypesInPackage[i]), rendererContext.IsFeatureDirty(featureTypesInPackage[i]));
             }
             
             for (int i = 0; i < totalFeatureTypes; i++)
             {
-                if (features[i].Active)
+                if ((features[i].Active && !checkDirtyness) ||
+                    (features[i].Active && checkDirtyness && features[i].Dirty))
+                {
                     SketchRendererFeatureWrapper.ConfigureRendererFeature(features[i].Feature, rendererContext, ResourceAsset);
-                else
+                    rendererContext.SetFeatureDirty(features[i].Feature, false);
+                }
+                else if(!features[i].Active)
                     SketchRendererFeatureWrapper.RemoveRendererFeature(features[i].Feature);
             }
         }
@@ -125,7 +129,7 @@ namespace SketchRenderer.Editor.Rendering
         {
             if (ManagerSettings.AlwaysUpdateRendererData)
             {
-                UpdateRendererToCurrentContext();
+                UpdateRendererToCurrentContext(true);
                 CurrentRendererContext.IsDirty = false;
             }
         }
@@ -144,13 +148,8 @@ namespace SketchRenderer.Editor.Rendering
         {
             if (rendererContext == null)
                 throw new NullReferenceException("[SketchRenderer] Renderer context used to configure is not set.");
-
-            if (SketchRendererFeatureWrapper.CheckHasActiveFeature(featureType))
-            {
-                SketchRendererFeatureWrapper.ConfigureRendererFeature(featureType, rendererContext, ResourceAsset);
-            }
-            else
-                Debug.LogWarning($"[SketchRenderer] Current renderer asset does not have {featureType} as an active feature.");
+            
+            SketchRendererFeatureWrapper.ConfigureRendererFeature(featureType, rendererContext, ResourceAsset);
         }
     }
 }

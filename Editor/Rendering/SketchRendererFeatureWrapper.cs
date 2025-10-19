@@ -35,6 +35,13 @@ namespace SketchRenderer.Editor.Rendering
         };
 
         internal static SketchRendererContext internalRendererContext;
+        private static RenderUVsRendererFeature cachedUvsRendererFeature;
+        private static SmoothOutlineRendererFeature cachedSmoothOutlineRendererFeature;
+        private static SketchOutlineRendererFeature cachedSketchOutlineRendererFeature;
+        private static MaterialSurfaceRendererFeature cachedMaterialSurfaceRendererFeature;
+        private static LuminanceRendererFeature cachedLuminanceRendererFeature;
+        private static SketchCompositionRendererFeature cachedSketchCompositionRendererFeature;
+        
         
         #region Renderer Data Feature Validation
         static SketchRendererFeatureWrapper()
@@ -67,6 +74,17 @@ namespace SketchRenderer.Editor.Rendering
         {
             if(internalRendererContext != null)
                 Object.DestroyImmediate(internalRendererContext);
+            DisposeCachedFeatures();
+        }
+
+        private static void DisposeCachedFeatures()
+        {
+            cachedUvsRendererFeature = null;
+            cachedMaterialSurfaceRendererFeature = null;
+            cachedLuminanceRendererFeature = null;
+            cachedSketchCompositionRendererFeature = null;
+            cachedSmoothOutlineRendererFeature = null;
+            cachedSketchCompositionRendererFeature = null;
         }
         
         private static bool trackingRendererFeatures = false;
@@ -171,7 +189,14 @@ namespace SketchRenderer.Editor.Rendering
             {
                 case SketchRendererFeatureType.UVS:
                     if (hasFeature)
-                        internalRendererContext.UVSFeatureData = ((RenderUVsRendererFeature)feature).UvsPassData;
+                    {
+                        RenderUVsRendererFeature typedFeatured = (RenderUVsRendererFeature)feature;
+                        internalRendererContext.UVSFeatureData = typedFeatured.UvsPassData;
+                        cachedUvsRendererFeature = typedFeatured;
+                    }
+                    else
+                        cachedUvsRendererFeature = null;
+
                     break;
                 case SketchRendererFeatureType.OUTLINE_SMOOTH:
                     if (hasFeature)
@@ -182,9 +207,14 @@ namespace SketchRenderer.Editor.Rendering
                         internalRendererContext.AccentedOutlineFeatureData =
                             smoothOutlineFeature.AccentedOutlinePassData;
                         internalRendererContext.ThicknessDilationFeatureData = smoothOutlineFeature.ThicknessPassData;
+                        cachedSmoothOutlineRendererFeature = smoothOutlineFeature;
                     }
                     else
+                    {
                         internalRendererContext.UseSmoothOutlineFeature = false;
+                        cachedSmoothOutlineRendererFeature = null;
+                    }
+
                     break;
                 case SketchRendererFeatureType.OUTLINE_SKETCH:
                     if (hasFeature)
@@ -193,33 +223,57 @@ namespace SketchRenderer.Editor.Rendering
                         SketchOutlineRendererFeature sketchOutlineRendererFeature = (SketchOutlineRendererFeature)feature;
                         internalRendererContext.EdgeDetectionFeatureData = sketchOutlineRendererFeature.EdgeDetectionPassData;
                         internalRendererContext.SketchyOutlineFeatureData = sketchOutlineRendererFeature.SketchStrokesPassData;
+                        cachedSketchOutlineRendererFeature = sketchOutlineRendererFeature;
                     }
                     else
+                    {
                         internalRendererContext.UseSketchyOutlineFeature = false;
+                        cachedSketchOutlineRendererFeature = null;
+                    }
+
                     break;
                 case SketchRendererFeatureType.LUMINANCE:
                     if (hasFeature)
                     {
                         internalRendererContext.UseLuminanceFeature = true;
-                        internalRendererContext.LuminanceFeatureData = ((LuminanceRendererFeature)feature).LuminanceData;
+                        LuminanceRendererFeature typedFeature = (LuminanceRendererFeature)feature;
+                        internalRendererContext.LuminanceFeatureData = typedFeature.LuminanceData;
                     }
                     else
+                    {
                         internalRendererContext.UseLuminanceFeature = false;
+                        cachedLuminanceRendererFeature = null;
+                    }
+
                     break;
                 case SketchRendererFeatureType.MATERIAL:
                     if (hasFeature)
                     {
                         internalRendererContext.UseMaterialFeature = true;
-                        internalRendererContext.MaterialFeatureData = ((MaterialSurfaceRendererFeature)feature).MaterialData;
+                        MaterialSurfaceRendererFeature typedFeature = (MaterialSurfaceRendererFeature)feature;
+                        internalRendererContext.MaterialFeatureData = typedFeature.MaterialData;
+                        cachedMaterialSurfaceRendererFeature = typedFeature;
                     }
                     else
+                    {
                         internalRendererContext.UseMaterialFeature = false;
+                        cachedMaterialSurfaceRendererFeature = null;
+                    }
+
                     break;
                 case SketchRendererFeatureType.COMPOSITOR:
                     if (hasFeature)
-                        internalRendererContext.CompositionFeatureData = ((SketchCompositionRendererFeature)feature).CompositionPassData;
+                    {
+                        SketchCompositionRendererFeature typedFeature = (SketchCompositionRendererFeature)feature;
+                        internalRendererContext.CompositionFeatureData = typedFeature.CompositionPassData;
+                        cachedSketchCompositionRendererFeature = typedFeature;
+                    }
                     else
+                    {
                         internalRendererContext.CompositionFeatureData = null;
+                        cachedSketchCompositionRendererFeature = null;
+                    }
+
                     break;
             }
         }
@@ -346,10 +400,35 @@ namespace SketchRenderer.Editor.Rendering
         #endregion
         
         #region Renderer Feature Management
+
+        internal static void CacheRendererFeature(ScriptableRendererFeature feature, SketchRendererFeatureType featureType)
+        {
+            switch (featureType)
+            {
+                case SketchRendererFeatureType.UVS:
+                    cachedUvsRendererFeature = (RenderUVsRendererFeature)feature;
+                    break;
+                case SketchRendererFeatureType.OUTLINE_SMOOTH:
+                    cachedSmoothOutlineRendererFeature = (SmoothOutlineRendererFeature)feature;
+                    break;
+                case SketchRendererFeatureType.OUTLINE_SKETCH:
+                    cachedSketchCompositionRendererFeature = (SketchCompositionRendererFeature)feature;
+                    break;
+                case SketchRendererFeatureType.LUMINANCE:
+                    cachedLuminanceRendererFeature = (LuminanceRendererFeature)feature;
+                    break;
+                case SketchRendererFeatureType.MATERIAL:
+                    cachedMaterialSurfaceRendererFeature = (MaterialSurfaceRendererFeature)feature;
+                    break;
+                case SketchRendererFeatureType.COMPOSITOR:
+                    cachedSketchCompositionRendererFeature = (SketchCompositionRendererFeature)feature;
+                    break;
+            }
+        }
         
         internal static bool CheckHasActiveFeature(SketchRendererFeatureType featureType)
         {
-            ScriptableRendererFeature feature = GetRendererFeature(rendererFeatureTypes[featureType]);
+            ScriptableRendererFeature feature = GetCachedRendererFeature(featureType);
             return feature != null;
         }
       
@@ -380,6 +459,46 @@ namespace SketchRenderer.Editor.Rendering
                 }
             }
         }
+
+        private static ScriptableRendererFeature GetCachedRendererFeature(SketchRendererFeatureType featureType)
+        {
+            ScriptableRendererFeature feature = null;
+            switch (featureType)
+            {
+                case SketchRendererFeatureType.UVS:
+                    feature = cachedUvsRendererFeature;
+                    break;
+
+                case SketchRendererFeatureType.OUTLINE_SMOOTH:
+                    feature = cachedSmoothOutlineRendererFeature;
+                    break;
+
+                case SketchRendererFeatureType.OUTLINE_SKETCH:
+                    feature = cachedSketchCompositionRendererFeature;
+                    break;
+
+                case SketchRendererFeatureType.LUMINANCE:
+                    feature = cachedLuminanceRendererFeature;
+                    break;
+
+                case SketchRendererFeatureType.MATERIAL:
+                    feature = cachedMaterialSurfaceRendererFeature;
+                    break;
+
+                case SketchRendererFeatureType.COMPOSITOR:
+                    feature = cachedSketchCompositionRendererFeature;
+                    break;
+            }
+
+            if (feature == null)
+            {
+                feature = GetRendererFeature(rendererFeatureTypes[featureType]);
+                if(feature != null)
+                    CacheRendererFeature(feature, featureType);
+            }
+
+            return feature;
+        }
       
         private static ScriptableRendererFeature GetRendererFeature(Type featureType)
         {
@@ -404,6 +523,17 @@ namespace SketchRenderer.Editor.Rendering
             else
                 throw new Exception("[SketchRendererDataWrapper] Renderer feature does not implement ISketchRendererFeature interface.");
         }
+
+        private static ISketchRendererFeature GetCachedSketchRendererFeature(SketchRendererFeatureType featureType)
+        {
+            ScriptableRendererFeature feature = GetCachedRendererFeature(featureType);
+            
+            ISketchRendererFeature sketchRendererFeature = feature as ISketchRendererFeature;
+            if(sketchRendererFeature != null)
+                return sketchRendererFeature;
+            else
+                throw new Exception("[SketchRendererDataWrapper] Renderer feature does not implement ISketchRendererFeature interface.");
+        }
         
         internal static void AddRendererFeature(SketchRendererFeatureType featureType)
         {
@@ -415,9 +545,11 @@ namespace SketchRenderer.Editor.Rendering
             {
                 ScriptableRendererFeature rendererFeature = GetNewRendererFeatureAsset(featureType);
                 int preferredHierarchySlot = featureType == SketchRendererFeatureType.COMPOSITOR ? GetIndexOfPreviousHierarchyFeature(featureType) : GetIndexOfNextHierarchyFeature(featureType);
-                if(rendererFeature != null) 
-
+                if (rendererFeature != null)
+                {
                     AddFeatureToData(rendererData, rendererFeature, preferredHierarchySlot);
+                    CacheRendererFeature(rendererFeature, featureType);
+                }
             }
         }
         
@@ -520,9 +652,9 @@ namespace SketchRenderer.Editor.Rendering
       
         internal static void ConfigureRendererFeature(SketchRendererFeatureType featureType, SketchRendererContext rendererContext, SketchResourceAsset resourceAsset)
         {
-            if(!CheckHasActiveFeature(featureType))
+            if (!CheckHasActiveFeature(featureType))
                 AddRendererFeature(featureType);
-            
+
             UpdateRendererFeatureByContext(featureType, rendererContext, resourceAsset);
             UniversalRendererData rendererData = GetCurrentRendererData();
             if (EditorUtility.IsPersistent(rendererData))
@@ -538,7 +670,7 @@ namespace SketchRenderer.Editor.Rendering
             if(context == null)
                 throw new ArgumentNullException("[SketchRendererDataWrapper] Missing SketchRendererContext in attempt to configure current renderer.");
             
-            ISketchRendererFeature sketchFeature = GetSketchRendererFeature(rendererFeatureTypes[featureType]);
+            ISketchRendererFeature sketchFeature = GetCachedSketchRendererFeature(featureType);
             if (sketchFeature != null)
             {
                 sketchFeature.ConfigureByContext(context, resources);
@@ -553,9 +685,10 @@ namespace SketchRenderer.Editor.Rendering
             UniversalRendererData rendererData = GetCurrentRendererData();
             if (rendererData != null)
             {
-                ScriptableRendererFeature rendererFeature = GetRendererFeature(rendererFeatureTypes[featureType]);
+                ScriptableRendererFeature rendererFeature = GetCachedRendererFeature(featureType);
                 if(rendererFeature != null)
                     RemoveFeatureFromData(rendererData, rendererFeature);
+                CacheRendererFeature(null, featureType);
             }
         }
 

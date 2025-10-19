@@ -17,24 +17,36 @@ namespace SketchRenderer.Runtime.Data
                                                        || (UseLuminanceFeature && LuminanceFeatureData.RequiresTextureCoordinateFeature());
         
         public RenderUVsPassData UVSFeatureData;
+        [HideInInspector][SerializeField]
+        private bool isUVsFeatureDirty;
 
         public bool UseMaterialFeature;
         public MaterialSurfacePassData MaterialFeatureData = new ();
+        [HideInInspector][SerializeField]
+        private bool isMaterialFeatureDirty;
 
         public bool UseLuminanceFeature;
         public LuminancePassData LuminanceFeatureData = new();
+        [HideInInspector][SerializeField]
+        private bool isLuminanceFeatureDirty;
         
         public EdgeDetectionPassData EdgeDetectionFeatureData;
 
         public bool UseSmoothOutlineFeature;
         public AccentedOutlinePassData AccentedOutlineFeatureData = new ();
         public ThicknessDilationPassData ThicknessDilationFeatureData = new ();
+        [HideInInspector][SerializeField]
+        private bool isSmoothFeatureDirty;
 
         public bool UseSketchyOutlineFeature;
         public SketchStrokesPassData SketchyOutlineFeatureData = new ();
+        [HideInInspector][SerializeField]
+        private bool isSketchyFeatureDirty;
 
         public bool UseCompositorFeature => UseUVsFeature || UseMaterialFeature || UseLuminanceFeature || UseSmoothOutlineFeature || UseSketchyOutlineFeature;
         public SketchCompositionPassData CompositionFeatureData = new ();
+        [HideInInspector][SerializeField]
+        private bool isCompositionFeatureDirty;
 
         public bool IsFeaturePresent(SketchRendererFeatureType featureType)
         {
@@ -48,6 +60,45 @@ namespace SketchRenderer.Runtime.Data
                 SketchRendererFeatureType.COMPOSITOR => UseCompositorFeature,
                 _ => throw new NotImplementedException(),
             };
+        }
+
+        public bool IsFeatureDirty(SketchRendererFeatureType featureType)
+        {
+            return featureType switch
+            {
+                SketchRendererFeatureType.UVS => isUVsFeatureDirty,
+                SketchRendererFeatureType.OUTLINE_SMOOTH => isSmoothFeatureDirty,
+                SketchRendererFeatureType.OUTLINE_SKETCH => isSketchyFeatureDirty,
+                SketchRendererFeatureType.LUMINANCE => isLuminanceFeatureDirty,
+                SketchRendererFeatureType.MATERIAL => isMaterialFeatureDirty,
+                SketchRendererFeatureType.COMPOSITOR => isCompositionFeatureDirty,
+                _ => throw new NotImplementedException(),
+            };
+        }
+        
+        public void SetFeatureDirty(SketchRendererFeatureType featureType, bool isDirty)
+        {
+            switch (featureType)
+            {
+                case SketchRendererFeatureType.UVS:
+                    isUVsFeatureDirty = isDirty;
+                    break;
+                case SketchRendererFeatureType.OUTLINE_SMOOTH:
+                    isSmoothFeatureDirty = isDirty;
+                    break;
+                case SketchRendererFeatureType.OUTLINE_SKETCH:
+                    isSketchyFeatureDirty = isDirty;
+                    break;
+                case SketchRendererFeatureType.LUMINANCE:
+                    isLuminanceFeatureDirty = isDirty;
+                    break;
+                case SketchRendererFeatureType.MATERIAL:
+                    isMaterialFeatureDirty = isDirty;
+                    break;
+                case SketchRendererFeatureType.COMPOSITOR:
+                    isCompositionFeatureDirty = isDirty;
+                        break;
+            }
         }
 
         public void ConfigureSettings()

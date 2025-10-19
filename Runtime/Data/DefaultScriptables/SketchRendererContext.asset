@@ -90,6 +90,7 @@ MonoBehaviour:
     StrokeThreshold: 0
     DirectionSmoothingFactor: 0.5
     FrameSmoothingFactor: 0
+    StrokeThicknessDepthFalloff: 0.25
     UsePerpendicularDirection: 0
   CompositionFeatureData:
     debugMode: 0

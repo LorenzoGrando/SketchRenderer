@@ -1,6 +1,7 @@
 using SketchRenderer.Editor.TextureTools;
 using SketchRenderer.Editor.UIToolkit;
 using SketchRenderer.Runtime.Data;
+using SketchRenderer.Runtime.Rendering.RendererFeatures;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -49,6 +50,7 @@ namespace SketchRenderer.Editor.Rendering
                 SerializedProperty uvDataProp = serializedObject.FindProperty("UVSFeatureData");
                 var uvDataField = new PropertyField(uvDataProp);
                 uvDataField.BindProperty(uvDataProp);
+                uvDataField.RegisterCallback<SerializedPropertyChangeEvent>(evt => OnFeatureDataChanged(SketchRendererFeatureType.UVS));
                 SketchRendererUIUtils.AddWithMargins(uvDataFoldout, uvDataField, SketchRendererUIData.MinorFieldMargins);
                 
                 assetField.Add(uvDataFoldout);
@@ -62,6 +64,7 @@ namespace SketchRenderer.Editor.Rendering
             var materialDataField = new PropertyField(materialDataProp);
             materialDataField.BindProperty(materialDataProp);
             materialDataField.RegisterCallback<ExecuteCommandEvent>(TriggerRepaint);
+            materialDataField.RegisterCallback<SerializedPropertyChangeEvent>(evt => OnFeatureDataChanged(SketchRendererFeatureType.MATERIAL));
             SketchRendererUIUtils.AddWithMargins(materialDataFoldout, materialDataField, SketchRendererUIData.MinorFieldMargins);
             if (!context.MaterialFeatureData.IsAllPassDataValid())
             {
@@ -79,6 +82,7 @@ namespace SketchRenderer.Editor.Rendering
             var luminanceDataField = new PropertyField(luminanceDataProp);
             luminanceDataField.BindProperty(luminanceDataProp);
             luminanceDataField.RegisterCallback<ExecuteCommandEvent>(TriggerRepaint);
+            luminanceDataField.RegisterCallback<SerializedPropertyChangeEvent>(evt => OnFeatureDataChanged(SketchRendererFeatureType.LUMINANCE));
             SketchRendererUIUtils.AddWithMargins(luminanceDataFoldout, luminanceDataField, SketchRendererUIData.MinorFieldMargins);
             if (!context.LuminanceFeatureData.IsAllPassDataValid())
             {
@@ -125,6 +129,7 @@ namespace SketchRenderer.Editor.Rendering
             SerializedProperty compositionDataProp = serializedObject.FindProperty("CompositionFeatureData");
             var compositionDataField = new PropertyField(compositionDataProp);
             compositionDataField.BindProperty(compositionDataProp);
+            compositionDataField.RegisterCallback<SerializedPropertyChangeEvent>(evt => OnFeatureDataChanged(SketchRendererFeatureType.COMPOSITOR));
             SketchRendererUIUtils.AddWithMargins(compositionFoldout, compositionDataField, SketchRendererUIData.MinorFieldMargins);
             
             assetField.Add(compositionFoldout);
@@ -146,6 +151,7 @@ namespace SketchRenderer.Editor.Rendering
             var smoothFoldout = SketchRendererUI.SketchFoldoutWithToggle("Smooth Outline Feature", UseSmoothOutlineProp, false, true, DynamicToggleCallback);
             
             var edgeField = ConstructEdgeDetectionElement();
+            edgeField.RegisterCallback<SerializedPropertyChangeEvent>(evt => OnFeatureDataChanged(SketchRendererFeatureType.OUTLINE_SMOOTH));
             edgeField.RegisterCallback<ExecuteCommandEvent>(TriggerRepaint);
             SketchRendererUIUtils.AddWithMargins(smoothFoldout, edgeField, SketchRendererUIData.MinorFieldMargins);
             
@@ -155,6 +161,7 @@ namespace SketchRenderer.Editor.Rendering
             
             var accentedDataField = new PropertyField(accentedDataProp);
             accentedDataField.RegisterCallback<ExecuteCommandEvent>(TriggerRepaint);
+            accentedDataField.RegisterCallback<SerializedPropertyChangeEvent>(evt => OnFeatureDataChanged(SketchRendererFeatureType.OUTLINE_SMOOTH));
             accentedDataField.BindProperty(accentedDataProp);
             SketchRendererUIUtils.AddWithMargins(accentedFoldout, accentedDataField, CornerData.Empty);
             SketchRendererUIUtils.AddWithMargins(smoothFoldout, accentedFoldout, SketchRendererUIData.MinorFieldMargins);
@@ -165,6 +172,7 @@ namespace SketchRenderer.Editor.Rendering
             
             var thicknessDataField = new PropertyField(thicknessDataProp);
             thicknessDataField.BindProperty(thicknessDataProp);
+            thicknessDataField.RegisterCallback<SerializedPropertyChangeEvent>(evt => OnFeatureDataChanged(SketchRendererFeatureType.OUTLINE_SMOOTH));
             SketchRendererUIUtils.AddWithMargins(thicknessFoldout, thicknessDataField, CornerData.Empty);
             SketchRendererUIUtils.AddWithMargins(smoothFoldout, thicknessFoldout, SketchRendererUIData.MinorFieldMargins);
             
@@ -177,12 +185,14 @@ namespace SketchRenderer.Editor.Rendering
             
             var edgeField = ConstructEdgeDetectionElement();
             edgeField.RegisterCallback<ExecuteCommandEvent>(TriggerRepaint);
+            edgeField.RegisterCallback<SerializedPropertyChangeEvent>(evt => OnFeatureDataChanged(SketchRendererFeatureType.OUTLINE_SKETCH));
             SketchRendererUIUtils.AddWithMargins(sketchFoldout, edgeField, SketchRendererUIData.MinorFieldMargins);
             
             SerializedProperty sketchyDataProp = serializedObject.FindProperty("SketchyOutlineFeatureData");
             var sketchyDataField = new PropertyField(sketchyDataProp);
             sketchyDataField.BindProperty(sketchyDataProp);
             sketchyDataField.RegisterCallback<ExecuteCommandEvent>(TriggerRepaint);
+            sketchyDataField.RegisterCallback<SerializedPropertyChangeEvent>(evt => OnFeatureDataChanged(SketchRendererFeatureType.OUTLINE_SKETCH));
             SketchRendererUIUtils.AddWithMargins(sketchFoldout, sketchyDataField, SketchRendererUIData.MinorFieldMargins);
             
             return sketchFoldout;
@@ -222,6 +232,13 @@ namespace SketchRenderer.Editor.Rendering
             root.Clear();
             ConstructAssetField();
             Repaint();
+        }
+
+        private void OnFeatureDataChanged(SketchRendererFeatureType featureType)
+        {
+            SketchRendererContext context = (SketchRendererContext)target;
+            context.SetFeatureDirty(featureType, true);
+            context.SetFeatureDirty(SketchRendererFeatureType.COMPOSITOR, true);
         }
 
         private void OnActiveTonalArtMapPacked()
