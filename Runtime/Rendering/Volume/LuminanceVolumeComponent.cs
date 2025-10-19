@@ -3,10 +3,10 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using SketchRenderer.Runtime.Data;
 using SketchRenderer.Runtime.Rendering.RendererFeatures;
+using SketchRenderer.Runtime.TextureTools.TonalArtMap;
 
 namespace SketchRenderer.Runtime.Rendering.Volume
 {
-    [System.Serializable]
     [VolumeComponentMenu(SketchRendererData.PackageInspectorVolumePath + "Luminance")]
     public class LuminanceVolumeComponent : VolumeComponent
     {

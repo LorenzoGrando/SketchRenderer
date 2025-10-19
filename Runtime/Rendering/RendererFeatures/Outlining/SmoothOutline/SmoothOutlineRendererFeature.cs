@@ -134,6 +134,11 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                     edgeDetectionPass.Setup(primaryData, edgeDetectionMaterial);
                     edgeDetectionPass.SetSecondary(false);
                     
+                    if (secondaryEdgeDetectionPass == null)
+                    {
+                        Create();
+                        return;
+                    }
                     EdgeDetectionPassData secondaryData = new EdgeDetectionPassData();
                     secondaryData.CopyFrom(CurrentEdgeDetectionPassData);
                     secondaryData.Source = EdgeDetectionGlobalData.EdgeDetectionSource.COLOR;

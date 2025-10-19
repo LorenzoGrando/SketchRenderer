@@ -46,6 +46,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             OutlineAngleSensitivity = 1f;
             OutlineAngleConstraint = 0.45f;
             OutlineNormalSensitivity = 0.5f;
+            PrimarySplitOutlineThreshold = OutlineThreshold;
+            SecondarySplitOutlineThreshold = OutlineThreshold;
         }
         public void CopyFrom(EdgeDetectionPassData passData)
         {
@@ -102,7 +104,10 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             overrideData.Method = volumeComponent.Method.overrideState
                 ? volumeComponent.Method.value : Method;
             overrideData.Source = volumeComponent.Source.overrideState ? volumeComponent.Source.value : Source;
-            overrideData.OutlineThreshold = volumeComponent.Threshold.overrideState ? volumeComponent.Threshold.value : OutlineThreshold;
+            if (overrideData.Source == EdgeDetectionGlobalData.EdgeDetectionSource.COLOR)
+                overrideData.OutlineThreshold = volumeComponent.ColorThreshold.overrideState ? volumeComponent.ColorThreshold.value : OutlineThreshold;
+            else
+                overrideData.OutlineThreshold = volumeComponent.DepthNormalsThreshold.overrideState ? volumeComponent.DepthNormalsThreshold.value : OutlineThreshold;
             overrideData.OutlineDistanceFalloff = volumeComponent.DistanceFalloff.overrideState ? volumeComponent.DistanceFalloff.value : OutlineDistanceFalloff;
             overrideData.OutlineOffset = volumeComponent.Offset.overrideState ? volumeComponent.Offset.value : OutlineOffset;
             overrideData.OutlineAngleSensitivity = volumeComponent.AngleSensitivity.overrideState ? volumeComponent.AngleSensitivity.value : OutlineAngleSensitivity;
@@ -110,8 +115,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             overrideData.OutlineNormalSensitivity = volumeComponent.NormalSensitivity.overrideState ? volumeComponent.NormalSensitivity.value : OutlineNormalSensitivity;
             overrideData.OutputType = OutputType;
 
-            overrideData.PrimarySplitOutlineThreshold = PrimarySplitOutlineThreshold;
-            overrideData.SecondarySplitOutlineThreshold = SecondarySplitOutlineThreshold;
+            overrideData.PrimarySplitOutlineThreshold = volumeComponent.DepthNormalsThreshold.overrideState ? volumeComponent.DepthNormalsThreshold.value : PrimarySplitOutlineThreshold;
+            overrideData.SecondarySplitOutlineThreshold = volumeComponent.ColorThreshold.overrideState ? volumeComponent.ColorThreshold.value : SecondarySplitOutlineThreshold;
             
             return overrideData;
         }

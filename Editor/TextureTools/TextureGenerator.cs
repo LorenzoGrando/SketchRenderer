@@ -9,25 +9,8 @@ namespace SketchRenderer.Editor.TextureTools
 {
     internal static class TextureGenerator
     {
-        internal static event Action OnRecreateTargetTexture;
-        private static RenderTexture targetRT;
-
-        internal static RenderTexture TargetRT
-        {
-            get
-            {
-                if(targetRT == null)
-                    CreateOrClearTarget();
-                return targetRT;
-            }
-        }
+        internal static event Action<RenderTexture> OnRecreateTargetTexture;
         
-        
-        internal static TextureResolution Resolution;
-        internal static int Dimension
-        {
-            get; private set;
-        }
         internal static TextureImporterType TextureImporterType;
         
         
@@ -76,38 +59,26 @@ namespace SketchRenderer.Editor.TextureTools
             OverwriteFileOutputName = string.Empty;
             OverwriteFileOutputPath = string.Empty;
         }
-        
-        internal static void OverwriteGeneratorDimension(int dimension)
-        {
-            Dimension = dimension;
-            CreateOrClearTarget();
-        }
 
         internal static void PrepareGeneratorForRender()
         {
             ResetGeneratorOutputSettings();
-            Dimension = TextureAssetManager.GetTextureResolution(Resolution);
-            CreateOrClearTarget();
         }
         
         #region Asset Preparation
         
-        internal static void CreateOrClearTarget()
+        internal static void CreateOrClearTarget(ref RenderTexture targetRT, int dimension)
         {
             if (targetRT != null)
             {
                 if(RenderTexture.active == targetRT)
                     RenderTexture.active = null;
                 targetRT.Release();
-                targetRT = null;
             }
-            
-            if(Dimension <= 0)
-                Dimension = TextureAssetManager.GetTextureResolution(Resolution);
 
-            targetRT = CreateRT(Dimension);
+            targetRT = CreateRT(dimension);
             targetRT.hideFlags = HideFlags.HideAndDontSave;
-            OnRecreateTargetTexture?.Invoke();
+            OnRecreateTargetTexture?.Invoke(targetRT);
         }
         
         internal static RenderTexture CreateRT(int dimension)
@@ -144,12 +115,12 @@ namespace SketchRenderer.Editor.TextureTools
         
         #region Asset Management
 
-        internal static void BlitToTargetTexture(Material blitMat, int pass = 0)
+        internal static void BlitToTargetTexture(RenderTexture targetRT, Material blitMat, int pass = 0)
         {
             Graphics.Blit(null, targetRT,  blitMat, pass);
         }
         
-        internal static Texture2D SaveCurrentTargetTexture(bool overwrite, string fileName = null)
+        internal static Texture2D SaveCurrentTargetTexture(RenderTexture targetRT, bool overwrite, string fileName = null)
         {
             string path = GetTextureOutputPath();
             
@@ -158,10 +129,10 @@ namespace SketchRenderer.Editor.TextureTools
             
             string name = GetTextureOutputName();
         
-            return TextureAssetManager.OutputToAssetTexture(TargetRT, path, name, overwrite);
+            return TextureAssetManager.OutputToAssetTexture(targetRT, path, name, overwrite);
         }
         
-        internal static Texture2D SaveCurrentTargetTexture(TextureImporterType texType, bool overwrite, string fileName = null)
+        internal static Texture2D SaveCurrentTargetTexture(RenderTexture targetRT, TextureImporterType texType, bool overwrite, string fileName = null)
         {
             TextureImporterType = texType;
 
@@ -172,7 +143,7 @@ namespace SketchRenderer.Editor.TextureTools
             
             string name = GetTextureOutputName();
         
-            return TextureAssetManager.OutputToAssetTexture(TargetRT, path, name, overwrite, TextureImporterType);
+            return TextureAssetManager.OutputToAssetTexture(targetRT, path, name, overwrite, TextureImporterType);
         }
         
         #endregion

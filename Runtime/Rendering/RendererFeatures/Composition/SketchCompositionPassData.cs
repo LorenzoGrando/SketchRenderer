@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using SketchRenderer.Runtime.Rendering.Volume;
 using UnityEngine;
 using SketchRenderer.ShaderLibrary;
+using UnityEngine.Rendering;
 
 namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 {
@@ -59,7 +61,21 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
         public SketchCompositionPassData GetPassDataByVolume()
         {
-            return this;
+            if(VolumeManager.instance == null || VolumeManager.instance.stack == null)
+                return this;
+            CompositionVolumeComponent volumeComponent = VolumeManager.instance.stack.GetComponent<CompositionVolumeComponent>();
+            if (volumeComponent == null)
+                return this;
+            SketchCompositionPassData overrideData = new SketchCompositionPassData();
+
+            overrideData.OutlineStrokeColor = volumeComponent.OutlineStrokeColor.overrideState ? volumeComponent.OutlineStrokeColor.value : OutlineStrokeColor;
+            overrideData.ShadingStrokeColor = volumeComponent.ShadingStrokeColor.overrideState ? volumeComponent.ShadingStrokeColor.value : ShadingStrokeColor;
+            overrideData.StrokeBlendMode = volumeComponent.StrokeBlendingOperation.overrideState ? volumeComponent.StrokeBlendingOperation.value : StrokeBlendMode;
+            overrideData.BlendStrength = volumeComponent.BlendStrength.overrideState ? volumeComponent.BlendStrength.value : BlendStrength;
+            overrideData.MaterialAccumulationStrength = volumeComponent.MaterialAccumulation.overrideState ? volumeComponent.MaterialAccumulation.value : MaterialAccumulationStrength;
+            overrideData.featuresToCompose = FeaturesToCompose;
+            
+            return overrideData;
         }
 
         public bool RequiresColorTexture()

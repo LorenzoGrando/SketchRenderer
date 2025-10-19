@@ -28,6 +28,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public float DirectionSmoothingFactor;
         [Range(0f, 1f)] 
         public float FrameSmoothingFactor;
+        [Range(0f, 1f)] 
+        public float StrokeThicknessDepthFalloff;
         
         [HideInInspector] 
         public bool UsePerpendicularDirection;
@@ -44,6 +46,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             StrokeThreshold = 0.05f;
             DirectionSmoothingFactor = 0.5f;
             FrameSmoothingFactor = 0;
+            StrokeThicknessDepthFalloff = 0.25f;
         }
 
         public void CopyFrom(SketchStrokesPassData passData)
@@ -59,6 +62,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             StrokeThreshold = passData.StrokeThreshold;
             DirectionSmoothingFactor = passData.DirectionSmoothingFactor;
             FrameSmoothingFactor = passData.FrameSmoothingFactor;
+            StrokeThicknessDepthFalloff = passData.StrokeThicknessDepthFalloff;
             UsePerpendicularDirection = passData.UsePerpendicularDirection;
         }
 
@@ -99,12 +103,13 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             overrideData.StrokeSampleOffsetRate = volumeComponent.StrokeScaleOffset.overrideState ? volumeComponent.StrokeScaleOffset.value : StrokeSampleOffsetRate;
             overrideData.DoDownscale = volumeComponent.DoDownscale.overrideState ? volumeComponent.DoDownscale.value : DoDownscale;
             if(overrideData.DoDownscale)
-                overrideData.DownscaleFactor = volumeComponent.DownscaleFactor.overrideState ? volumeComponent.DownscaleFactor.value : DownscaleFactor;
+                overrideData.DownscaleFactor = DownscaleFactor;
             else
                 overrideData.DownscaleFactor = 1;
             overrideData.StrokeThreshold = volumeComponent.MinThresholdForStroke.overrideState ? volumeComponent.MinThresholdForStroke.value : StrokeThreshold;;
             overrideData.DirectionSmoothingFactor = volumeComponent.DirectionSmoothing.overrideState? volumeComponent.DirectionSmoothing.value : DirectionSmoothingFactor;
             overrideData.FrameSmoothingFactor = volumeComponent.FrameSmoothingFactor.overrideState ? volumeComponent.FrameSmoothingFactor.value : FrameSmoothingFactor;
+            overrideData.StrokeThicknessDepthFalloff = volumeComponent.StrokeDepthFalloff.overrideState ? volumeComponent.StrokeDepthFalloff.value : StrokeThicknessDepthFalloff;
             
             return overrideData;
         }

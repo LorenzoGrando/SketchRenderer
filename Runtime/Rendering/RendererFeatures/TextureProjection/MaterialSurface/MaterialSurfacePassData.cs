@@ -10,8 +10,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public TextureProjectionGlobalData.TextureProjectionMethod ProjectionMethod;
         [Range(1f, 5f)]
         public float ConstantScaleFalloffFactor = 2f;
-        public Texture2D AlbedoTexture;
-        public Texture2D NormalTexture;
+        public Texture AlbedoTexture;
+        public Texture NormalTexture;
         public Vector2Int Scale;
         [Range(0f, 1f)]
         public float BaseColorBlendFactor;
@@ -36,22 +36,26 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
     
         public bool IsAllPassDataValid()
         {
-            return AlbedoTexture != null && NormalTexture != null;
+            MaterialSurfacePassData passData = GetPassDataByVolume();
+            return passData.AlbedoTexture != null && passData.NormalTexture != null;
         }
 
         public MaterialSurfacePassData GetPassDataByVolume()
         {
             if(VolumeManager.instance == null || VolumeManager.instance.stack == null)
                 return this;
+            MaterialVolumeComponent volumeComponent = VolumeManager.instance.stack.GetComponent<MaterialVolumeComponent>();
+            if (volumeComponent == null || !volumeComponent.active)
+                return this;
 
             MaterialSurfacePassData overrideData = new MaterialSurfacePassData();
         
-            overrideData.ProjectionMethod = ProjectionMethod;
-            overrideData.ConstantScaleFalloffFactor = ConstantScaleFalloffFactor;
-            overrideData.AlbedoTexture = AlbedoTexture;
-            overrideData.NormalTexture = NormalTexture;
-            overrideData.Scale = Scale;
-            overrideData.BaseColorBlendFactor = BaseColorBlendFactor;
+            overrideData.ProjectionMethod = volumeComponent.ProjectionMethod.overrideState ? volumeComponent.ProjectionMethod.value : ProjectionMethod;
+            overrideData.ConstantScaleFalloffFactor = volumeComponent.ConstantScaleFalloffFactor.overrideState ? volumeComponent.ConstantScaleFalloffFactor.value : ConstantScaleFalloffFactor;
+            overrideData.AlbedoTexture = volumeComponent.AlbedoTexture.overrideState ? volumeComponent.AlbedoTexture.value : AlbedoTexture;
+            overrideData.NormalTexture = volumeComponent.DirectionalTexture.overrideState ? volumeComponent.DirectionalTexture.value : NormalTexture;
+            overrideData.Scale = volumeComponent.Scales.overrideState ? new Vector2Int(Mathf.RoundToInt(volumeComponent.Scales.value.x), Mathf.RoundToInt(volumeComponent.Scales.value.y)) : Scale;
+            overrideData.BaseColorBlendFactor = volumeComponent.BaseColorBlend.overrideState ? volumeComponent.BaseColorBlend.value : BaseColorBlendFactor;
         
             return overrideData;
         }

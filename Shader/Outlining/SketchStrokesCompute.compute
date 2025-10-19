@@ -11,6 +11,7 @@
 #pragma multi_compile_local SIMPLE HATCHING ZIGZAG FEATHERING
 #pragma multi_compile_local _ USE_PERPENDICULAR_DIRECTION
 #pragma multi_compile_local _ FRAME_SMOOTHING
+#pragma multi_compile_local _ DEPTH_SCALING
 
 #include "Packages/com.lorenzogrando.sketchrenderer/Shader/Strokes/StrokeSDFInclude.hlsl"
 
@@ -24,33 +25,39 @@ uint _TextureHeight;
 float _ThresholdForStroke;
 float _DirectionSmoothingFactor;
 float _SmoothingThreshold;
+float _DepthFalloff;
 
 
 //Used by combination step to know where to sample
 RWStructuredBuffer<uint> _CombineStrokesPointerBuffer; // current stroke id in gradient buffers.
 RWStructuredBuffer<uint> _CombineStrokesLengthBuffer;//stroke length multiplier, aka how many times it has been combined
+RWStructuredBuffer<float> _StrokesDepthBuffer; //stroke depth falloff calculation
 
 //declare them at max supported kernel size, though this does lead to some wasted memory
 groupshared float4 gradients[32*32];
-groupshared float localIsEdge[32*32];
+//Edge mask, depth scaling
+groupshared float2 localIsEdge[32*32];
 void ComputeAverageStroke (uint3 id, uint3 idG, uint3 idGs, uint2 kernelSizes)
 {
     uint gFlatIndex = idG.y * kernelSizes.x + idG.x;
     uint groupFlatIndex = idGs.y * _GroupsX + idGs.x;
     int totalElements = (int)(kernelSizes.x * kernelSizes.y);
 
-    float angle = _OriginalSource[id.xy].g;
+    float4 sample = _OriginalSource[id.xy].rgba;
+
+    float angle = sample.g;
     angle = angle * 2.0 * PI - PI;
-    float directionStrength = _OriginalSource[id.xy].b;
+    float directionStrength = sample.r;
+    float depthSample = sample.b;
     
-    float isEdge = _OriginalSource[id.xy].r;
+    float isEdge = sample.a;
     float2 position = float2(id.x/(float)_TextureWidth, id.y/(float)_TextureHeight);
     float2 direction = float2(cos(angle), sin(angle)) * (directionStrength);
     if (length(direction) < 0.9)
         direction = -direction;
     float4 gradient = float4(position.xy, direction.xy);
     gradients[gFlatIndex] = gradient;
-    localIsEdge[gFlatIndex] = step(0.5, isEdge);
+    localIsEdge[gFlatIndex] = float2(step(0.5, isEdge), depthSample);
     
     GroupMemoryBarrierWithGroupSync();
     
@@ -58,11 +65,12 @@ void ComputeAverageStroke (uint3 id, uint3 idG, uint3 idGs, uint2 kernelSizes)
     {
         float2 averagePosition = float2(0, 0);
         float2 averageDirection = float2(0, 0);
+        float averageDepth = 0.0;
         int summed = 0;
         [loop]
         for (int i = 0; i < totalElements; i++)
         {
-            if (localIsEdge[i] > 0)
+            if (localIsEdge[i].x > 0)
             {
                 averagePosition += gradients[i].rg;
                 float2 dir = gradients[i].ba;
@@ -73,6 +81,7 @@ void ComputeAverageStroke (uint3 id, uint3 idG, uint3 idGs, uint2 kernelSizes)
                     if (isSimilarButOpposite < 0 && step(1.0 - _DirectionSmoothingFactor, abs(isSimilarButOpposite) ))
                         dir = -dir;
                 }
+                averageDepth += localIsEdge[i].y;
                 averageDirection += dir;
                 summed++;
             }
@@ -81,8 +90,9 @@ void ComputeAverageStroke (uint3 id, uint3 idG, uint3 idGs, uint2 kernelSizes)
         if(isAverageStroke)
         {
             //averagePosition = gradients[0].rg + float2(float(id.x + kernelSizes.x)/2.0, float(id.y + kernelSizes.y)/2.0);
-            averagePosition /= (float)summed;
+            averagePosition /= float(summed);
             averageDirection = normalize(averageDirection);
+            averageDepth /= float(summed);
         }
         gradients[0] = float4(averagePosition.xy, averageDirection.xy * isAverageStroke);
 
@@ -93,16 +103,24 @@ void ComputeAverageStroke (uint3 id, uint3 idG, uint3 idGs, uint2 kernelSizes)
             //gradients[0] = previousGradient;
             gradients[0] = lerp(gradients[0], previousGradient, 0.35);
         #endif
+
+        float depthScale = averageDepth;
+        #if defined (DEPTH_SCALING)
+        depthScale = lerp(_DepthFalloff, 1.0, 1.0 - saturate(pow((1.0 - averageDepth), 20.0))) * isAverageStroke;
+        #else
+        depthScale = 1;
+        #endif
         
         _GradientVectors[groupFlatIndex] = gradients[0];
         _CombineStrokesPointerBuffer[groupFlatIndex] = groupFlatIndex; //this id, 
         _CombineStrokesLengthBuffer[groupFlatIndex] = 1; //base stroke length (1.0)
+        _StrokesDepthBuffer[groupFlatIndex] = depthScale;
     }
     GroupMemoryBarrierWithGroupSync();
 
     //Debugging
     //float4 grad = gradients[0];
-    //_OriginalSource[id.xy] = float4(abs(grad.ba), 0.0, 1.0);
+    _OriginalSource[id.xy] = float4(_StrokesDepthBuffer[groupFlatIndex], 0, 0.0, 1.0);
     
     //float x = float(idG.x)/(float)kernelSizes.x;
     //float y = float(idG.y)/(float)kernelSizes.y;
@@ -142,7 +160,7 @@ uint _CombinationIteration;
 void CollapseSimilarStrokes(uint3 id : SV_DispatchThreadID, uint3 idG : SV_GroupThreadID, uint3 idGs : SV_GroupID)
 {
     uint threadFlatIndex = id.x + id.y * 8 * _CombinationXGroups;
-    int i = _CombinationIteration + 1;
+    uint i = _CombinationIteration + 1;
     float failed = 0;
     uint thisStrokeBufferData = _CombineStrokesPointerBuffer[threadFlatIndex];
     float isStillOwnerStroke = thisStrokeBufferData == threadFlatIndex;
@@ -155,12 +173,12 @@ void CollapseSimilarStrokes(uint3 id : SV_DispatchThreadID, uint3 idG : SV_Group
         failed++;
     
     int2 targetSampleOffset = int2(round(thisStroke.ba * i)); //determine direction of sample
-    int2 offsetGroupCoords = idG.xy + targetSampleOffset;
+    int2 offsetGroupCoords = int2(idG.xy) + targetSampleOffset;
     //Check if outside group bounds, prevent race conditions with other groups
     if(offsetGroupCoords.x < 0 || offsetGroupCoords.y < 0 || offsetGroupCoords.x >= 8 || offsetGroupCoords.y >= 8)
         failed++;
     
-    int sampleOffset = targetSampleOffset.x + targetSampleOffset.y * _CombinationXGroups * 8;
+    int sampleOffset = targetSampleOffset.x + targetSampleOffset.y * int(_CombinationXGroups) * 8;
     uint sampleThreadFlatIndex = uint(int(threadFlatIndex) + sampleOffset);
 
     uint sampleStrokeBufferData = _CombineStrokesPointerBuffer[sampleThreadFlatIndex];
@@ -171,7 +189,10 @@ void CollapseSimilarStrokes(uint3 id : SV_DispatchThreadID, uint3 idG : SV_Group
     //Is similar enough?
     float4 sampleStroke = _GradientVectors[sampleThreadFlatIndex]; 
     float similarity = step(_CombinationThreshold, dot(thisStroke.ba, sampleStroke.ba));
-    if (similarity && failed <= 0)
+    float depthSimilarity = step(_CombinationThreshold, 1.0 - abs(_StrokesDepthBuffer[threadFlatIndex] - _StrokesDepthBuffer[sampleThreadFlatIndex]));
+    if (similarity + depthSimilarity < 1.9)
+        failed++;
+    if (failed <= 0)
     {
         //Additional check to ensure no other thread that passed all checks was able to write to the buffer before this one
         if(_CombineStrokesPointerBuffer[sampleThreadFlatIndex] == sampleThreadFlatIndex)
@@ -207,29 +228,29 @@ int _StrokeSampleScale;
 float _StrokeScaleOffsetRate;
 groupshared StrokeData groupData;
 groupshared float isEdge;
-groupshared float4 debugColor;
 void ApplyStrokeSDFs(uint3 id, uint2 idG, uint3 idGs, uint2 kernelSizes)
 {
+    int scale = _StrokeSampleScale - 1;
     float value = 1;
     float4 direction = float4(0, 0, 0, 0);
     float widthScalar = (float)_TextureWidth/(float)kernelSizes.x;
     float heightScalar = (float)_TextureHeight/(float)kernelSizes.y;
     float baseScalar = (min(widthScalar, heightScalar)) / ((float)_DownscaleFactor);
-    float lengthSampleScalar = baseScalar / _StrokeSampleScale;
+    float lengthSampleScalar = baseScalar / (scale + 1);
     StrokeData data = _OutlineStrokeData[0];
     [loop]
-    for (int x = -_StrokeSampleScale; x < _StrokeSampleScale + 1; x++)
+    for (int x = -scale; x < scale + 1; x++)
     {
         [loop]
-        for (int  y = -_StrokeSampleScale; y < _StrokeSampleScale + 1; y++)
+        for (int  y = -scale; y < scale + 1; y++)
         {
-            uint xClamp = clamp((uint)(((int)idGs.x + x)), 0, _GroupsX - 1);
-            uint yClamp = clamp((uint)(((int)idGs.y + y)), 0, _GroupsY - 1);
+            uint xClamp = clamp((uint)((int(idGs.x + x))), 0, _GroupsX);
+            uint yClamp = clamp((uint)((int(idGs.y + y))), 0, _GroupsY);
             //uint groupFlatIndex = idGs.x + idGs.y * _GroupsX;
             //if we did downscale, the division will be by a value higher than one
             //taking the floor of both x and y collapses the higher grid from the upscale into the downscale-expected group index
-            xClamp = (uint)floor((float)xClamp/(float)_DownscaleFactor);
-            yClamp = (uint)floor((float)yClamp/(float)_DownscaleFactor);
+            xClamp = (uint)floor((float)(xClamp)/(float)_DownscaleFactor);
+            yClamp = (uint)floor((float)(yClamp)/(float)_DownscaleFactor);
             uint groupsClamp = (uint)(floor((float)_GroupsX/(float)_DownscaleFactor));
             uint groupFlatIndex = yClamp * groupsClamp + xClamp;
             if(idG.x == 0 && idG.y == 0)
@@ -254,19 +275,28 @@ void ApplyStrokeSDFs(uint3 id, uint2 idG, uint3 idGs, uint2 kernelSizes)
                 
                 float4 edgeData = _GradientVectors[combinationCascadeID];
                 isEdge = step(0.5, length(float2(edgeData.ba)));
-                data.coords = float4(edgeData.rg, 0, 0);
-                data.direction = float4(edgeData.ba, 0, 0);
+                StrokeData sampleData = {
+                    data.coords,data.direction, data.additionalPackedData,
+            data.thickness, data.thicknessFalloffConstraint,
+            data.length, data.lengthThicknessFalloff,
+            data.pressure, data.pressureFalloff, data.iterations
+                };
+                sampleData.coords = float4(edgeData.rg, 0, 0);
+                sampleData.direction = float4(edgeData.ba, 0, 0);
                 float2 originOffsetRates = 1.0/float2(widthScalar/_DownscaleFactor, heightScalar/_DownscaleFactor) * 0.5;
-                data = GetRandomizedParamsStrokeData(data, _OutlineStrokeVariationData[0], int(combinationCascadeID), float(_TextureWidth));
-                data.coords.xy -= (data.direction.xy * (originOffsetRates * data.length * (_StrokeSampleScale - 1) * _StrokeScaleOffsetRate));
+                //sampleData = GetRandomizedParamsStrokeData(sampleData, _OutlineStrokeVariationData[0], int(combinationCascadeID), float(_TextureWidth));
                 //Some aditional modulation based on the level of combined strokes
                 if (_CombinationRange > 0)
                 {
-                    data.length += (float(combinationLengthMultiplier * 2.0)); //Increase length to match the expected total size of all combined strokes
-                    data.lengthThicknessFalloff -= ((data.lengthThicknessFalloff/2.0) * (combinationLengthMultiplier/float(_CombinationRange)));
-                    data.lengthThicknessFalloff = min(0, data.lengthThicknessFalloff);
+                    sampleData.length += (float(combinationLengthMultiplier)); //Increase length to match the expected total size of all combined strokes
+                    sampleData.lengthThicknessFalloff -= ((sampleData.lengthThicknessFalloff/2.0) * (combinationLengthMultiplier/float(_CombinationRange)));
+                    sampleData.lengthThicknessFalloff = min(0, sampleData.lengthThicknessFalloff);
                 }
-                groupData = data;
+                sampleData.thickness *= _StrokesDepthBuffer[combinationCascadeID];
+                sampleData.length *= _StrokesDepthBuffer[combinationCascadeID];
+                sampleData.coords.xy -= (sampleData.direction.xy * (originOffsetRates * sampleData.length * (scale) * _StrokeScaleOffsetRate));
+                
+                groupData = sampleData;
             }
             GroupMemoryBarrierWithGroupSync();
 
@@ -276,7 +306,7 @@ void ApplyStrokeSDFs(uint3 id, uint2 idG, uint3 idGs, uint2 kernelSizes)
                 value *= localValue;
                 direction += groupData.direction;
                 // i.e. if not the very first iteration
-                if (y > -_StrokeSampleScale || x > -_StrokeSampleScale)
+                if (y > -scale || x > -scale)
                     direction /= 2.0;
             }
         }
@@ -286,7 +316,6 @@ void ApplyStrokeSDFs(uint3 id, uint2 idG, uint3 idGs, uint2 kernelSizes)
     direction = (direction + 1) * 0.5;
     // R: Value graphite, GB: Average direction of found strokes. A: Value mask
     _OriginalSource[id.xy] = float4(value.r, direction.rg * value.r, value.r);
-    //_OriginalSource[id.xy] = debugColor;
     //float u = float(idG.x)/(float)kernelSizes.x * (1- value);
     //float v = float(idG.y)/(float)kernelSizes.y * (1- value);
     //_OriginalSource[id.xy] = float4(u, v, 0.0, 1.0);

@@ -47,11 +47,24 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         {
             if(VolumeManager.instance == null || VolumeManager.instance.stack == null)
                 return this;
+            
+            RenderUVsVolumeComponent volumeComponent = VolumeManager.instance.stack.GetComponent<RenderUVsVolumeComponent>();
+            if (volumeComponent != null)
+            {
+                RenderUVsPassData passData = new RenderUVsPassData();
+                passData.SkyboxRotationStep = volumeComponent.RotationStep.overrideState ? volumeComponent.RotationStep.value : SkyboxRotationStep;
+                passData.SkyboxScale = volumeComponent.Scale.overrideState ? volumeComponent.Scale.value : SkyboxScale;
+                if(passData.ShouldRotate)
+                    passData.SkyboxRotationMatrix = ConstructRotationMatrix(passData.ExpectedRotation);
+                return passData;
+            }
+            else
+            {
+                if (ShouldRotate)
+                    SkyboxRotationMatrix = ConstructRotationMatrix(ExpectedRotation);
 
-            if (ShouldRotate)
-                SkyboxRotationMatrix = ConstructRotationMatrix(ExpectedRotation);
-
-            return this;
+                return this;
+            }
         }
 
         private Matrix4x4 ConstructRotationMatrix(float beta)

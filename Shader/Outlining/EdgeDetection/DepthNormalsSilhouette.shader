@@ -127,7 +127,8 @@ Shader "SketchRenderer/DepthNormalsSilhouette"
                 //If normals texture is available, modify threshold depending on viewing angle to avoid thick edges in very shallow angles
                 //Specifically, if view vector is almost perpendicular to surface normal, make the threshold higher.
                #if defined(SOURCE_DEPTH)
-               float depth = LinearEyeDepth(SampleSceneDepth(uv), _ZBufferParams);
+               float nonLinearDepth = SampleSceneDepth(uv);
+               float depth = LinearEyeDepth(nonLinearDepth, _ZBufferParams);
                float2 depthGradientVector = float2(horizontalValue.r, depthEdge);
                float thresholdScale = lerp(1.0, 5.0, _OutlineDistanceFalloff);
                float threshold = _OutlineThreshold * lerp(1.0, thresholdScale * (1 + _OutlineOffset), depth/60);
@@ -139,7 +140,8 @@ Shader "SketchRenderer/DepthNormalsSilhouette"
                float3 viewDir = -normalize(float3((uv * 2 - 1)/perspectiveProj, -1));
                
                half isShallow = step(1 - _OutlineShallowThresholdSensitivity, 1 - dot(viewDir, surfaceNormal));
-               float depth = LinearEyeDepth(SampleSceneDepth(uv), _ZBufferParams);
+               float nonLinearDepth = SampleSceneDepth(uv);
+               float depth = LinearEyeDepth(nonLinearDepth, _ZBufferParams);
                float thresholdScale = lerp(1.0, 50.0, _OutlineDistanceFalloff);
                float threshold = _OutlineThreshold * lerp(1.0, thresholdScale * (1 + _OutlineOffset), depth/60);
                threshold += isShallow * (_OutlineThreshold * 20.0 * _OutlineShallowThresholdStrength);
@@ -172,7 +174,7 @@ Shader "SketchRenderer/DepthNormalsSilhouette"
                     angle = (angle + 1) * 0.5;
                     float edge = max(0, depthGradient);
                      //Is Edge, the angle of outline flow, the strength of the direction, and a repeated edge presence as the alpha strength
-                    return float4(edge, angle * edge, 1.0 * edge, edge);
+                    return float4(edge, angle * edge, nonLinearDepth, edge);
                     #elif defined(SOURCE_DEPTH_NORMALS)
                     float edge = max(0, max(depthGradient, normalGradient));
                     float angleDepth = atan2(depthGradientVector.y, depthGradientVector.x);
@@ -183,7 +185,7 @@ Shader "SketchRenderer/DepthNormalsSilhouette"
                     angle /= PI;
                     angle = (angle + 1) * 0.5;
                      //Is Edge, the angle of outline flow (only if edge present), the strength of the direction, and a repeated edge presence as the alpha strength
-                    return float4(edge, angle * edge, 1.0 * edge, edge);
+                    return float4(edge, angle * edge, nonLinearDepth, edge);
                     #endif
                #elif defined(OUTPUT_DIRECTION_DATA_VECTOR)
                     #if defined(SOURCE_DEPTH)
