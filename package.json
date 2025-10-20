@@ -1,6 +1,6 @@
 {
   "name": "com.lorenzogrando.sketchrenderer",
-  "version": "0.7.5-beta-samples",
+  "version": "0.7.6-beta-samples",
   "displayName": "Sketch Renderer",
   "description": "Editor Tools and PostProcessing effects for recreating sketchy and hand-drawn styles in URP.",
   "unity": "6000.0",

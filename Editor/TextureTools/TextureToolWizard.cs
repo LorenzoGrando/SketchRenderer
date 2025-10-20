@@ -63,15 +63,21 @@ namespace SketchRenderer.Editor.TextureTools
 
         internal static void ValidateTonalArtMapWindow()
         {
-            if (EditorWindow.HasOpenInstances<TonalArtMapGeneratorWindow>())
+            if (SketchRendererManager.ResourceAsset != null && SketchRendererManager.ManagerSettings != null)
             {
-                if (TonalArtMapGeneratorWindow.window == null)
+                if (EditorWindow.HasOpenInstances<TonalArtMapGeneratorWindow>())
                 {
-                    //Do this instead of EditorWindow.GetWindow so we find the window regardless of docked state
-                    TonalArtMapGeneratorWindow.window = Resources.FindObjectsOfTypeAll<TonalArtMapGeneratorWindow>()[0];
+                    if (TonalArtMapGeneratorWindow.window == null)
+                    {
+                        //Do this instead of EditorWindow.GetWindow so we find the window regardless of docked state
+                        TonalArtMapGeneratorWindow.window =
+                            Resources.FindObjectsOfTypeAll<TonalArtMapGeneratorWindow>()[0];
+                    }
+
+                    //Clear any existing buffers before they are lost
+                    TonalArtMapGeneratorWindow.window.InitializeTool(SketchRendererManager.ResourceAsset,
+                        SketchRendererManager.ManagerSettings);
                 }
-                //Clear any existing buffers before they are lost
-                TonalArtMapGeneratorWindow.window.InitializeTool(SketchRendererManager.ResourceAsset, SketchRendererManager.ManagerSettings);
             }
 
             if (hasDelayedTonalWindowCall)
@@ -110,15 +116,20 @@ namespace SketchRenderer.Editor.TextureTools
 
         internal static void ValidateMaterialWindow()
         {
-            if (EditorWindow.HasOpenInstances<MaterialGeneratorWindow>())
+            if (SketchRendererManager.ResourceAsset != null && SketchRendererManager.ManagerSettings != null)
             {
-                if (MaterialGeneratorWindow.window == null)
+                if (EditorWindow.HasOpenInstances<MaterialGeneratorWindow>())
                 {
-                    //Do this instead of EditorWindow.GetWindow so we find the window regardless of docked state
-                    MaterialGeneratorWindow.window = Resources.FindObjectsOfTypeAll<MaterialGeneratorWindow>()[0];
+                    if (MaterialGeneratorWindow.window == null)
+                    {
+                        //Do this instead of EditorWindow.GetWindow so we find the window regardless of docked state
+                        MaterialGeneratorWindow.window = Resources.FindObjectsOfTypeAll<MaterialGeneratorWindow>()[0];
+                    }
+
+                    //Clear any existing buffers before they are lost
+                    MaterialGeneratorWindow.window.InitializeTool(SketchRendererManager.ResourceAsset,
+                        SketchRendererManager.ManagerSettings);
                 }
-                //Clear any existing buffers before they are lost
-                MaterialGeneratorWindow.window.InitializeTool(SketchRendererManager.ResourceAsset, SketchRendererManager.ManagerSettings);
             }
 
             if (hasDelayedMaterialWindowCall)

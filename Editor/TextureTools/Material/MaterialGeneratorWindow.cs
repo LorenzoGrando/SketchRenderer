@@ -160,6 +160,7 @@ namespace SketchRenderer.Editor.TextureTools
             
             var pathManipulator = new AssetsDirectoryManipulator();
             pathField = SketchRendererUI.SketchTextField("Override Directory Path", isDelayed:true, pathManipulator);
+            pathField.Field.SetValueWithoutNotify(MaterialGenerator.OverrideOutputPath);
             pathManipulator.OnValidated += Path_Changed;
             SketchRendererUIUtils.AddWithMargins(settingsContainer, pathField.Container, SketchRendererUIData.MinorFieldMargins);
             

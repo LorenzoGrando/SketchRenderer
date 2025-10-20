@@ -38,6 +38,8 @@ namespace SketchRenderer.Editor.TextureTools
                 
                 SketchRendererManager.UpdateFeatureByCurrentContext(SketchRendererFeatureType.MATERIAL);
             }
+            else
+                Debug.LogWarning("Couldn't set as active since there is no current assigned SketchRendererContext in the Sketch settings.");
         }
         
         internal static void SetAsActiveDirectional(Texture directionalTexture)
@@ -54,6 +56,8 @@ namespace SketchRenderer.Editor.TextureTools
                 
                 SketchRendererManager.UpdateFeatureByCurrentContext(SketchRendererFeatureType.MATERIAL);
             }
+            else
+                Debug.LogWarning("Couldn't set as active since there is no current assigned SketchRendererContext in the Sketch settings.");    
         }
     }
 }

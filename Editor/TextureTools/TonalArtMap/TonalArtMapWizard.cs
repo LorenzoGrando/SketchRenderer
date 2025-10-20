@@ -17,6 +17,9 @@ namespace SketchRenderer.Editor.TextureTools
             if(asset == null)
                 return false;
             
+            if(SketchRendererManager.CurrentRendererContext == null)
+                return false;
+            
             return SketchRendererManager.CurrentRendererContext.LuminanceFeatureData.ActiveTonalMap == asset;
         }
         
@@ -52,6 +55,8 @@ namespace SketchRenderer.Editor.TextureTools
                 
                 SketchRendererManager.UpdateFeatureByCurrentContext(SketchRendererFeatureType.LUMINANCE);
             }
+            else
+                Debug.LogWarning("Couldn't set as active since there is no current assigned SketchRendererContext in the Sketch settings.");
         }
     }
 }
