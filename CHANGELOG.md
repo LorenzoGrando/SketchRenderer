@@ -6,6 +6,13 @@ This project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [v0.7.6-beta-samples] - 2025-10-20
+
+### Changed
+
+- Fixed TonalArtMapGenerator not resizing target stroke area when changing texture resolution.
+- Fixed initialization errors in texture tools when no SketchRendererContext is assigned.
+
 ## [v0.7.5-beta-samples] - 2025-10-19
 
 ### Changed
@@ -63,7 +70,8 @@ This project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renderer Manager and Project Settings for dynamically handling feature dependencies and URP renderer data.
 
 ---
-[unreleased]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.7.5-beta-samples...HEAD
+[unreleased]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.7.6-beta-samples...HEAD
+[v0.7.6-beta-samples]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.7.5-beta...v0.7.6-beta-samples
 [v0.7.5-beta-samples]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.7.1-beta...v0.7.5-beta-samples
 [v0.7.1-beta]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.7.0-beta...v0.7.1-beta
 [v0.7.0-beta]: https://github.com/LorenzoGrando/SketchRenderer/compare/v0.5.6-alpha...v0.7.0-beta
