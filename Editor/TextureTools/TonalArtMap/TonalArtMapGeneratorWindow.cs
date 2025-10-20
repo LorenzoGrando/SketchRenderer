@@ -254,6 +254,7 @@ namespace SketchRenderer.Editor.TextureTools
             
             var pathManipulator = new AssetsDirectoryManipulator();
             pathField = SketchRendererUI.SketchTextField("Override Directory Path", isDelayed:true, pathManipulator);
+            pathField.Field.SetValueWithoutNotify(TonalArtMapGenerator.OverrideOutputPath);
             pathManipulator.OnValidated += Path_Changed;
             SketchRendererUIUtils.AddWithMargins(settingsContainer, pathField.Container, SketchRendererUIData.MinorFieldMargins);
             
@@ -296,6 +297,7 @@ namespace SketchRenderer.Editor.TextureTools
             {
                 previewImage.visible = (strokeAssetField != null && strokeAssetField.Field.value != null);
                 previewImage.image = TonalArtMapGenerator.TargetTexture;
+                previewImage.scaleMode = ScaleMode.ScaleToFit;
             }
         }
 

@@ -43,8 +43,18 @@ namespace SketchRenderer.Editor.TextureTools
         internal static int IterationsPerStroke = 15;
         [Range(0, 1)] 
         internal static float TargetFillRate = 1f;
-        internal static TextureResolution TargetResolution = TextureResolution.SIZE_512;
-        private static int Dimension = TextureAssetManager.GetTextureResolution(TargetResolution);
+        private static TextureResolution targetResolution = TextureResolution.SIZE_512;
+        internal static TextureResolution TargetResolution
+        {
+            get => targetResolution;
+            set
+            {
+                targetResolution = value;
+                Dimension = TextureAssetManager.GetTextureResolution(TargetResolution);
+                TextureGenerator.CreateOrClearTarget(ref targetTexture, Dimension);
+            }
+        }
+        private static int Dimension = 512;
 
         internal static StrokeAsset strokeDataAsset;
         internal static StrokeAsset[] defaultStrokeDataAssets;
