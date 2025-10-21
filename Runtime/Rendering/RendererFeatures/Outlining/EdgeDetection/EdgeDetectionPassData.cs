@@ -90,6 +90,21 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 return sketchComponent;
             else return null;
         }
+        
+        public bool ActiveInVolume()
+        {
+            if(VolumeManager.instance == null || VolumeManager.instance.stack == null)
+                return false;
+            SketchOutlineVolumeComponent sketchVolumeComponent = VolumeManager.instance.stack.GetComponent<SketchOutlineVolumeComponent>();
+            SmoothOutlineVolumeComponent smoothVolumeComponent = VolumeManager.instance.stack.GetComponent<SmoothOutlineVolumeComponent>();
+            bool hasSmooth = smoothVolumeComponent != null && smoothVolumeComponent.AnyPropertiesIsOverridden();
+            bool hasSketch = sketchVolumeComponent != null && sketchVolumeComponent.AnyPropertiesIsOverridden();
+            if (hasSmooth && OutputType == EdgeDetectionGlobalData.EdgeDetectionOutputType.OUTPUT_DIRECTION_DATA_VECTOR)
+                return true;
+            else if(hasSketch && OutputType == EdgeDetectionGlobalData.EdgeDetectionOutputType.OUTPUT_DIRECTION_DATA_ANGLE)
+                return true;
+            else return false;
+        }
 
         public EdgeDetectionPassData GetPassDataByVolume()
         {
@@ -100,6 +115,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 return this;
 
             EdgeDetectionPassData overrideData = new EdgeDetectionPassData();
+            
+            overrideData.OutputType = volumeComponent.OutputType;
             
             overrideData.Method = volumeComponent.Method.overrideState
                 ? volumeComponent.Method.value : Method;

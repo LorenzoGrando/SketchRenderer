@@ -100,6 +100,7 @@ namespace SketchRenderer.Editor.Rendering
 
         internal static void UpdateRendererByContext(SketchRendererContext rendererContext)
         {
+            return;
             if (rendererContext == null)
                 throw new NullReferenceException("[SketchRenderer] Renderer context used to configure is not set.");
             
@@ -113,13 +114,14 @@ namespace SketchRenderer.Editor.Rendering
             {
                 if (features[i].Active)
                     SketchRendererFeatureWrapper.ConfigureRendererFeature(features[i].Feature, rendererContext, ResourceAsset);
-                else
-                    SketchRendererFeatureWrapper.RemoveRendererFeature(features[i].Feature);
+                //else
+                    //SketchRendererFeatureWrapper.RemoveRendererFeature(features[i].Feature);
             }
         }
 
         private static void UpdateBySettingsChange()
         {
+            return;
             if (ManagerSettings.AlwaysUpdateRendererData)
             {
                 UpdateRendererToCurrentContext();
@@ -129,16 +131,19 @@ namespace SketchRenderer.Editor.Rendering
       
         internal static void ClearRenderer()
         {
+            return;
             for(int i = totalFeatureTypes - 1; i >= 0; i--)
                 SketchRendererFeatureWrapper.RemoveRendererFeature(featureTypesInPackage[i]);
         }
         internal static void UpdateFeatureByCurrentContext(SketchRendererFeatureType featureType)
         {
+            return;
             UpdateFeatureByContext(featureType, CurrentRendererContext);
         }
         
         internal static void UpdateFeatureByContext(SketchRendererFeatureType featureType, SketchRendererContext rendererContext)
         {
+            return;
             if (rendererContext == null)
                 throw new NullReferenceException("[SketchRenderer] Renderer context used to configure is not set.");
 

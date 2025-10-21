@@ -52,6 +52,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             if(!MaterialData.IsAllPassDataValid())
                 return;
             
+            if(!MaterialData.ActiveInVolume())
+                return;
 
             materialRenderPass.Setup(MaterialData.GetPassDataByVolume(), materialMat);
             renderer.EnqueuePass(materialRenderPass);

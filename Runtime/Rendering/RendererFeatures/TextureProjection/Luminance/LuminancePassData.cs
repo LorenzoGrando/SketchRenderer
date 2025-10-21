@@ -67,9 +67,20 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             overrideData.ToneScales = volumeComponent.ToneScales.overrideState ? volumeComponent.ToneScales.value : ToneScales;
             overrideData.LuminanceOffset = volumeComponent.LuminanceOffset.overrideState ? volumeComponent.LuminanceOffset.value : LuminanceScalar;
             
-            overrideData.ActiveTonalMap = ActiveTonalMap;
+            overrideData.ActiveTonalMap = volumeComponent.HasTAMOverride ? volumeComponent.TonalArtMap : ActiveTonalMap;
             
             return overrideData;
+        }
+        
+        public bool ActiveInVolume()
+        {
+            if(VolumeManager.instance == null || VolumeManager.instance.stack == null)
+                return false;
+            LuminanceVolumeComponent volumeComponent = VolumeManager.instance.stack.GetComponent<LuminanceVolumeComponent>();
+            if (volumeComponent == null)
+                return false;
+
+            return volumeComponent.AnyPropertiesIsOverridden();
         }
         
         public bool RequiresTextureCoordinateFeature()

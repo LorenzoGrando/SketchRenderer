@@ -29,7 +29,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public bool IsAllPassDataValid()
         {
             ThicknessDilationPassData passData = GetPassDataByVolume();
-            return passData.UseThicknessDilation && passData.ThicknessRange > 0;
+            return true;
         }
 
         public ThicknessDilationPassData GetPassDataByVolume()
@@ -45,6 +45,17 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             overrideData.ThicknessStrength = volumeComponent.ThicknessStrength.overrideState ? volumeComponent.ThicknessStrength.value : ThicknessStrength;
         
             return overrideData;
+        }
+        
+        public bool ActiveInVolume()
+        {
+            if(VolumeManager.instance == null || VolumeManager.instance.stack == null)
+                return false;
+            SmoothOutlineVolumeComponent volumeComponent = VolumeManager.instance.stack.GetComponent<SmoothOutlineVolumeComponent>();
+            if (volumeComponent == null)
+                return false;
+
+            return volumeComponent.AnyPropertiesIsOverridden();
         }
     }
 }

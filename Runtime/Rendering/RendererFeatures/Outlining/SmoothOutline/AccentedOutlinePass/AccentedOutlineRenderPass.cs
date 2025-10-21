@@ -164,6 +164,9 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
+            if(!passData.ActiveInVolume())
+                return;
+            
             var resourceData = frameData.Get<UniversalResourceData>();
             
             if (resourceData.isActiveTargetBackBuffer)

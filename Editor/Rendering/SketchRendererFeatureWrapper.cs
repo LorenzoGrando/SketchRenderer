@@ -42,8 +42,8 @@ namespace SketchRenderer.Editor.Rendering
             AssemblyReloadEvents.beforeAssemblyReload += DisposeInternalState;
             AssemblyReloadEvents.afterAssemblyReload += PrepareInternalState;
             
-            Selection.selectionChanged += ShouldTrackRendererFeatures;
-            ShouldTrackRendererFeatures();
+            //Selection.selectionChanged += ShouldTrackRendererFeatures;
+            //ShouldTrackRendererFeatures();
         }
 
         private static void PrepareInternalState()
@@ -239,6 +239,7 @@ namespace SketchRenderer.Editor.Rendering
                 }
             }
             
+            /*
             //Never allow two outline features
             if (context.UseSmoothOutlineFeature && context.UseSketchyOutlineFeature)
             {
@@ -251,6 +252,7 @@ namespace SketchRenderer.Editor.Rendering
                     Debug.LogWarning("[SketchRenderer] Attempted to manually add two different sketch outline features. Currently only one active outline style can be present in the renderer.");
                 }
             }
+            */
 
             if (context.UseCompositorFeature)
             {
@@ -547,6 +549,7 @@ namespace SketchRenderer.Editor.Rendering
         
         internal static void RemoveRendererFeature(SketchRendererFeatureType featureType)
         {
+            return;
             if(!CheckHasActiveFeature(featureType))
                 return;
             

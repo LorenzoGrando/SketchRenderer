@@ -73,9 +73,20 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             overrideData.StrokeBlendMode = volumeComponent.StrokeBlendingOperation.overrideState ? volumeComponent.StrokeBlendingOperation.value : StrokeBlendMode;
             overrideData.BlendStrength = volumeComponent.BlendStrength.overrideState ? volumeComponent.BlendStrength.value : BlendStrength;
             overrideData.MaterialAccumulationStrength = volumeComponent.MaterialAccumulation.overrideState ? volumeComponent.MaterialAccumulation.value : MaterialAccumulationStrength;
-            overrideData.featuresToCompose = FeaturesToCompose;
+            overrideData.featuresToCompose = volumeComponent.HasFeatureOverride ? volumeComponent.Features : FeaturesToCompose;
             
             return overrideData;
+        }
+        
+        public bool ActiveInVolume()
+        {
+            if(VolumeManager.instance == null || VolumeManager.instance.stack == null)
+                return false;
+            CompositionVolumeComponent volumeComponent = VolumeManager.instance.stack.GetComponent<CompositionVolumeComponent>();
+            if (volumeComponent == null)
+                return false;
+
+            return volumeComponent.AnyPropertiesIsOverridden();
         }
 
         public bool RequiresColorTexture()

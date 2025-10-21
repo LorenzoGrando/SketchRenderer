@@ -5,5 +5,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public bool IsAllPassDataValid();
 
         public T GetPassDataByVolume();
+
+        public bool ActiveInVolume();
     }
 }

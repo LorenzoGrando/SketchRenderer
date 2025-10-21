@@ -1,4 +1,5 @@
 using System;
+using SketchRenderer.Runtime.Data;
 using UnityEngine;
 using UnityEngine.Rendering;
 using SketchRenderer.Runtime.Rendering.RendererFeatures;
@@ -6,7 +7,7 @@ using SketchRenderer.Runtime.Rendering.RendererFeatures;
 namespace SketchRenderer.Runtime.Rendering.Volume
 {
     [System.Serializable]
-    public abstract class OutlineVolumeComponent : VolumeComponent
+    public abstract class OutlineVolumeComponent : VolumeComponent, ISketchVolumeComponent
     {
         [Space(10)]
         [Header("Edge Detection")]
@@ -21,5 +22,20 @@ namespace SketchRenderer.Runtime.Rendering.Volume
         public ClampedFloatParameter AngleSensitivity = new ClampedFloatParameter(0, 0, 1);
         public ClampedFloatParameter AngleConstraint = new ClampedFloatParameter(0, 0, 1);
         public ClampedFloatParameter NormalSensitivity = new ClampedFloatParameter(0, 0, 1);
+
+        public virtual EdgeDetectionGlobalData.EdgeDetectionOutputType OutputType => EdgeDetectionGlobalData.EdgeDetectionOutputType.OUTPUT_GREYSCALE;
+        
+        public void CopyFromContext(SketchRendererContext context)
+        {
+            Method.value = context.EdgeDetectionFeatureData.Method;
+            Source.value = context.EdgeDetectionFeatureData.Source;
+            DepthNormalsThreshold.value = context.EdgeDetectionFeatureData.PrimarySplitOutlineThreshold;
+            ColorThreshold.value = context.EdgeDetectionFeatureData.SecondarySplitOutlineThreshold;
+            DistanceFalloff.value = context.EdgeDetectionFeatureData.OutlineDistanceFalloff;
+            Offset.value = context.EdgeDetectionFeatureData.OutlineOffset;
+            AngleSensitivity.value = context.EdgeDetectionFeatureData.OutlineAngleSensitivity;
+            AngleConstraint.value = context.EdgeDetectionFeatureData.OutlineAngleConstraint;
+            NormalSensitivity.value = context.EdgeDetectionFeatureData.OutlineNormalSensitivity;
+        }
     }
 }

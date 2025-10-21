@@ -68,7 +68,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
         public bool IsAllPassDataValid()
         {
-            return OutlineStrokeData != null;
+            SketchStrokesPassData passData = GetPassDataByVolume();
+            return passData.OutlineStrokeData  != null;
         }
 
         public bool IsDoingCombination => StrokeCombinationRange > 0;
@@ -95,7 +96,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 return this;
             
             SketchStrokesPassData overrideData = new SketchStrokesPassData();
-            overrideData.OutlineStrokeData = OutlineStrokeData;
+            overrideData.OutlineStrokeData = volumeComponent.HasStrokeAssetOverride ? volumeComponent.StrokeAsset : OutlineStrokeData;
             overrideData.StrokeCombinationThreshold = volumeComponent.StrokeCombinationThreshold.overrideState ? volumeComponent.StrokeCombinationThreshold.value : StrokeCombinationThreshold;
             overrideData.StrokeCombinationRange = volumeComponent.StrokeCombinationRange.overrideState ? volumeComponent.StrokeCombinationRange.value : StrokeCombinationRange;
             overrideData.SampleArea = volumeComponent.StrokeArea.overrideState ? volumeComponent.StrokeArea.value : SampleArea;
@@ -112,6 +113,17 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             overrideData.StrokeThicknessDepthFalloff = volumeComponent.StrokeDepthFalloff.overrideState ? volumeComponent.StrokeDepthFalloff.value : StrokeThicknessDepthFalloff;
             
             return overrideData;
+        }
+
+        public bool ActiveInVolume()
+        {
+            if(VolumeManager.instance == null || VolumeManager.instance.stack == null)
+                return false;
+            SketchOutlineVolumeComponent volumeComponent = VolumeManager.instance.stack.GetComponent<SketchOutlineVolumeComponent>();
+            if (volumeComponent == null)
+                return false;
+
+            return volumeComponent.AnyPropertiesIsOverridden();
         }
     }
 }

@@ -17,6 +17,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         
         private LocalKeyword sourceDepthKeyword;
         private LocalKeyword sourceDepthNormalsKeyword;
+        
+        private EdgeDetectionGlobalData.EdgeDetectionOutputType lastOutputType;
 
         public override void ConfigureMaterial()
         {
@@ -61,6 +63,9 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
+            if(!passData.ActiveInVolume())
+                return;
+            
             var resourceData = frameData.Get<UniversalResourceData>();
 
             if (resourceData.isActiveTargetBackBuffer)

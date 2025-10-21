@@ -51,6 +51,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             if(!LuminanceData.IsAllPassDataValid())
                 return;
             
+            if(!LuminanceData.ActiveInVolume())
+                return;
 
             luminanceRenderPass.Setup(LuminanceData.GetPassDataByVolume(), luminanceMaterial);
             renderer.EnqueuePass(luminanceRenderPass);

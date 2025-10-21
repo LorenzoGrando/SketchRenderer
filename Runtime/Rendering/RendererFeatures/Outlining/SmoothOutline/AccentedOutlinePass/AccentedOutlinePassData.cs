@@ -57,7 +57,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         public bool IsAllPassDataValid()
         {
             AccentedOutlinePassData passData = GetPassDataByVolume();
-            return passData.UseAccentedOutlines && (passData.Strength > 0 || (passData.PencilOutlineMask != null && passData.MaskScale != Vector2.zero));
+            return true;
         }
 
         public AccentedOutlinePassData GetPassDataByVolume()
@@ -81,6 +81,17 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             overrideData.MaskScale = volumeComponent.MaskTextureScale.overrideState ? volumeComponent.MaskTextureScale.value : MaskScale;
             
             return overrideData;
+        }
+        
+        public bool ActiveInVolume()
+        {
+            if(VolumeManager.instance == null || VolumeManager.instance.stack == null)
+                return false;
+            SmoothOutlineVolumeComponent volumeComponent = VolumeManager.instance.stack.GetComponent<SmoothOutlineVolumeComponent>();
+            if (volumeComponent == null)
+                return false;
+
+            return volumeComponent.AnyPropertiesIsOverridden();
         }
     }
 }

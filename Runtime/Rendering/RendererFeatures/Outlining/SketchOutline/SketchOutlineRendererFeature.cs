@@ -97,9 +97,12 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 Debug.LogWarning("[SketchOutlineRendererFeature] Compute Shader Support is not available on this platform.");
                 return;
             }
-
+            
+            
             if (CurrentEdgeDetectionPassData.IsAllPassDataValid())
             {
+                EdgeDetectionPassData passData = CurrentEdgeDetectionPassData;
+                passData.OutputType = EdgeDetectionGlobalData.EdgeDetectionOutputType.OUTPUT_DIRECTION_DATA_ANGLE;
                 if (!CurrentEdgeDetectionPassData.IsSplitEdgePass)
                 {
                     edgeDetectionPass.Setup(CurrentEdgeDetectionPassData, edgeDetectionMaterial);

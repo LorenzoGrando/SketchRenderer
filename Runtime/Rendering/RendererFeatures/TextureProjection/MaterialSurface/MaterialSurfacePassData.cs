@@ -59,6 +59,17 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
         
             return overrideData;
         }
+        
+        public bool ActiveInVolume()
+        {
+            if(VolumeManager.instance == null || VolumeManager.instance.stack == null)
+                return false;
+            MaterialVolumeComponent volumeComponent = VolumeManager.instance.stack.GetComponent<MaterialVolumeComponent>();
+            if (volumeComponent == null)
+                return false;
+
+            return volumeComponent.AnyPropertiesIsOverridden();
+        }
 
         public bool RequiresTextureCoordinateFeature()
         {

@@ -56,6 +56,9 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             if(!UvsPassData.IsAllPassDataValid())
                 return;
             
+            if(!UvsPassData.ActiveInVolume())
+                return;
+            
             renderUVsRenderPass.Setup(CurrentUVsPassData, renderUVsMaterial);
             renderer.EnqueuePass(renderUVsRenderPass);
         }

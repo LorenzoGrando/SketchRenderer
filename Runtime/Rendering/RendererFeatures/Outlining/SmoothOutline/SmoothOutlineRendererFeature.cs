@@ -119,6 +119,8 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
 
             if (CurrentEdgeDetectionPassData.IsAllPassDataValid())
             {
+                EdgeDetectionPassData passData = CurrentEdgeDetectionPassData;
+                passData.OutputType = EdgeDetectionGlobalData.EdgeDetectionOutputType.OUTPUT_DIRECTION_DATA_VECTOR;
                 if (!CurrentEdgeDetectionPassData.IsSplitEdgePass)
                 {
                     edgeDetectionPass.Setup(CurrentEdgeDetectionPassData, edgeDetectionMaterial);

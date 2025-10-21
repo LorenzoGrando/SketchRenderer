@@ -2,12 +2,13 @@ using System;
 using UnityEngine;
 using UnityEngine.Rendering;
 using SketchRenderer.Runtime.Data;
+using SketchRenderer.Runtime.Rendering.RendererFeatures;
 
 namespace SketchRenderer.Runtime.Rendering.Volume
 {
     [System.Serializable]
     [VolumeComponentMenu(SketchRendererData.PackageInspectorVolumePath + "Smooth Outline")]
-    public class SmoothOutlineVolumeComponent : OutlineVolumeComponent
+    public class SmoothOutlineVolumeComponent : OutlineVolumeComponent, ISketchVolumeComponent
     {
         [Header("Accented Outlines")]
         public BoolParameter UseAccentedOutlines = new(true);
@@ -29,5 +30,25 @@ namespace SketchRenderer.Runtime.Rendering.Volume
         [Space(2.5f)] [Header("Accented Outlines - Outline Masking")]
         public Texture2DParameter MaskTexture = new Texture2DParameter(null);
         public NoInterpVector2Parameter MaskTextureScale = new NoInterpVector2Parameter(Vector2.one);
+
+        public override EdgeDetectionGlobalData.EdgeDetectionOutputType OutputType => EdgeDetectionGlobalData.EdgeDetectionOutputType.OUTPUT_DIRECTION_DATA_VECTOR;
+        
+        public void CopyFromContext(SketchRendererContext context)
+        {
+            base.CopyFromContext(context);
+            UseAccentedOutlines.value = context.AccentedOutlineFeatureData.UseAccentedOutlines;
+            UseThickness.value = context.ThicknessDilationFeatureData.UseThicknessDilation;
+            ThicknessRange.value = context.ThicknessDilationFeatureData.ThicknessRange;
+            ThicknessStrength.value = context.ThicknessDilationFeatureData.ThicknessStrength;
+            BakeDistortion.value = context.AccentedOutlineFeatureData.BakeDistortionDuringRuntime;
+            BakedDistortionTextureScale.value = context.AccentedOutlineFeatureData.BakedTextureScaleFactor;
+            DistortionRate.value = context.AccentedOutlineFeatureData.Rate;
+            DistortionStrength.value = context.AccentedOutlineFeatureData.Strength;
+            AdditionalDistortionLines.value = context.AccentedOutlineFeatureData.AdditionalLines;
+            AdditionalLineTintPersistence.value = context.AccentedOutlineFeatureData.AdditionalLineTintPersistence;
+            AdditionalLinesDistortionJitter.value = context.AccentedOutlineFeatureData.AdditionalLineDistortionJitter;
+            MaskTexture.value = context.AccentedOutlineFeatureData.PencilOutlineMask;
+            MaskTextureScale.value = context.AccentedOutlineFeatureData.MaskScale;
+        }
     }
 }

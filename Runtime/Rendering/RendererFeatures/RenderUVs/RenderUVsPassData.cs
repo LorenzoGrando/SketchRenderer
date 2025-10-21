@@ -66,6 +66,17 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
                 return this;
             }
         }
+        
+        public bool ActiveInVolume()
+        {
+            if(VolumeManager.instance == null || VolumeManager.instance.stack == null)
+                return false;
+            RenderUVsVolumeComponent volumeComponent = VolumeManager.instance.stack.GetComponent<RenderUVsVolumeComponent>();
+            if (volumeComponent == null)
+                return false;
+
+            return volumeComponent.AnyPropertiesIsOverridden();
+        }
 
         private Matrix4x4 ConstructRotationMatrix(float beta)
         {

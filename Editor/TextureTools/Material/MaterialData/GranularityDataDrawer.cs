@@ -30,11 +30,11 @@ namespace SketchRenderer.Editor.TextureTools.MaterialData
             SketchRendererUIUtils.AddWithMargins(assetField, detailPersistenceField.Container, SketchRendererUIData.MajorIndentCorners);
             
             minStrengthProp = property.FindPropertyRelative("MinimumGranularity");
-            var minimumStrengthField = SketchRendererUI.SketchFloatSliderPropertyWithInput(minStrengthProp, nameOverride:"Minimum Strength", MinStrength_Changed);
+            var minimumStrengthField = SketchRendererUI.SketchFloatSliderPropertyWithInput(minStrengthProp, nameOverride:"Minimum Strength", evt => MinStrength_Changed(evt, maxStrengthProp.floatValue));
             SketchRendererUIUtils.AddWithMargins(assetField, minimumStrengthField.Container, SketchRendererUIData.MajorIndentCorners);
             
             maxStrengthProp = property.FindPropertyRelative("MaximumGranularity");
-            var maximumStrengthField = SketchRendererUI.SketchFloatSliderPropertyWithInput(maxStrengthProp, nameOverride:"Maximum Strength", MaxStrength_Changed);
+            var maximumStrengthField = SketchRendererUI.SketchFloatSliderPropertyWithInput(maxStrengthProp, nameOverride:"Maximum Strength", evt => MaxStrength_Changed(evt, minStrengthProp.floatValue));
             SketchRendererUIUtils.AddWithMargins(assetField, maximumStrengthField.Container, SketchRendererUIData.MajorIndentCorners);
             
             var tintField = SketchRendererUI.SketchColorProperty(property.FindPropertyRelative("GranularityTint"), nameOverride:"Tint");
@@ -43,19 +43,17 @@ namespace SketchRenderer.Editor.TextureTools.MaterialData
             return assetField;
         }
         
-        private void MinStrength_Changed(ChangeEvent<float> bind)
+        private void MinStrength_Changed(ChangeEvent<float> bind, float maxValue)
         {
             float newValue = bind.newValue;
-            float maxHatchingValue = maxStrengthProp.floatValue;
-            minStrengthProp.floatValue = Mathf.Min(newValue, maxHatchingValue);
+            minStrengthProp.floatValue = Mathf.Min(newValue, maxValue);
             minStrengthProp.serializedObject.ApplyModifiedProperties();
         }
 
-        private void MaxStrength_Changed(ChangeEvent<float>  bind)
+        private void MaxStrength_Changed(ChangeEvent<float>  bind, float minValue)
         {
             float newValue = bind.newValue;
-            float minHatchingValue = minStrengthProp.floatValue;
-            maxStrengthProp.floatValue = Mathf.Max(newValue, minHatchingValue);
+            maxStrengthProp.floatValue = Mathf.Max(newValue, minValue);
             maxStrengthProp.serializedObject.ApplyModifiedProperties();
         }
     }
