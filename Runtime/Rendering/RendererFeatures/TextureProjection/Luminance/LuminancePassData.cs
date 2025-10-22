@@ -67,7 +67,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             overrideData.ToneScales = volumeComponent.ToneScales.overrideState ? volumeComponent.ToneScales.value : ToneScales;
             overrideData.LuminanceOffset = volumeComponent.LuminanceOffset.overrideState ? volumeComponent.LuminanceOffset.value : LuminanceScalar;
             
-            overrideData.ActiveTonalMap = volumeComponent.HasTAMOverride ? volumeComponent.TonalArtMap : ActiveTonalMap;
+            overrideData.ActiveTonalMap = LuminanceVolumeComponent.HasTAMOverride ? LuminanceVolumeComponent.TonalArtMap : ActiveTonalMap;
             
             return overrideData;
         }

@@ -86,7 +86,7 @@ namespace SketchRenderer.Runtime.Rendering.RendererFeatures
             if (volumeComponent == null)
                 return false;
 
-            return volumeComponent.AnyPropertiesIsOverridden();
+            return volumeComponent.AnyPropertiesIsOverridden() && FeaturesToCompose != null && FeaturesToCompose.Count > 0;
         }
 
         public bool RequiresColorTexture()

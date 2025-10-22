@@ -32,18 +32,13 @@ public class SketchVolumeOverrider : MonoBehaviour
     }
     [SerializeField]
     private SketchPreset[] presets;
+    private SketchRendererContext lastContext;
     
     private bool initialized = false;
 
     private void Start()
     {
         StartCoroutine(AwaitInit());
-    }
-
-    private void Update()
-    {
-        if(Input.GetKeyDown(KeyCode.Space))
-            ApplyPreset(1);
     }
 
     private void Initialize()
@@ -62,6 +57,7 @@ public class SketchVolumeOverrider : MonoBehaviour
         volume.profile.TryGet<MaterialVolumeComponent>(out materialComponent);
         volume.profile.TryGet<LuminanceVolumeComponent>(out luminanceComponent);
         volume.profile.TryGet<CompositionVolumeComponent>(out compositionComponent);
+        ClearVolume();
         initialized = true;
     }
 
@@ -72,8 +68,6 @@ public class SketchVolumeOverrider : MonoBehaviour
             Initialize();
             yield return null;
         }
-        
-        ApplyPreset(0);
     }
 
     public void CopyFromContext(SketchRendererContext context, List<SketchRendererFeatureType> features = null)
@@ -117,25 +111,47 @@ public class SketchVolumeOverrider : MonoBehaviour
             compositionComponent.SetAllOverridesTo(compositionComponent.active);
         }
         
+        lastContext = context;
         UpdateActiveFeatures(context);
+    }
+
+    private void ClearVolume()
+    {
+        uvsComponent.SetAllOverridesTo(false);
+        smoothOutlineComponent.SetAllOverridesTo(false);
+        sketchOutlineComponent.SetAllOverridesTo(false);
+        materialComponent.SetAllOverridesTo(false);
+        luminanceComponent.SetAllOverridesTo(false);
+        compositionComponent.SetAllOverridesTo(false);
+        lastContext = null;
+        UpdateActiveFeatures(null);
     }
 
     public void UpdateActiveFeatures(SketchRendererContext context)
     {
         List<SketchRendererFeatureType> features = new List<SketchRendererFeatureType>();
-        int possibleFeatures = Enum.GetValues(typeof(SketchRendererFeatureType)).Length;
-        for (int i = 0; i < possibleFeatures; i++)
+        if (context != null)
         {
-            SketchRendererFeatureType feat = (SketchRendererFeatureType)i;
-            if(context.IsFeaturePresent(feat))
-                features.Add(feat);
+            int possibleFeatures = Enum.GetValues(typeof(SketchRendererFeatureType)).Length;
+            for (int i = 0; i < possibleFeatures; i++)
+            {
+                SketchRendererFeatureType feat = (SketchRendererFeatureType)i;
+                if (context.IsFeaturePresent(feat))
+                    features.Add(feat);
+            }
         }
-        
+
         compositionComponent.SetRenderingTargets(features);
     }
 
     public void ApplyPreset(int presetIndex)
     {
-        CopyFromContext(presets[presetIndex].Context);
+        SketchRendererContext targetContext = presets[presetIndex].Context;
+        if (lastContext == null || (lastContext != null && lastContext != targetContext))
+            CopyFromContext(presets[presetIndex].Context);
+        else
+            ClearVolume();
     }
+
+    public string GetPresetName(int i) => presets[i].PresetName;
 }

@@ -17,8 +17,8 @@ namespace SketchRenderer.Runtime.Rendering.Volume
         public NoInterpVector2Parameter ToneScales = new NoInterpVector2Parameter(Vector2.one);
         public ClampedFloatParameter LuminanceOffset = new ClampedFloatParameter(0f, -1f, 1f);
 
-        public bool HasTAMOverride => TonalArtMap != null;
-        public TonalArtMapAsset TonalArtMap { get; private set; }
+        public static bool HasTAMOverride => TonalArtMap != null;
+        public static TonalArtMapAsset TonalArtMap { get; private set; }
         
         public void CopyFromContext(SketchRendererContext context)
         {

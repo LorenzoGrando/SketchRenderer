@@ -4,7 +4,8 @@
     "references": [
         "Unity.RenderPipelines.Universal.Runtime",
         "Unity.RenderPipelines.Core.Runtime",
-        "LorenzoGrando.SketchRenderer.ShaderLibrary"
+        "LorenzoGrando.SketchRenderer.ShaderLibrary",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
